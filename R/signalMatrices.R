@@ -14,6 +14,13 @@
 #' @param ... Passed to `EnrichedHeatmap::normalizeToMatrix`
 #'
 #' @return A list of `normalizeToMatrix` objects
+#' @export
+#' @import GenomicRanges
+#' @importFrom Rsamtools scanBamFlag scanBamParam countBam
+#' @importFrom genomation ScoreMatrix
+#' @import EnrichedHeatmap
+#' @importFrom rtracklayer import BigWigSelection
+#' @importFrom GenomicAlignments readGAlignmentPairs
 signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE, 
                           ..., RPM=TRUE, BPPARAM=BiocParallel::SerialParam(),
                           flgs=Rsamtools::scanBamFlag(isDuplicate=FALSE,
@@ -31,13 +38,6 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
   
   regions2 <- resize(regions, fix="center", width=extend*2)
   
-  align2cuts <- function(x){
-    bstart <- bend <- GRanges(x)
-    end(bstart) <- start(bstart)
-    start(bend) <- end(bend)
-    sort(c(bstart,bend))
-  }
-  
   lapply(setNames(names(filepaths),names(filepaths)), FUN=function(filename){
     filepath <- filepaths[[filename]]
     message("Reading ", filepath)
@@ -51,7 +51,7 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
       if(cuts){
         params <- Rsamtools::ScanBamParam(which=regions2, flag=flgs)
         bam <- GenomicAlignments::readGAlignmentPairs(filepath, param=params)
-        bam <- coverage(align2cuts(bam))
+        bam <- coverage(.align2cuts(bam))
         mat <- genomation::ScoreMatrix(bam, windows=regions2, 
                                        strand.aware=FALSE, library.size=libsize)
         rm(bam)
@@ -68,7 +68,7 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
                       FUN=function(x) rowMeans(mat[,x]) )
         extend <- floor(ncol(mat)/2)
       }
-      mat<- EnrichedHeatmap::as.normalizedMatrix( 
+      mat <- EnrichedHeatmap::as.normalizedMatrix( 
         unclass(mat), extend=extend, signal_name=filename, k_target=0, 
         k_upstream=extend, k_downstream=extend+(w==1) )
       
@@ -108,6 +108,8 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' @param ... Passed to EnrichedHeatmap::EnrichedHeatmap
 #'
 #' @return A HeatmapList object
+#' @import EnrichedHeatmap
+#' @importFrom circlize colorRamp2
 plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=viridisLite::inferno(100), 
                                  scale_title="density", title_size=11, 
                                  row_order=NULL, cluster_rows=FALSE, ...){
@@ -139,13 +141,15 @@ plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=viridisLite::inferno(100
 
 #' meltSignals
 #'
-#' Aggregates and melts a list of signal matrices, for plotting with ggplot.
+#' Aggregates and melts a list of signal matrices, for plotting (with ggplot).
 #'
 #' @param ml A named list of matrices as produced by `signal2Matrix`
 #' @param fun The aggregation to perform. Either "mean", "sum", "median", or
 #' a custom function to be applied on columns.
 #'
 #' @return A data.frame.
+#' @export
+#' @importFrom matrixStats colMedians
 meltSignals <- function(ml, fun=c("mean","sum","median")){
   stopifnot(is.list(ml))
   if(!is.function(fun)) fun <- match.arg(fun)
