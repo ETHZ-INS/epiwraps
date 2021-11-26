@@ -3,9 +3,10 @@
 #' A wrapper around `Gviz` for quick plotting of genomic signals in a single
 #' region.
 #'
-#' @param files A named list or vector of paths to signal files
-#' (e.g. bigwig/bam). If a list, list elements will be overlaid or aggregated 
-#' (depending on the `aggregation` argument).
+#' @param files A named list or vector of paths to signal files  (e.g. 
+#' bigwig/bam, but also bed files). If a list, list elements will be overlaid 
+#' or aggregated (depending on the `aggregation` argument). Objects accepted by
+#' \code{\link[Gviz]{DataTrack}}'s `range` argument are also accepted.
 #' @param region A genomic region, either as a `GRanges` object or as a string 
 #' (i.e. `region="chr5:10000-12000`). Alternatively, if `ensdb` is provided, a 
 #' gene name can be given, and the gene's coordinates will be used as region.
@@ -40,17 +41,18 @@
 #' 
 #' @importFrom GenomicRanges reduce seqnames start end
 #' @importFrom ensembldb getGeneRegionTrackForGviz genes
-#' @importFrom AnnotationFilter SymbolFilter GeneIdFilter TxIdFilter
 #' @importFrom S4Vectors mcols
 #' @importFrom ensembldb getGeneRegionTrackForGviz
 #' @importFrom Gviz plotTracks DataTrack OverlayTrack GeneRegionTrack 
 #' @importFrom Gviz GenomeAxisTrack AnnotationTrack
 #' @importFrom matrixStats rowMins rowMaxs rowMedians
+#'
+#' @export
 plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL, 
                              type="h",  genomeAxis=0.3, extend=0,
                              aggregation=c("mean","median", "sum", "max", 
                                            "min", "heatmap", "overlay"),
-                             transcripts=c("collapsed", "full", "none", "coding"), 
+                             transcripts=c("collapsed","full","coding","none"), 
                              genes.params=list(col.line="grey40", col=NULL, 
                                                fill="#000000"),
                              tracks.params=list(), extraTracks=list(), 
@@ -64,33 +66,7 @@ plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL,
   if(!is.null(ensdb)) stopifnot(is(ensdb,"EnsDb"))
   
   # region of interest
-  stopifnot(length(region)==1)
-  if(is(region,"GRanges")) region <- as.character(region)
-  stopifnot(is.character(region))
-  region <- strsplit(gsub("-",":",region),":")[[1]]
-  if(length(region)==1){
-    if(is.null(ensdb))
-      stop("`ensdb` is required when defining the region with a gene name.")
-    region <- reduce(genes(ensdb, filter=SymbolFilter(region)))
-    if(length(region)==0) 
-      region <- reduce(genes(ensdb, filter=GeneIdFilter(region)))
-    if(length(region)==0) 
-      region <- reduce(genes(ensdb, filter=TxIdFilter(region)))
-    if(length(region)==0){
-      region <- reduce(genes(ensdb, filter=SymbolFilter(region,"startsWith")))
-      if(length(region)>1)
-        stop("Gene not found with this exact name, and mutliple genes match ",
-             "this string.")
-    }
-    if(length(region)==0) stop("Gene not found!")
-    if(length(region)>1)
-      stop("Region input is ambiguous (multiple non-overlapping regions)")
-    region <- strsplit(gsub("-",":",as.character(region)),":")[[1]][1:3]
-  }
-  stopifnot(length(region)==3)
-  region <- as.list(region)
-  region[[2]] <- as.integer(region[[2]])
-  region[[3]] <- as.integer(region[[3]])
+  region <- .parseRegion(region, ensdb)
   
   # check file formats (from names)
   fm <- lapply(files, .parseFiletypeFromName)
@@ -246,4 +222,37 @@ plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL,
   })
   mcols(gr) <- m
   gr
+}
+
+
+#' @importFrom AnnotationFilter SymbolFilter GeneIdFilter TxIdFilter
+.parseRegion <- function(region, ensdb=NULL){
+  stopifnot(length(region)==1)
+  if(is(region,"GRanges")) region <- as.character(region)
+  stopifnot(is.character(region))
+  region <- strsplit(gsub("-",":",region),":")[[1]]
+  if(length(region)==1){
+    if(is.null(ensdb))
+      stop("`ensdb` is required when defining the region with a gene name.")
+    region <- reduce(genes(ensdb, filter=SymbolFilter(region)))
+    if(length(region)==0) 
+      region <- reduce(genes(ensdb, filter=GeneIdFilter(region)))
+    if(length(region)==0) 
+      region <- reduce(genes(ensdb, filter=TxIdFilter(region)))
+    if(length(region)==0){
+      region <- reduce(genes(ensdb, filter=SymbolFilter(region,"startsWith")))
+      if(length(region)>1)
+        stop("Gene not found with this exact name, and mutliple genes match ",
+             "this string.")
+    }
+    if(length(region)==0) stop("Gene not found!")
+    if(length(region)>1)
+      stop("Region input is ambiguous (multiple non-overlapping regions)")
+    region <- strsplit(gsub("-",":",as.character(region)),":")[[1]][1:3]
+  }
+  stopifnot(length(region)==3)
+  region <- as.list(region)
+  region[[2]] <- as.integer(region[[2]])
+  region[[3]] <- as.integer(region[[3]])
+  region
 }

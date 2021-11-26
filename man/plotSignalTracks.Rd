@@ -13,7 +13,7 @@ plotSignalTracks(
   genomeAxis = 0.3,
   extend = 0,
   aggregation = c("mean", "median", "sum", "max", "min", "heatmap", "overlay"),
-  transcripts = c("collapsed", "full", "none", "coding"),
+  transcripts = c("collapsed", "full", "coding", "none"),
   genes.params = list(col.line = "grey40", col = NULL, fill = "#000000"),
   tracks.params = list(),
   extraTracks = list(),
@@ -27,9 +27,10 @@ plotSignalTracks(
 )
 }
 \arguments{
-\item{files}{A named list or vector of paths to signal files
-(e.g. bigwig/bam). If a list, list elements will be overlaid or aggregated 
-(depending on the `aggregation` argument).}
+\item{files}{A named list or vector of paths to signal files  (e.g. 
+bigwig/bam, but also bed files). If a list, list elements will be overlaid 
+or aggregated (depending on the `aggregation` argument). Objects accepted by
+\code{\link[Gviz]{DataTrack}}'s `range` argument are also accepted.}
 
 \item{region}{A genomic region, either as a `GRanges` object or as a string 
 (i.e. `region="chr5:10000-12000`). Alternatively, if `ensdb` is provided, a 

@@ -3,6 +3,7 @@
 export(annotateRegions)
 export(breakStrings)
 export(meltSignals)
+export(plotSignalTracks)
 export(signal2Matrix)
 import(EnrichedHeatmap)
 import(GenomicRanges)

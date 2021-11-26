@@ -17,6 +17,7 @@
 #'
 #' @return A list of `normalizeToMatrix` objects
 #' @export
+#' 
 #' @import GenomicRanges
 #' @importFrom BiocParallel bplapply SerialParam MulticoreParam
 #' @importFrom Rsamtools scanBamFlag ScanBamParam countBam
