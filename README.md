@@ -1,2 +1,3 @@
 # epiwraps
-Wrappers for dealing and plotting with epigenomics data
+
+Wrappers for plotting and dealing with epigenomics data
