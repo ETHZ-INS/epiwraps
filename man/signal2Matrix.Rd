@@ -12,8 +12,8 @@ signal2Matrix(
   cuts = FALSE,
   ...,
   RPM = TRUE,
-  BPPARAM = BiocParallel::SerialParam(),
-  flgs = Rsamtools::scanBamFlag(isDuplicate = FALSE, isSecondaryAlignment = FALSE)
+  nthreads = 1L,
+  flgs = scanBamFlag(isDuplicate = FALSE, isSecondaryAlignment = FALSE)
 )
 }
 \arguments{
@@ -32,7 +32,9 @@ than coverage (ignored unless the input are bam files)}
 
 \item{RPM}{Whether to perform RPM normalization (for bam input)}
 
-\item{BPPARAM}{Not yet implemented}
+\item{nthreads}{The number of threads to use to read and prepare the data 
+(default 1). Alternatively, a \code{\link[BiocParallel]{BiocParallelParam}}
+object.}
 
 \item{flgs}{Flags for bam reading}
 }

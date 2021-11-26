@@ -7,7 +7,7 @@
 plotEnrichedHeatmaps(
   ml,
   trim = 0.998,
-  colors = viridisLite::inferno(100),
+  colors = inferno(100),
   scale_title = "density",
   title_size = 11,
   row_order = NULL,

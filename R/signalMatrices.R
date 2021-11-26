@@ -9,27 +9,25 @@
 #' @param cuts Whether to count cuts (e.g. beginning/end of fragments) rather
 #' than coverage (ignored unless the input are bam files)
 #' @param RPM Whether to perform RPM normalization (for bam input)
-#' @param BPPARAM Not yet implemented
+#' @param nthreads The number of threads to use to read and prepare the data 
+#' (default 1). Alternatively, a \code{\link[BiocParallel]{BiocParallelParam}}
+#' object.
 #' @param flgs Flags for bam reading
 #' @param ... Passed to `EnrichedHeatmap::normalizeToMatrix`
 #'
 #' @return A list of `normalizeToMatrix` objects
 #' @export
 #' @import GenomicRanges
-#' @importFrom Rsamtools scanBamFlag scanBamParam countBam
+#' @importFrom BiocParallel bplapply SerialParam MulticoreParam
+#' @importFrom Rsamtools scanBamFlag ScanBamParam countBam
 #' @importFrom genomation ScoreMatrix
 #' @import EnrichedHeatmap
 #' @importFrom rtracklayer import BigWigSelection
 #' @importFrom GenomicAlignments readGAlignmentPairs
 signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE, 
-                          ..., RPM=TRUE, BPPARAM=BiocParallel::SerialParam(),
-                          flgs=Rsamtools::scanBamFlag(isDuplicate=FALSE,
-                                                      isSecondaryAlignment=FALSE)){
-  suppressPackageStartupMessages({
-    library(GenomicRanges)
-    library(Rsamtools)
-  })
-  
+                          ..., RPM=TRUE, nthreads=1L,
+                          flgs=scanBamFlag(isDuplicate=FALSE,
+                                           isSecondaryAlignment=FALSE)){
   if(cuts && !all(grepl("\\.bam$",filepaths,ignore.case=TRUE)))
     stop("`cuts` can only be used with BAM files.")
   if(is.null(names(filepaths)))
@@ -38,7 +36,16 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
   
   regions2 <- resize(regions, fix="center", width=extend*2)
   
-  lapply(setNames(names(filepaths),names(filepaths)), FUN=function(filename){
+  if(is.numeric(nthreads)){
+    if(nthreads<2L){
+      nthreads <- BiocParallel::SerialParam()
+    }else{
+      nthreads <- BiocParallel::MulticoreParam(as.integer(nthreads))
+    }
+  }
+  
+  bplapply(setNames(names(filepaths),names(filepaths)), BPPARAM=nthreads, 
+           FUN=function(filename){
     filepath <- filepaths[[filename]]
     message("Reading ", filepath)
     if(grepl("\\.bam$",filepath,ignore.case=TRUE)){
@@ -109,8 +116,9 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #'
 #' @return A HeatmapList object
 #' @import EnrichedHeatmap
+#' @importFrom viridisLite inferno
 #' @importFrom circlize colorRamp2
-plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=viridisLite::inferno(100), 
+plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100), 
                                  scale_title="density", title_size=11, 
                                  row_order=NULL, cluster_rows=FALSE, ...){
   if(!is.list(ml)) ml <- list(signal=ml)
