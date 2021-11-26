@@ -8,10 +8,16 @@
   if(length(x)>1) return(sapply(x, .parseFiletypeFromName))
   if(grepl("\\.bigwig$|\\.bw$|\\.bam$", x, ignore.case=TRUE)) return("bw")
   if(grepl("\\.bam$", x, ignore.case=TRUE)) return("bam")
-  if(grepl("\\.bed$|\\.narropeak$|\\.broadpeak$|\\.gappedpeak", x, 
+  if(grepl("\\.bed$|\\.narrowpeak$|\\.broadpeak$|\\.gappedpeak$", x, 
            ignore.case=TRUE)) return("bed")
   if(stopOnUnrecognized) stop("Format unrecongized for file\n",x)
   return(NULL)
+}
+
+.cleanFileNames <- function(x){
+  pat <- paste0("\\.bigwig$|\\.bw$|\\.bam$|\\.bed$|\\.narrowpeak$",
+                "|\\.broadpeak$|\\.gappedpeak$")
+  gsub(pat, "", basename(x), ignore.case=TRUE)
 }
 
 .align2cuts <- function(x){

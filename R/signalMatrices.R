@@ -1,9 +1,10 @@
 #' signal2Matrix
 #' 
-#' Reads the signals around a set of regions.
+#' Reads the signals around (the centers of) a set of regions.
 #'
 #' @param filepaths A named vector of filepaths (preferentially to bigwig files)
-#' @param regions A `GRanges` of the regions/positions around which to plot
+#' @param regions A `GRanges` of the regions/positions around which to plot, or
+#' the path to a bed file of such regions.
 #' @param extend Number of basepair to extend on either side of the regions
 #' @param w Bin size
 #' @param cuts Whether to count cuts (e.g. beginning/end of fragments) rather
@@ -13,7 +14,7 @@
 #' (default 1). Alternatively, a \code{\link[BiocParallel]{BiocParallelParam}}
 #' object.
 #' @param flgs Flags for bam reading
-#' @param ... Passed to `EnrichedHeatmap::normalizeToMatrix`
+#' @param ... Passed to \code{\link[EnrichedHeatmap]{normalizeToMatrix}}.
 #'
 #' @return A list of `normalizeToMatrix` objects
 #' @export
@@ -25,6 +26,25 @@
 #' @import EnrichedHeatmap
 #' @importFrom rtracklayer import BigWigSelection
 #' @importFrom GenomicAlignments readGAlignmentPairs
+#' 
+#' @examples 
+#' # we fetch the path to the example bigwig file:
+#' (bw <- system.file("extdata/example_atac.bw", package="epiwraps"))
+#' # we load example regions:
+#' regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
+#'                                            package="epiwraps"))
+#' length(regions)
+#' # we obtain the matrix of the signal around the regions:
+#' m <- signal2Matrix(bw, regions)
+#' dim(m[[1]])
+#' # we can plot it with:
+#' plotEnrichedHeatmaps(m)
+#' # we could also take a broader range around the center of the regions, and 
+#' # use bigger bins:
+#' m <- signal2Matrix(bw, regions, extend=2000, w=20)
+#' # the matrix has the same size, but shows broader regions:
+#' dim(m[[1]])
+#' plotEnrichedHeatmaps(m)
 signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE, 
                           ..., RPM=TRUE, nthreads=1L,
                           flgs=scanBamFlag(isDuplicate=FALSE,
@@ -32,9 +52,13 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
   if(cuts && !all(grepl("\\.bam$",filepaths,ignore.case=TRUE)))
     stop("`cuts` can only be used with BAM files.")
   if(is.null(names(filepaths)))
-    names(filepaths) <- gsub("\\.bam$|\\.bw|\\.bigwig$", "", 
-                             basename(filepaths), ignore.case=TRUE)
+    names(filepaths) <- .cleanFileNames(filepaths)
   
+  if(is.character(regions)){
+    stopifnot(is.character(regions) && length(regions)==1)
+    regions <- import(regions)
+  }
+  stopifnot(is(regions, "GRanges"))
   regions2 <- resize(regions, fix="center", width=extend*2)
   
   if(is.numeric(nthreads)){
@@ -106,7 +130,7 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' 
 #' Plots enrichment heatmaps from the output of `signal2Matrix`
 #'
-#' @param ml A named list of matrices as produced by `signal2Matrix`
+#' @param ml A named list of matrices as produced by \code{\link{signal2Matrix}}
 #' @param trim The quantile above which to trim values for the colorscale
 #' @param colors The heatmap colors to use
 #' @param scale_title The title of the scale
@@ -119,6 +143,24 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' @import EnrichedHeatmap
 #' @importFrom viridisLite inferno
 #' @importFrom circlize colorRamp2
+#' @examples 
+#' # we first fetch the path to the example bigwig file:
+#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+#' # Since we only have one, we'll use the same and pretend they're 2 samples:
+#' bw <- c(sample1=bw, sample2=bw)
+#' # we next load regions of interest (either GRanges or path to a bed file):
+#' regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
+#' # we obtain the matrix of the signal around the regions:
+#' m <- signal2Matrix(bw, regions)
+#' plotEnrichedHeatmaps(m)
+#' # we could also just plot one with:
+#' # plotEnrichedHeatmaps(m[1])
+#' # or change the aesthetics, e.g.:
+#' plotEnrichedHeatmaps(m, trim=0.98, scale_title="RPKM", 
+#'                      colors=c("white","darkred"))
+#' # any argument accepted by `EnrichedHeatmap` (and hence by 
+#' # `ComplexHeatmap::Heatmap`) can be used, e.g.: 
+#' plotEnrichedHeatmaps(m, row_title="My regions of interest")
 plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100), 
                                  scale_title="density", title_size=11, 
                                  row_order=NULL, cluster_rows=FALSE, ...){
@@ -152,7 +194,7 @@ plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100),
 #'
 #' Aggregates and melts a list of signal matrices, for plotting (with ggplot).
 #'
-#' @param ml A named list of matrices as produced by `signal2Matrix`
+#' @param ml A named list of matrices as produced by \code{\link{signal2Matrix}}
 #' @param fun The aggregation to perform. Either "mean", "sum", "median", or
 #' a custom function to be applied on columns.
 #'

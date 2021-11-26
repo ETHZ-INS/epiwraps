@@ -19,7 +19,8 @@
 #' scalar between 0 and 1 can be given, in which case a scale will be 
 #' plotted of this relative size.
 #' @param extend Either an integer or vector of two integers indicating the 
-#' number of base pairs by which to extent on either side.
+#' number of base pairs by which to extent on either side. If `extend`<=1, this
+#' will be interpreted as a fraction of the plotted region.
 #' @param aggregation Method for aggregation data tracks, one of: 'mean' 
 #' (default), 'median', 'max', 'overlay' or 'heatmap'.
 #' @param transcripts Whether to show transcripts (reguires `ensdb`) as "full",
@@ -48,12 +49,22 @@
 #' @importFrom matrixStats rowMins rowMaxs rowMedians
 #'
 #' @export
+#' @examples 
+#' # fetch path to example bigwig file:
+#' (bw <- system.file("extdata/example_rna.bw", package="epiwraps"))
+#' plotSignalTracks(list(track1=bw), region="8:22165140-22212326")
+#' # if we had an EnsDb object loaded, we could just input a gene instead of 
+#' # coordinates, and the transcript models would automatically show (not run):
+#' # plotSignalTracks(list(track1=bw), region="BMP1", ensdb=ensdb)
+#' # show all transcript variants:
+#' # plotSignalTracks(list(tracks=bw), region="BMP1", ensdb=ensdb,
+#' #                  transcripts="full")
 plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL, 
-                             type="h",  genomeAxis=0.3, extend=0,
+                             type="h",  genomeAxis=0.3, extend=0.15,
                              aggregation=c("mean","median", "sum", "max", 
                                            "min", "heatmap", "overlay"),
                              transcripts=c("collapsed","full","coding","none"), 
-                             genes.params=list(col.line="grey40", col=NULL, 
+                             genes.params=list(col.line="grey40", col=NULL,
                                                fill="#000000"),
                              tracks.params=list(), extraTracks=list(), 
                              background.title="white", col.axis="grey40", 
@@ -76,14 +87,12 @@ plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL,
   # creating names if not specified
   if(is.null(names(files))){
     if(is.character(files)){
-      names(files) <- gsub("\\.bigwig$|\\.bw$|\\.bam$|\\.bed$", "", 
-                           basename(files), ignore.case=TRUE)
+      names(files) <- .cleanFileNames(files)
     }else if(is.list(files)){
       stopifnot(all(unlist(lapply(files, is.character))))
       names(files) <- sapply(seq_along(files), FUN=function(x){
         if(length(files[[x]])==1)
-          return(gsub("\\.bigwig$|\\.bw$|\\.bam$|\\.bed$", "", 
-                      files[[x]], ignore.case=TRUE))
+          return(.cleanFileNames(files[[x]]))
         paste0("track",x)
       })
     }else{
@@ -193,6 +202,8 @@ plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL,
     }
   }
   
+  if(all(extend<=1) & all(extend>=0))
+    extend <- round(extend*(region[[3]]-region[[2]]))
   if(length(extend)<2) extend <- c(extend,extend)
   plotTracks(c(tracks, extraTracks, gt, ga), chromosome=region[[1]], 
              from=region[[2]]-extend[1], to=region[[3]]+extend[2], 

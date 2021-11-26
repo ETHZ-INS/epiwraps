@@ -16,7 +16,7 @@ plotEnrichedHeatmaps(
 )
 }
 \arguments{
-\item{ml}{A named list of matrices as produced by `signal2Matrix`}
+\item{ml}{A named list of matrices as produced by \code{\link{signal2Matrix}}}
 
 \item{trim}{The quantile above which to trim values for the colorscale}
 
@@ -37,4 +37,23 @@ A HeatmapList object
 }
 \description{
 Plots enrichment heatmaps from the output of `signal2Matrix`
+}
+\examples{
+# we first fetch the path to the example bigwig file:
+bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+# Since we only have one, we'll use the same and pretend they're 2 samples:
+bw <- c(sample1=bw, sample2=bw)
+# we next load regions of interest (either GRanges or path to a bed file):
+regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
+# we obtain the matrix of the signal around the regions:
+m <- signal2Matrix(bw, regions)
+plotEnrichedHeatmaps(m)
+# we could also just plot one with:
+# plotEnrichedHeatmaps(m[1])
+# or change the aesthetics, e.g.:
+plotEnrichedHeatmaps(m, trim=0.98, scale_title="RPKM", 
+                     colors=c("white","darkred"))
+# any argument accepted by `EnrichedHeatmap` (and hence by 
+# `ComplexHeatmap::Heatmap`) can be used, e.g.: 
+plotEnrichedHeatmaps(m, row_title="My regions of interest")
 }

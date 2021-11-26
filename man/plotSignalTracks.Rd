@@ -11,7 +11,7 @@ plotSignalTracks(
   ensdb = NULL,
   type = "h",
   genomeAxis = 0.3,
-  extend = 0,
+  extend = 0.15,
   aggregation = c("mean", "median", "sum", "max", "min", "heatmap", "overlay"),
   transcripts = c("collapsed", "full", "coding", "none"),
   genes.params = list(col.line = "grey40", col = NULL, fill = "#000000"),
@@ -48,7 +48,8 @@ scalar between 0 and 1 can be given, in which case a scale will be
 plotted of this relative size.}
 
 \item{extend}{Either an integer or vector of two integers indicating the 
-number of base pairs by which to extent on either side.}
+number of base pairs by which to extent on either side. If `extend`<=1, this
+will be interpreted as a fraction of the plotted region.}
 
 \item{aggregation}{Method for aggregation data tracks, one of: 'mean' 
 (default), 'median', 'max', 'overlay' or 'heatmap'.}
@@ -85,4 +86,15 @@ A list of GenomeGraph tracks to be plotted.
 \description{
 A wrapper around `Gviz` for quick plotting of genomic signals in a single
 region.
+}
+\examples{
+# fetch path to example bigwig file:
+(bw <- system.file("extdata/example_rna.bw", package="epiwraps"))
+plotSignalTracks(list(track1=bw), region="8:22165140-22212326")
+# if we had an EnsDb object loaded, we could just input a gene instead of 
+# coordinates, and the transcript models would automatically show (not run):
+# plotSignalTracks(list(track1=bw), region="BMP1", ensdb=ensdb)
+# show all transcript variants:
+# plotSignalTracks(list(tracks=bw), region="BMP1", ensdb=ensdb,
+#                  transcripts="full")
 }

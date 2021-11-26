@@ -19,7 +19,8 @@ signal2Matrix(
 \arguments{
 \item{filepaths}{A named vector of filepaths (preferentially to bigwig files)}
 
-\item{regions}{A `GRanges` of the regions/positions around which to plot}
+\item{regions}{A `GRanges` of the regions/positions around which to plot, or
+the path to a bed file of such regions.}
 
 \item{extend}{Number of basepair to extend on either side of the regions}
 
@@ -28,7 +29,7 @@ signal2Matrix(
 \item{cuts}{Whether to count cuts (e.g. beginning/end of fragments) rather
 than coverage (ignored unless the input are bam files)}
 
-\item{...}{Passed to `EnrichedHeatmap::normalizeToMatrix`}
+\item{...}{Passed to \code{\link[EnrichedHeatmap]{normalizeToMatrix}}.}
 
 \item{RPM}{Whether to perform RPM normalization (for bam input)}
 
@@ -42,5 +43,24 @@ object.}
 A list of `normalizeToMatrix` objects
 }
 \description{
-Reads the signals around a set of regions.
+Reads the signals around (the centers of) a set of regions.
+}
+\examples{
+# we fetch the path to the example bigwig file:
+(bw <- system.file("extdata/example_atac.bw", package="epiwraps"))
+# we load example regions:
+regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
+                                           package="epiwraps"))
+length(regions)
+# we obtain the matrix of the signal around the regions:
+m <- signal2Matrix(bw, regions)
+dim(m[[1]])
+# we can plot it with:
+plotEnrichedHeatmaps(m)
+# we could also take a broader range around the center of the regions, and 
+# use bigger bins:
+m <- signal2Matrix(bw, regions, extend=2000, w=20)
+# the matrix has the same size, but shows broader regions:
+dim(m[[1]])
+plotEnrichedHeatmaps(m)
 }
