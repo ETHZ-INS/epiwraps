@@ -17,12 +17,14 @@ Imports:
     rtracklayer,
     EnrichedHeatmap,
     S4Vectors,
-    ggplot2,
     grid,
     Rsamtools,
     Gviz,
     ensembldb,
-    AnnotationFilter
+    AnnotationFilter,
+    matrixStats,
+    circlize,
+    viridisLite
 Suggests: 
     knitr,
     rmarkdown,
