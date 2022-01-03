@@ -143,6 +143,7 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' @import EnrichedHeatmap
 #' @importFrom viridisLite inferno
 #' @importFrom circlize colorRamp2
+#' @export
 #' @examples 
 #' # we first fetch the path to the example bigwig file:
 #' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
