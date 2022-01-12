@@ -3,7 +3,7 @@
 export(annotateRegions)
 export(breakStrings)
 export(fragSizesDist)
-export(getFingerprints)
+export(getCovStats)
 export(meltSignals)
 export(plotCorFromCovStats)
 export(plotCovStats)

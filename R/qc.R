@@ -19,7 +19,7 @@
 #' @importFrom GenomeInfoDb seqlengths
 #' @importFrom dplyr bind_rows
 #' @importFrom rtracklayer import BigWigSelection
-getFingerprints <- function(x, binSize=1000, nbBins=10000, exclude=NULL, 
+getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL, 
                             genome=NULL, BPPARAM=SerialParam()){
   if(is(genome, "GRanges")){
     maxes <- seqlengths(genome)
@@ -42,7 +42,7 @@ getFingerprints <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
   gr <- sort(GRanges(rep(names(chr),lengths(pos)), 
                      IRanges(unlist(pos), width=binSize)))
   covs <- bplapply(x, BPPARAM=BPPARAM, FUN=function(x){
-    if(grepl("\\.bam$",filepath,ignore.case=TRUE)){
+    if(grepl("\\.bam$",x,ignore.case=TRUE)){
       flgs <- scanBamFlag(isDuplicate=FALSE, isSecondaryAlignment=FALSE)
       params <- Rsamtools::ScanBamParam(which=regions2, flag=flgs)
       x <- as(GenomicAlignments::readGAlignmentPairs(x, param=params), "GRanges")
