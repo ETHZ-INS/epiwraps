@@ -10,6 +10,7 @@ plotEnrichedHeatmaps(
   colors = inferno(100),
   scale_title = "density",
   title_size = 11,
+  use_raster = NULL,
   row_order = NULL,
   cluster_rows = FALSE,
   ...
@@ -25,6 +26,8 @@ plotEnrichedHeatmaps(
 \item{scale_title}{The title of the scale}
 
 \item{title_size}{The size of the heatmap titles}
+
+\item{use_raster}{Passed to EnrichedHeatmap::EnrichedHeatmap}
 
 \item{row_order}{Option order of the rows}
 

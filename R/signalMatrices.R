@@ -128,6 +128,7 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' @param colors The heatmap colors to use
 #' @param scale_title The title of the scale
 #' @param title_size The size of the heatmap titles
+#' @param use_raster Passed to EnrichedHeatmap::EnrichedHeatmap
 #' @param row_order Option order of the rows
 #' @param cluster_rows Whether to cluster rows
 #' @param ... Passed to EnrichedHeatmap::EnrichedHeatmap
@@ -158,8 +159,10 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' plotEnrichedHeatmaps(m, row_title="My regions of interest")
 plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100), 
                                  scale_title="density", title_size=11, 
-                                 row_order=NULL, cluster_rows=FALSE, ...){
+                                 use_raster=NULL, row_order=NULL, 
+                                 cluster_rows=FALSE, ...){
   ml <- .comparableMatrices(ml)
+  if(is.null(use_raster)) use_raster <- nrow(ml[[1]])>1000
   hl <- NULL
   ylim <- c(0,max(unlist(lapply(ml,FUN=function(x){
     max(colMeans(x)+matrixStats::colSds(x)/sqrt(nrow(x)))
@@ -178,10 +181,10 @@ plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100),
     HA <- HeatmapAnnotation(enriched=anno_enriched(ylim=ylim, show_error=TRUE,
                                                    axis=isLast))
     hl <- hl + EnrichedHeatmap(ml[[m]], column_title=m, col=col_fun, ...,
-                    column_title_gp=gpar(fontsize=title_size),
+                    column_title_gp=gpar(fontsize=title_size), 
                     cluster_rows = cluster_rows, row_order=row_order,
                     top_annotation=HA, show_heatmap_legend=isLast,
-                    name=ifelse(isLast,scale_title,m) )
+                    use_raster=use_raster, name=ifelse(isLast,scale_title,m) )
   }
   hl
 }
