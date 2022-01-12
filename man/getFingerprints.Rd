@@ -32,5 +32,6 @@ seqlengths, the maximum coordinate of each chromosome will be used.}
 A named list of QC tables
 }
 \description{
-getCovStats
+Assembles read distribution statistics from a set of bigwig files based on
+random windows.
 }

@@ -1,7 +1,7 @@
 Package: epiwraps
 Type: Package
 Title: epiwraps: Wrappers for dealing and plotting with epigenomics data
-Version: 0.99.1
+Version: 0.99.2
 Depends: R (>= 3.6)
 Date: 2021-11-26
 Authors@R: c(
@@ -14,6 +14,9 @@ Imports:
     data.table,
     BiocParallel,
     GenomeInfoDb,
+    GenomicAlignments,
+    GenomicFiles,
+    Rsamtools,
     rtracklayer,
     EnrichedHeatmap,
     S4Vectors,
@@ -24,7 +27,8 @@ Imports:
     AnnotationFilter,
     matrixStats,
     circlize,
-    viridisLite
+    viridisLite,
+    ggplot2
 Suggests: 
     knitr,
     rmarkdown,

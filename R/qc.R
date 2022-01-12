@@ -1,4 +1,7 @@
 #' getCovStats
+#' 
+#' Assembles read distribution statistics from a set of bigwig files based on
+#' random windows.
 #'
 #' @param x A (named) vector of paths to bigwig files
 #' @param binSize The size of bins
@@ -39,14 +42,21 @@ getFingerprints <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
   gr <- sort(GRanges(rep(names(chr),lengths(pos)), 
                      IRanges(unlist(pos), width=binSize)))
   covs <- bplapply(x, BPPARAM=BPPARAM, FUN=function(x){
-    x <- rtracklayer::import(x, format="BigWig", selection=BigWigSelection(gr))
-    o <- findOverlaps(gr,x)
-    tmp <- max(splitAsList(x$score[to(o)], from(o)))
-    if(length(tmp)!=length(gr)){
-      y <- rep(0,length(gr))
-      y[as.integer(names(tmp))] <- as.numeric(tmp)
+    if(grepl("\\.bam$",filepath,ignore.case=TRUE)){
+      flgs <- scanBamFlag(isDuplicate=FALSE, isSecondaryAlignment=FALSE)
+      params <- Rsamtools::ScanBamParam(which=regions2, flag=flgs)
+      x <- as(GenomicAlignments::readGAlignmentPairs(x, param=params), "GRanges")
+      y <- as.integer(countOverlaps(gr,x))
     }else{
-      y <- as.numeric(tmp)
+      x <- rtracklayer::import(x, format="BigWig", selection=BigWigSelection(gr))
+      o <- findOverlaps(gr,x)
+      tmp <- max(splitAsList(x$score[to(o)], from(o)))
+      if(length(tmp)!=length(gr)){
+        y <- rep(0,length(gr))
+        y[as.integer(names(tmp))] <- as.numeric(tmp)
+      }else{
+        y <- as.numeric(tmp)
+      }
     }
     y
   })
@@ -140,4 +150,55 @@ plotCorFromCovStats <- function(qc, method=c("pearson","spearman"), col=NULL,
   hl <- NULL
   for(hi in h) hl <- hl + hi
   hl
+}
+
+
+#' fragSizesDist
+#'
+#' @param x A (named) vector of paths to bam files.
+#' @param what Either a positive integer (length 1) indicating how many reads 
+#' to randomly sample, or a character vector (of length 1) indicating which
+#' chromosome to read.
+#' @param flags A `scanBamFlag` object (see \link[Rsamtools]{ScanBamParam})
+#' @param BPPARAM A \link[BiocParallel]{BiocParallel} BPPARAM object for
+#' multithreading.
+#' @param returnPlot Logical; whether to return a plot.
+#'
+#' @return If `returnPlot=TRUE`, returns a ggplot object, otherwise a
+#' data.frame of fragment lengths.
+#' @export
+#' @importFrom Rsamtools BamFile ScanBamParam scanBamFlag
+#' @importFrom GenomicFiles reduceByYield REDUCEsampler
+#' @importFrom GenomicAlignments readGAlignmentPairs
+#' @importFrom BiocParallel bplapply SerialParam MulticoreParam SnowParam
+#' @importFrom ggplot2 ggplot aes geom_density xlab
+#' @import GenomicRanges
+#'
+#' @examples
+#' # example bam file:
+#' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
+#' fragSizesDist(bam, what=100)
+fragSizesDist <- function(x, what=10000, flags=scanBamFlag(isProperPair=TRUE),
+                          BPPARAM=SerialParam(), returnPlot=TRUE){
+  stopifnot(length(what)==1)
+  if(is.null(names(x))) names(x) <- .cleanFileNames(x)
+  flen <- bplapply(x, BPPARAM=BPPARAM, FUN=function(x){
+    if(is.numeric(what)){
+      what <- as.integer(what)
+      stopifnot(what>1)
+      x <- GenomicFiles::reduceByYield(
+        BamFile(x), MAP=identity, YIELD=function(x)
+           readGAlignmentPairs(x, param = ScanBamParam(flag=flags)),
+        REDUCE=GenomicFiles::REDUCEsampler(what, verbose=FALSE))
+    }else{
+      x <- readGAlignmentPairs(x, param=ScanBamParam(flag=flags, 
+                               which=GRanges(what, IRanges(1L,10^8))))
+    }
+    width(as(x, "GRanges"))
+  })
+  d <- data.frame(sample=rep(factor(names(flen)), lengths(flen)),
+                  length=unlist(flen), row.names=NULL)
+  if(!returnPlot) return(d)
+  ggplot(d, aes(length, colour=sample)) + geom_density() + 
+    xlab("Fragment length")
 }
