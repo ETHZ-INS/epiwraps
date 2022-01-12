@@ -8,6 +8,7 @@
 #' @param nbBins The number of random bins. More bins gives more accurate 
 #' readouts but take longer to compute.
 #' @param exclude Region to exclude
+#' @param maxCovQuant The quantile to use as maximum coverage (default 0.999)
 #' @param genome A named vector of chromosome sizes. If a GRanges without 
 #' seqlengths, the maximum coordinate of each chromosome will be used.
 #' @param BPPARAM BioParallel BPPARAM for multithreading across files.
@@ -20,7 +21,7 @@
 #' @importFrom dplyr bind_rows
 #' @importFrom rtracklayer import BigWigSelection
 getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL, 
-                            genome=NULL, BPPARAM=SerialParam()){
+                        maxCovQuant=0.999, genome=NULL, BPPARAM=SerialParam()){
   if(is(genome, "GRanges")){
     maxes <- seqlengths(genome)
     if(any(is.na(maxes)))
@@ -41,10 +42,11 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
                       sample.int(maxes[x]-binSize,chr[[x]], replace=TRUE))
   gr <- sort(GRanges(rep(names(chr),lengths(pos)), 
                      IRanges(unlist(pos), width=binSize)))
+  if(!is.null(exclude)) gr <- gr[!overlapsAny(gr, exclude)]
   covs <- bplapply(x, BPPARAM=BPPARAM, FUN=function(x){
     if(grepl("\\.bam$",x,ignore.case=TRUE)){
       flgs <- scanBamFlag(isDuplicate=FALSE, isSecondaryAlignment=FALSE)
-      params <- Rsamtools::ScanBamParam(which=regions2, flag=flgs)
+      params <- Rsamtools::ScanBamParam(which=gr, flag=flgs)
       x <- as(GenomicAlignments::readGAlignmentPairs(x, param=params), "GRanges")
       y <- as.integer(countOverlaps(gr,x))
     }else{
@@ -60,6 +62,12 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
     }
     y
   })
+  toExclude <- unique(unlist(lapply(covs, FUN=function(x){
+    which(x>quantile(x,maxCovQuant))
+  })))
+  if(length(toExclude)>0){
+    covs <- lapply(covs, FUN=function(x) x[-toExclude])
+  }
   if(length(covs)>1){
     tmp <- do.call(cbind, covs)
     pea <- cor(tmp)
@@ -75,6 +83,8 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
   d2 <- dplyr::bind_rows(lapply(covs, FUN=function(x){
     data.frame(rank=rank(x), fraction.of.highest=x/max(x))
   }), .id="file")
+  d1$file <- as.factor(d1$file)
+  d2$file <- as.factor(d2$file)
   ll <- list(coverage=d1, enrichment=d2)
   if(length(covs)>1) ll <- c(ll, list(cor.pearson=pea, cor.spearman=spea))
   ll
@@ -95,7 +105,8 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
 plotCovStats <- function(qc, labels="AUTO", show.legend=TRUE){
   p1 <- ggplot(qc$coverage, aes(coverage, fraction.above, colour=file)) + 
     geom_line() + labs(x="Read density", y="Fraction of regions > density") +
-    theme(legend.position="top", legend.direction = "horizontal")
+    theme(legend.position="top", legend.direction = "horizontal") +
+    xlim(0,min(max(qc$coverage$coverage),50))
   qc$enrichment$rank <- qc$enrichment$rank/max(qc$enrichment$rank)
   p2 <- ggplot(qc$enrichment, aes(rank, fraction.of.highest, colour=file)) + 
     geom_abline(slope=1, intercept=0, linetype="dashed", colour="grey") +

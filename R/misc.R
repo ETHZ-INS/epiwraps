@@ -62,3 +62,48 @@ breakStrings <- function (x, minSizeForBreak=20, lb="\n"){
     return(x)
   })
 }
+
+
+.getBP <- function(x, progressbar=TRUE, ...){
+  if(is.numeric(x)){
+    if(length(x)==1 && isTRUE(x>0)){
+      if(x==1) return(BiocParallel::SerialParam(progressbar=progressbar, ...))
+      if(.Platform$OS.type=="unix"){
+        return(BiocParallel::MulticoreParam(x, progressbar=progressbar, ...))
+      }else{
+        return(BiocParallel::SnowParam(x, progressbar=progressbar, ...))
+      }
+    }
+  }else if(inherits(x, "BiocParallelParam")){
+    return(x)
+  }
+  stop("BPPARAM should either be a BiocParallelParam object or a positive",
+       "integer indicating the number of threads to use.")
+}
+
+.comparableMatrices <- function(ml, checkAttributes=FALSE, verbose=TRUE){
+  if(!is.list(ml)) ml <- list(signal=ml)
+  if(!all(unlist(lapply(ml, FUN=is, class2="normalizedMatrix"))))
+    stop("The object is not a list of signal matrices (i.e. normalizedMatrix)")
+  dims <- do.call(rbind, lapply(ml, dim))
+  if(length(unique(dims[,1]))>1){
+    if(length(tt <- table(unlist(lapply(ml, row.names))))==0 ||
+       length(i <- names(tt)[which(tt==length(ml))])<2)
+      stop("The matrices do not have the same number of regions, and appear to
+           have no named region in common.")
+    if(verbose)
+      warning("The matrices contain different numbers of regions, and only ",
+            "common region names (", length(i), ") will be retained.")
+    ml <- lapply(ml, FUN=function(x) x[i,])
+  }
+  if(checkAttributes){
+    if(length(unique(dims[,2]))>1)
+      stop("The matrices do not have the same numbers of columns/windows!")
+    a <- attributes(ml[[1]])
+    ai <- c("upsteam_index", "downsteam_index", "target_index", "extend")
+    if(!all(unlist(lapply(ml, FUN=function(x){
+      identical(attributes(x)[ai],a[ai]) && nrow(x)==nrow(ml[[1]])
+    })))) stop("The matrices do not have an homogeneous design!")
+  }
+  ml
+}

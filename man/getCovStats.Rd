@@ -9,6 +9,7 @@ getCovStats(
   binSize = 1000,
   nbBins = 10000,
   exclude = NULL,
+  maxCovQuant = 0.999,
   genome = NULL,
   BPPARAM = SerialParam()
 )
@@ -22,6 +23,8 @@ getCovStats(
 readouts but take longer to compute.}
 
 \item{exclude}{Region to exclude}
+
+\item{maxCovQuant}{The quantile to use as maximum coverage (default 0.999)}
 
 \item{genome}{A named vector of chromosome sizes. If a GRanges without 
 seqlengths, the maximum coordinate of each chromosome will be used.}

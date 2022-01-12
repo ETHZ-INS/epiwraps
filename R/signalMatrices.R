@@ -10,9 +10,8 @@
 #' @param cuts Whether to count cuts (e.g. beginning/end of fragments) rather
 #' than coverage (ignored unless the input are bam files)
 #' @param RPM Whether to perform RPM normalization (for bam input)
-#' @param nthreads The number of threads to use to read and prepare the data 
-#' (default 1). Alternatively, a \code{\link[BiocParallel]{BiocParallelParam}}
-#' object.
+#' @param BPPARAM A \code{\link[BiocParallel]{BiocParallelParam}} object, or 
+#' the number of threads to use to read and prepare the data.
 #' @param flgs Flags for bam reading
 #' @param ... Passed to \code{\link[EnrichedHeatmap]{normalizeToMatrix}}.
 #'
@@ -46,7 +45,7 @@
 #' dim(m[[1]])
 #' plotEnrichedHeatmaps(m)
 signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE, 
-                          ..., RPM=TRUE, nthreads=1L,
+                          ..., RPM=TRUE, BPPARAM=1L,
                           flgs=scanBamFlag(isDuplicate=FALSE,
                                            isSecondaryAlignment=FALSE)){
   if(cuts && !all(grepl("\\.bam$",filepaths,ignore.case=TRUE)))
@@ -59,17 +58,11 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
     regions <- import(regions)
   }
   stopifnot(is(regions, "GRanges"))
+  if(is.null(names(regions)))
+    names(regions) <- paste0("region", seq_along(regions))
   regions2 <- resize(regions, fix="center", width=extend*2)
   
-  if(is.numeric(nthreads)){
-    if(nthreads<2L){
-      nthreads <- BiocParallel::SerialParam()
-    }else{
-      nthreads <- BiocParallel::MulticoreParam(as.integer(nthreads))
-    }
-  }
-  
-  bplapply(setNames(names(filepaths),names(filepaths)), BPPARAM=nthreads, 
+  bplapply(setNames(names(filepaths),names(filepaths)), BPPARAM=.getBP(BPPARAM), 
            FUN=function(filename){
     filepath <- filepaths[[filename]]
     message("Reading ", filepath)
@@ -143,6 +136,7 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' @import EnrichedHeatmap
 #' @importFrom viridisLite inferno
 #' @importFrom circlize colorRamp2
+#' @importFrom matrixStats colSds
 #' @export
 #' @examples 
 #' # we first fetch the path to the example bigwig file:
@@ -165,9 +159,11 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100), 
                                  scale_title="density", title_size=11, 
                                  row_order=NULL, cluster_rows=FALSE, ...){
-  if(!is.list(ml)) ml <- list(signal=ml)
+  ml <- .comparableMatrices(ml)
   hl <- NULL
-  ylim <- c(0,max(unlist(lapply(ml,FUN=function(x) max(colMeans(x))))))
+  ylim <- c(0,max(unlist(lapply(ml,FUN=function(x){
+    max(colMeans(x)+matrixStats::colSds(x)/sqrt(nrow(x)))
+  }))))
   common_min <- min(unlist(lapply(ml,min)))
   common_max <- max(unlist(lapply(ml,prob=trim,FUN=quantile)))
   breaks <- seq(from=common_min, to=common_max, length.out=length(colors))
@@ -205,11 +201,8 @@ plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100),
 meltSignals <- function(ml, fun=c("mean","sum","median")){
   stopifnot(is.list(ml))
   if(!is.function(fun)) fun <- match.arg(fun)
+  ml <- .comparableMatrices(ml, checkAttributes=TRUE)
   a <- attributes(ml[[1]])
-  ai <- c("upsteam_index", "downsteam_index", "target_index", "extend")
-  if(!all(unlist(lapply(ml, FUN=function(x){
-    identical(attributes(x)[ai],a[ai]) && nrow(x)==nrow(ml[[1]])
-  })))) stop("The matrices do not have an homogeneous design!")
   x <- c( -1*(a$extend[1]/length(a$upstream_index))*
             rev(seq_along(a$upstream_index)),
           (a$extend[2]/length(a$downstream_index))*
@@ -226,3 +219,27 @@ meltSignals <- function(ml, fun=c("mean","sum","median")){
   d
 }
 
+#' mergeSignalMatrices
+#'
+#' @param ml A named list of matrices as produced by \code{\link{signal2Matrix}}
+#' @param aggregation The method to aggregate matrices
+#'
+#' @return A `normalizedMatrix` object
+#' @export
+mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median")){
+  aggregation <- match.arg(aggregation)
+  ml <- .comparableMatrices(ml, checkAttributes=TRUE)
+  switch(aggregation,
+    mean=Reduce("+", ml)/length(ml),
+    sum=Reduce("+", ml),
+    median=.medianSignalMat(ml)
+  )
+}
+
+#' @importFrom matrixStats rowMedians
+.medianSignalMat <- function(ml){
+  x <- matrixStats::rowMedians(do.call(cbind,lapply(ml, as.numeric)))
+  y <- ml[[1]]
+  y[seq_len(nrow(y)),seq_len(ncol(y))] <- x
+  y
+}
