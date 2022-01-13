@@ -9,13 +9,13 @@ getCovStats(
   binSize = 1000,
   nbBins = 10000,
   exclude = NULL,
+  canonical.chr = TRUE,
   maxCovQuant = 0.999,
-  genome = NULL,
   BPPARAM = SerialParam()
 )
 }
 \arguments{
-\item{x}{A (named) vector of paths to bigwig files}
+\item{x}{A (named) vector of paths to bigwig files (all from the same genome)}
 
 \item{binSize}{The size of bins}
 
@@ -24,10 +24,10 @@ readouts but take longer to compute.}
 
 \item{exclude}{Region to exclude}
 
-\item{maxCovQuant}{The quantile to use as maximum coverage (default 0.999)}
+\item{canonical.chr}{Logical; whether to restrict the sampling to standard
+chromosomes.}
 
-\item{genome}{A named vector of chromosome sizes. If a GRanges without 
-seqlengths, the maximum coordinate of each chromosome will be used.}
+\item{maxCovQuant}{The quantile to use as maximum coverage (default 0.999)}
 
 \item{BPPARAM}{BioParallel BPPARAM for multithreading across files.}
 }

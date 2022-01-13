@@ -3,14 +3,14 @@
 #' Assembles read distribution statistics from a set of bigwig files based on
 #' random windows.
 #'
-#' @param x A (named) vector of paths to bigwig files
+#' @param x A (named) vector of paths to bigwig files (all from the same genome)
 #' @param binSize The size of bins
 #' @param nbBins The number of random bins. More bins gives more accurate 
 #' readouts but take longer to compute.
 #' @param exclude Region to exclude
+#' @param canonical.chr Logical; whether to restrict the sampling to standard
+#' chromosomes.
 #' @param maxCovQuant The quantile to use as maximum coverage (default 0.999)
-#' @param genome A named vector of chromosome sizes. If a GRanges without 
-#' seqlengths, the maximum coordinate of each chromosome will be used.
 #' @param BPPARAM BioParallel BPPARAM for multithreading across files.
 #'
 #' @return A named list of QC tables
@@ -21,18 +21,15 @@
 #' @importFrom dplyr bind_rows
 #' @importFrom rtracklayer import BigWigSelection
 getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL, 
-                        maxCovQuant=0.999, genome=NULL, BPPARAM=SerialParam()){
-  if(is(genome, "GRanges")){
-    maxes <- seqlengths(genome)
-    if(any(is.na(maxes)))
-      maxes <- vapply(split(end(genome), 
-                            droplevels(as.factor(seqnames(genome)))),
-                      FUN=max, FUN.VALUE=integer(1L))
-  }else if(is(genome, "EnsDb")){
-    maxes <- genome(genome)
+                        canonical.chr=TRUE, maxCovQuant=0.999, 
+                        BPPARAM=SerialParam()){
+  if(.parseFiletypeFromName(x[[1]])=="bam"){
+    maxes <- seqlengths(BamFile(x[[1]]))
   }else{
-    maxes <- genome
+    maxes <- seqlengths(BigWigFile(x[[1]]))
   }
+  if(canonical.chr) maxes <- maxes[grep("^Y$|^X$|^[0-9]$", ignore.case=TRUE,
+                                        gsub("chr|CHR","",names(maxes)))]
   if(is.null(names(x)))
     names(x) <- make.unique(gsub("\\.bw|\\.bigwig", "", basename(x), 
                                  ignore.case=TRUE))
@@ -44,12 +41,13 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
                      IRanges(unlist(pos), width=binSize)))
   if(!is.null(exclude)) gr <- gr[!overlapsAny(gr, exclude)]
   covs <- bplapply(x, BPPARAM=BPPARAM, FUN=function(x){
-    if(grepl("\\.bam$",x,ignore.case=TRUE)){
+    ftype <- .parseFiletypeFromName(x)
+    if(ftype=="bam"){
       flgs <- scanBamFlag(isDuplicate=FALSE, isSecondaryAlignment=FALSE)
       params <- Rsamtools::ScanBamParam(which=gr, flag=flgs)
       x <- as(GenomicAlignments::readGAlignmentPairs(x, param=params), "GRanges")
       y <- as.integer(countOverlaps(gr,x))
-    }else{
+    }else if(ftype=="bw"){
       x <- rtracklayer::import(x, format="BigWig", selection=BigWigSelection(gr))
       o <- findOverlaps(gr,x)
       tmp <- max(splitAsList(x$score[to(o)], from(o)))
@@ -59,6 +57,8 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
       }else{
         y <- as.numeric(tmp)
       }
+    }else{
+      stop("Unsupported file format ", x)
     }
     y
   })
