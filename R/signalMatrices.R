@@ -48,6 +48,8 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
                           ..., RPM=TRUE, BPPARAM=1L,
                           flgs=scanBamFlag(isDuplicate=FALSE,
                                            isSecondaryAlignment=FALSE)){
+  if(!all(unlist(lapply(filepaths, file.exists))))
+    stop("Some of the files given do not exist, check the paths provided.")
   if(cuts && !all(grepl("\\.bam$",filepaths,ignore.case=TRUE)))
     stop("`cuts` can only be used with BAM files.")
   if(is.null(names(filepaths)))
@@ -113,8 +115,13 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
     }else{
       stop("Unknown file format")
     }
-    
-    mat
+    tryCatch({
+      names(mat) <- names(regions)
+      mat
+    }, error=function(e){
+      warning(e)
+      mat
+    })
   })
 }
 
