@@ -5,8 +5,8 @@
 #'
 #' @param x A (named) vector of paths to bigwig files (all from the same genome)
 #' @param binSize The size of bins
-#' @param nbBins The number of random bins. More bins gives more accurate 
-#' readouts but take longer to compute.
+#' @param nbBins The approximate number of random bins. More bins gives more 
+#' accurate readouts but take longer to read and compute.
 #' @param exclude Region to exclude
 #' @param canonical.chr Logical; whether to restrict the sampling to standard
 #' chromosomes.
@@ -19,7 +19,8 @@
 #' @import GenomicRanges S4Vectors
 #' @importFrom GenomeInfoDb seqlengths
 #' @importFrom dplyr bind_rows
-#' @importFrom rtracklayer import BigWigSelection
+#' @importFrom rtracklayer import BigWigSelection BigWigFile
+#' @importFrom Rsamtools BamFile scanBamFlag ScanBamParam
 getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL, 
                         canonical.chr=TRUE, maxCovQuant=0.999, 
                         BPPARAM=SerialParam()){
@@ -81,7 +82,7 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
                                      FUN=function(y) sum(x>y)/length(x)))
   }), .id="file")
   d2 <- dplyr::bind_rows(lapply(covs, FUN=function(x){
-    data.frame(rank=rank(x), fraction.of.highest=x/max(x))
+    data.frame(rank=rank(x,ties.method="random"), fraction.of.highest=x/max(x))
   }), .id="file")
   d1$file <- as.factor(d1$file)
   d2$file <- as.factor(d2$file)
