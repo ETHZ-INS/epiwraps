@@ -263,7 +263,6 @@ plotSignalTracks <- function(files=c(), region, ensdb=NULL, colors="darkblue",
 #' @importFrom rtracklayer import.bw
 signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
   region <- .parseRegion(region, asGR=TRUE)
-  print(class(region))
   gp <- GPos(seqnames(region), start(region):end(region))
   files <- lapply(files, which=region, rtracklayer::import.bw)
   grs <- lapply(files,FUN=function(x) x[x$score>0])
