@@ -262,7 +262,8 @@ plotSignalTracks <- function(files=c(), region, ensdb=NULL, colors="darkblue",
 #' @importFrom S4Vectors mcols
 #' @importFrom rtracklayer import.bw
 signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
-  region <- .parseRegion(region)
+  region <- .parseRegion(region, asGR=TRUE)
+  print(class(region))
   gp <- GPos(seqnames(region), start(region):end(region))
   files <- lapply(files, which=region, rtracklayer::import.bw)
   grs <- lapply(files,FUN=function(x) x[x$score>0])
@@ -279,9 +280,15 @@ signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
 
 
 #' @importFrom AnnotationFilter SymbolFilter GeneIdFilter TxIdFilter
-.parseRegion <- function(region, ensdb=NULL){
+.parseRegion <- function(region, ensdb=NULL, asGR=FALSE){
+  if(is.list(region) && length(region)==3 && all(lengths(region)==1) &&
+     all(is.integer(unlist(region[2:3])))){
+    if(asGR) return(GRanges(region[[1]], IRanges(region[[2]], region[[3]])))
+    return(region)
+  }
   stopifnot(length(region)==1)
-  if(is(region,"GRanges")) region <- as.character(region)
+  if(is(region,"GRanges")) return(region)
+  region <- as.character(region)
   stopifnot(is.character(region))
   region <- strsplit(gsub("-",":",region),":")[[1]]
   if(length(region)==1){
@@ -309,5 +316,6 @@ signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
   region <- as.list(region)
   region[[2]] <- as.integer(region[[2]])
   region[[3]] <- as.integer(region[[3]])
+  if(asGR) return(GRanges(region[[1]], IRanges(region[[2]], region[[3]])))
   region
 }
