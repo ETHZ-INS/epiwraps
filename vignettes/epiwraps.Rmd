@@ -41,7 +41,7 @@ completely empty regions using the `exclude` parameter, which would normally
 be used to exclude regions likely to be technical artefacts (e.g. blacklisted
 regions). 
 
-```{r}
+```{r, message=FALSE}
 library(GenomicRanges)
 library(epiwraps)
 # get the path to an example bigwig file:
@@ -289,6 +289,7 @@ head(d)
 This can then be used for plotting, e.g.:
 
 ```{r, fig.width=4, fig.height=3}
+library(ggplot2)
 ggplot(d, aes(position, mean, colour=sample)) + geom_line(lwd=2)
 ```
 
