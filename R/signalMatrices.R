@@ -152,6 +152,7 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' @importFrom viridisLite inferno
 #' @importFrom circlize colorRamp2
 #' @importFrom matrixStats colSds
+#' @importFrom grid gpar
 #' @export
 #' @examples 
 #' # we first fetch the path to the example bigwig file:
