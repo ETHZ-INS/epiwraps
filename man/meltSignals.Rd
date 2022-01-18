@@ -4,13 +4,12 @@
 \alias{meltSignals}
 \title{meltSignals}
 \usage{
-meltSignals(ml, fun = c("mean", "sum", "median"))
+meltSignals(ml, fun = NULL)
 }
 \arguments{
 \item{ml}{A named list of matrices as produced by \code{\link{signal2Matrix}}}
 
-\item{fun}{The aggregation to perform. Either "mean", "sum", "median", or
-a custom function to be applied on columns.}
+\item{fun}{An optional custom aggregation function (or named list thereof).}
 }
 \value{
 A data.frame.

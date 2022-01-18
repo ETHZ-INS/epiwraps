@@ -21,6 +21,13 @@
 #' @importFrom dplyr bind_rows
 #' @importFrom rtracklayer import BigWigSelection BigWigFile
 #' @importFrom Rsamtools BamFile scanBamFlag ScanBamParam
+#' 
+#' @examples 
+#' # we use an example bigwig file
+#' bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
+#' # because most of the file is empty, we'll exclude some of the ranges
+#' cs <- getCovStats(bwf, exclude=GRanges("1", IRanges(1, 4300000)))
+#' plotCovStats(cs)
 getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL, 
                         canonical.chr=TRUE, maxCovQuant=0.999, 
                         BPPARAM=SerialParam()){
@@ -29,10 +36,14 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
   }else{
     maxes <- seqlengths(BigWigFile(x[[1]]))
   }
+  stopifnot(length(maxes)>0)
   if(canonical.chr) maxes <- maxes[grep("^Y$|^X$|^[0-9]$", ignore.case=TRUE,
                                         gsub("chr|CHR","",names(maxes)))]
+  if(length(maxes)==0)
+    stop("No chromosome left after filtering! Consider using ",
+         "canonical.chr=FALSE")
   if(is.null(names(x)))
-    names(x) <- make.unique(gsub("\\.bw|\\.bigwig", "", basename(x), 
+    names(x) <- make.unique(gsub("\\.bw$|\\.bigwig$|\\.bam$", "", basename(x), 
                                  ignore.case=TRUE))
   chr <- table(sample(factor(names(maxes),names(maxes)), size=nbBins, 
                       prob=maxes/sum(maxes), replace=TRUE))
@@ -103,6 +114,13 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
 #' @export
 #' @import ggplot2
 #' @importFrom cowplot plot_grid get_legend
+#' 
+#' @examples 
+#' # we use an example bigwig file
+#' bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
+#' # because most of the file is empty, we'll exclude some of the ranges
+#' cs <- getCovStats(bwf, exclude=GRanges("1", IRanges(1, 4300000)))
+#' plotCovStats(cs)
 plotCovStats <- function(qc, labels="AUTO", show.legend=TRUE){
   p1 <- ggplot(qc$coverage, aes(coverage, fraction.above, colour=file)) + 
     geom_line() + labs(x="Read density", y="Fraction of regions > density") +
@@ -147,7 +165,8 @@ plotCorFromCovStats <- function(qc, method=c("pearson","spearman"), col=NULL,
     diag(m) <- NA
     m
   })
-  o <- as.dendrogram(hclust(dist(do.call(cbind, dat))))
+  o <- tryCatch( as.dendrogram(hclust(dist(do.call(cbind, dat)))),
+                 error=function(e) FALSE )
   h <- lapply(names(dat), FUN=function(x){
     if(is.null(col)){
       col = switch(x,

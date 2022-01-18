@@ -5,13 +5,21 @@
 #'
 #' @param files A named list or vector of paths to signal files  (e.g. 
 #' bigwig/bam, but also bed files). If a list, list elements will be overlaid 
-#' or aggregated (depending on the `aggregation` argument). Objects accepted by
-#' \code{\link[Gviz]{DataTrack}}'s `range` argument are also accepted.
+#' or aggregated (depending on the `aggregation` argument). Formats accepted by
+#' \code{\link[Gviz]{DataTrack}}'s `range` argument are also accepted. Can also
+#' include `GRanges ` objects (which will be plotted as 
+#' \code{\link[Gviz]{AnnotationTrack}}) or objects inheriting the 
+#' \code{\link[Gviz]{GdObject}} class (i.e. any `Gviz` track object).
 #' @param region A genomic region, either as a `GRanges` object or as a string 
 #' (i.e. `region="chr5:10000-12000`). Alternatively, if `ensdb` is provided, a 
 #' gene name can be given, and the gene's coordinates will be used as region.
 #' @param colors Signal color(s); will be recycled for elements of `files`
-#' @param type Signal plot type(s); will be recycled for elements of `files`
+#' @param type Signal plot type(s); will be recycled for elements of `files`.
+#' This is ignored for bed-like files, which are shown as 
+#' \code{\link[Gviz]{AnnotationTrack}}. See the `type` options of 
+#' \code{\link[Gviz]{DataTrack}}. In addition to these options, the type 
+#' 'alignments' can be given for bam files, which will display them as 
+#' \code{\link[Gviz]{AlignmentsTrack}}.
 #' @param overlay.alpha Transparency (0 to 250) when overlaying tracks.
 #' @param ensdb An optional \code{\link[ensembldb]{EnsDb}} object form which 
 #' to grab transcripts.
@@ -30,6 +38,9 @@
 #' \code{\link[Gviz](GeneRegionTrack)}.
 #' @param tracks.params Named list of parameters passed to 
 #' \code{\link[Gviz](DataTrack)}.
+#' @param align.params Named list of parameters passed to 
+#' \code{\link[Gviz](AlignmentsTrack)}. Only used for plotting bam files with
+#' `type="alignments"`.
 #' @param extraTracks List of extra custom tracks to be plotted.
 #' @param background.title The background color of the track titles.
 #' @param col.axis The color of the axes.
@@ -45,7 +56,7 @@
 #' @importFrom S4Vectors mcols
 #' @importFrom ensembldb getGeneRegionTrackForGviz
 #' @importFrom Gviz plotTracks DataTrack OverlayTrack GeneRegionTrack 
-#' @importFrom Gviz GenomeAxisTrack AnnotationTrack
+#' @importFrom Gviz GenomeAxisTrack AnnotationTrack AlignmentsTrack
 #' @importFrom matrixStats rowMins rowMaxs rowMedians
 #'
 #' @export
@@ -59,17 +70,20 @@
 #' # show all transcript variants:
 #' # plotSignalTracks(list(tracks=bw), region="BMP1", ensdb=ensdb,
 #' #                  transcripts="full")
-plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL, 
-                             type="h",  genomeAxis=0.3, extend=0.15,
+plotSignalTracks <- function(files=c(), region, ensdb=NULL, colors="darkblue",
+                             type="histogram",  genomeAxis=0.3, extend=0.15,
                              aggregation=c("mean","median", "sum", "max", 
                                            "min", "heatmap", "overlay"),
                              transcripts=c("collapsed","full","coding","none"), 
                              genes.params=list(col.line="grey40", col=NULL,
                                                fill="#000000"),
+                             align.params=list(color=NULL),
                              tracks.params=list(), extraTracks=list(), 
                              background.title="white", col.axis="grey40", 
                              bed.rotation.title=0, col.title="black", 
                              cex.title=0.65, overlay.alpha=100, ...){
+  if(length(files)==0 && is.null(ensdb))
+    stop("No track to plot!")
   options(ucscChromosomeNames=FALSE)
   if(!is.function(aggregation)) aggregation <- match.arg(aggregation)
   if(!is(transcripts, "GeneRegionTrack"))
@@ -80,30 +94,31 @@ plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL,
   region <- .parseRegion(region, ensdb)
   
   # check file formats (from names)
-  fm <- lapply(files, .parseFiletypeFromName)
-  if(any(lengths(lapply(fm,unique))!=1))
-    stop("Cannot aggregate files of different formats!")
-  
-  # creating names if not specified
-  if(is.null(names(files))){
-    if(is.character(files)){
-      names(files) <- .cleanFileNames(files)
-    }else if(is.list(files)){
-      stopifnot(all(unlist(lapply(files, is.character))))
-      names(files) <- sapply(seq_along(files), FUN=function(x){
-        if(length(files[[x]])==1)
-          return(.cleanFileNames(files[[x]]))
-        paste0("track",x)
-      })
-    }else{
-      stop("Invalid `files` argument!")
+  fm <- lapply(files, .parseFiletypeFromName, grOk=TRUE, trackOk=TRUE)
+  if(length(files)>0){
+    if(any(lengths(lapply(fm,unique))!=1))
+      stop("Cannot aggregate files of different formats!")
+
+    # creating names if not specified
+    if(is.null(names(files))){
+      if(is.character(files)){
+        names(files) <- .cleanFileNames(files)
+      }else if(is.list(files)){
+        stopifnot(all(unlist(lapply(files, is.character))))
+        names(files) <- sapply(seq_along(files), FUN=function(x){
+          if(length(files[[x]])==1)
+            return(.cleanFileNames(files[[x]]))
+          paste0("track",x)
+        })
+      }else{
+        stop("Invalid `files` argument!")
+      }
     }
+    if(!is.list(files)) files <- as.list(files)
+    if(any(lengths(fm)>1 && sapply(fm, FUN=function(x) any(x=="bam"))))
+      warning("It is not advised to overlay/aggregate signals from bam files, ",
+              "as these are not normalized.")
   }
-  if(!is.list(files)) files <- as.list(files)
-  if(any(lengths(fm)>1 && sapply(fm, FUN=function(x) any(x=="bam"))))
-    warning("It is not advised to overlay/aggregate signals from bam files, ",
-            "as these are not normalized.")
-  
   # Handling the gene track
   gt <- NULL
   if(!is.null(ensdb) && !is(transcripts, "GeneRegionTrack") && 
@@ -138,11 +153,14 @@ plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL,
     names(type) <- names(files)
   
   tracks <- lapply(setNames(names(files),names(files)), FUN=function(subf){
-    isMult <- length(files[[subf]])>1
-    
-    if(any(isBed <- grepl("\\.bed$",files[[subf]],ignore.case=TRUE))){
-      if(isMult){
-        stop("Bed merging not yet implemented, provide them as separate items.")
+    ft <- .parseFiletypeFromName(files[[subf]], grOk=TRUE, trackOk=TRUE)
+    if(length(ft)>1 && any(ft=="track")) stop("Custom tracks cannot be merged.")
+    if(all(ft=="track")) return(files[[subf]])
+    isMult <- !is(files[[subf]], "GRanges") && length(files[[subf]])>1
+    if(any(ft %in% c("bed","GRanges"))){
+      if(isMult && any(ft=="bed")){
+        files[[subf]] <- 
+          unlist(GRangesList(lapply(files[[subf]], rtracklayer::import)))
       }
       return(AnnotationTrack(files[[subf]], fill=colors[subf], col=NULL, 
                              rotation.title=bed.rotation.title,
@@ -152,20 +170,33 @@ plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL,
                      .maketrans(colors[subf],overlay.alpha))
     tp <- tracks.params
     tp$type <- type[[subf]]
+    if(is.null(tp$lwd) && tp$type=="histogram") tp$lwd <- 0
     tp$stream <- TRUE
-    tp$col <- thecol
+    if(is.null(tp$col)) tp$col <- thecol
+    if(is.null(tp$fill)) tp$fill <- thecol
     tp$name <- subf
     if(!isMult || aggregation=="overlay"){
       tr <- lapply(files[[subf]], FUN=function(x){
         tp$range <- x
-        do.call(DataTrack,tp)
+        if(grepl("^alignment", tp$type, ignore.case=TRUE)){
+          if(.parseFiletypeFromName(x)=="bam"){
+            ap <- align.params
+            ap$range <- x
+            ap$name <- subf
+            ap$fill <- colors[subf]
+            return(do.call(AlignmentsTrack, ap))
+          }
+          warning("Alignment type can only be given for bam files.")
+          tp$type <- "histogram"
+        }
+        do.call(DataTrack, tp)
       })
       if(length(tr)>1)
         return(OverlayTrack(tr, name=subf, type=type[[subf]], title=subf,
                             fill=thecol, col=thecol))
       return(tr[[1]])
     }
-    gr <- .signalsAcrossSamples(files[[subf]], region)
+    gr <- signalsAcrossSamples(files[[subf]], region)
     if(aggregation=="heatmap"){
       tp$type <- "heatmap"
       tp$range <- gr
@@ -212,19 +243,30 @@ plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL,
 }
 
 
-
+#' signalsAcrossSamples
+#' 
+#' Obtain a matrix of score/coverages across a region for a list of BigWig files
+#' or GRanges.
+#' 
+#' @param files A named list of paths to biwgig files or of `GRanges` objects
+#' with a `score` column.
+#' @param region The region of interest, either given as a string (in the 
+#' "chr:start-end" format) or as a `GRanges` of length 1.
+#' @param ignore.strand Logical; whether to merge scores from the two strands
+#' given stranded objects.
+#' 
+#' @return A disjoined `GRanges object` with the scores as metadata columns.
+#'
 #' @importFrom IRanges IRanges
 #' @import GenomicRanges
 #' @importFrom S4Vectors mcols
 #' @importFrom rtracklayer import.bw
-.signalsAcrossSamples <- function(files, region){
-  if(is.list(region))
-    region <- GRanges(region[[1]], IRanges(region[[2]], region[[3]]))
-  stopifnot(length(region)==1)
+signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
+  region <- .parseRegion(region)
   gp <- GPos(seqnames(region), start(region):end(region))
   files <- lapply(files, which=region, rtracklayer::import.bw)
   grs <- lapply(files,FUN=function(x) x[x$score>0])
-  gr <- disjoin(unlist(GRangesList(grs)), ignore.strand=TRUE)
+  gr <- disjoin(unlist(GRangesList(grs)), ignore.strand=ignore.strand)
   m <- sapply(grs, FUN=function(x){
     o <- findOverlaps(gr,x)
     y <- rep(0,length(gr))
@@ -243,6 +285,8 @@ plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL,
   stopifnot(is.character(region))
   region <- strsplit(gsub("-",":",region),":")[[1]]
   if(length(region)==1){
+    # assumes an ID is given; check in that order:
+    # gene symbols, gene ids, transcript ids, or partial gene symbol matches
     if(is.null(ensdb))
       stop("`ensdb` is required when defining the region with a gene name.")
     region <- reduce(genes(ensdb, filter=SymbolFilter(region)))
@@ -256,7 +300,7 @@ plotSignalTracks <- function(files, region, colors="darkblue", ensdb=NULL,
         stop("Gene not found with this exact name, and mutliple genes match ",
              "this string.")
     }
-    if(length(region)==0) stop("Gene not found!")
+    if(length(region)==0) stop("Gene/transcript not found!")
     if(length(region)>1)
       stop("Region input is ambiguous (multiple non-overlapping regions)")
     region <- strsplit(gsub("-",":",as.character(region)),":")[[1]][1:3]

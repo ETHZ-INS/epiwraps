@@ -5,16 +5,17 @@
 \title{plotSignalTracks}
 \usage{
 plotSignalTracks(
-  files,
+  files = c(),
   region,
-  colors = "darkblue",
   ensdb = NULL,
-  type = "h",
+  colors = "darkblue",
+  type = "histogram",
   genomeAxis = 0.3,
   extend = 0.15,
   aggregation = c("mean", "median", "sum", "max", "min", "heatmap", "overlay"),
   transcripts = c("collapsed", "full", "coding", "none"),
   genes.params = list(col.line = "grey40", col = NULL, fill = "#000000"),
+  align.params = list(color = NULL),
   tracks.params = list(),
   extraTracks = list(),
   background.title = "white",
@@ -29,19 +30,27 @@ plotSignalTracks(
 \arguments{
 \item{files}{A named list or vector of paths to signal files  (e.g. 
 bigwig/bam, but also bed files). If a list, list elements will be overlaid 
-or aggregated (depending on the `aggregation` argument). Objects accepted by
-\code{\link[Gviz]{DataTrack}}'s `range` argument are also accepted.}
+or aggregated (depending on the `aggregation` argument). Formats accepted by
+\code{\link[Gviz]{DataTrack}}'s `range` argument are also accepted. Can also
+include `GRanges ` objects (which will be plotted as 
+\code{\link[Gviz]{AnnotationTrack}}) or objects inheriting the 
+\code{\link[Gviz]{GdObject}} class (i.e. any `Gviz` track object).}
 
 \item{region}{A genomic region, either as a `GRanges` object or as a string 
 (i.e. `region="chr5:10000-12000`). Alternatively, if `ensdb` is provided, a 
 gene name can be given, and the gene's coordinates will be used as region.}
 
-\item{colors}{Signal color(s); will be recycled for elements of `files`}
-
 \item{ensdb}{An optional \code{\link[ensembldb]{EnsDb}} object form which 
 to grab transcripts.}
 
-\item{type}{Signal plot type(s); will be recycled for elements of `files`}
+\item{colors}{Signal color(s); will be recycled for elements of `files`}
+
+\item{type}{Signal plot type(s); will be recycled for elements of `files`.
+This is ignored for bed-like files, which are shown as 
+\code{\link[Gviz]{AnnotationTrack}}. See the `type` options of 
+\code{\link[Gviz]{DataTrack}}. In addition to these options, the type 
+'alignments' can be given for bam files, which will display them as 
+\code{\link[Gviz]{AlignmentsTrack}}.}
 
 \item{genomeAxis}{Whether to plot a genome axis. Alternatively, a numeric 
 scalar between 0 and 1 can be given, in which case a scale will be 
@@ -60,6 +69,10 @@ Alternatively, can be a custom \code{\link[Gviz](GeneRegionTrack)} object.}
 
 \item{genes.params}{Named list of parameters passed to 
 \code{\link[Gviz](GeneRegionTrack)}.}
+
+\item{align.params}{Named list of parameters passed to 
+\code{\link[Gviz](AlignmentsTrack)}. Only used for plotting bam files with
+`type="alignments"`.}
 
 \item{tracks.params}{Named list of parameters passed to 
 \code{\link[Gviz](DataTrack)}.}

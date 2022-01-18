@@ -19,8 +19,8 @@ getCovStats(
 
 \item{binSize}{The size of bins}
 
-\item{nbBins}{The number of random bins. More bins gives more accurate 
-readouts but take longer to compute.}
+\item{nbBins}{The approximate number of random bins. More bins gives more 
+accurate readouts but take longer to read and compute.}
 
 \item{exclude}{Region to exclude}
 
@@ -37,4 +37,11 @@ A named list of QC tables
 \description{
 Assembles read distribution statistics from a set of bigwig files based on
 random windows.
+}
+\examples{
+# we use an example bigwig file
+bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
+# because most of the file is empty, we'll exclude some of the ranges
+cs <- getCovStats(bwf, exclude=GRanges("1", IRanges(1, 4300000)))
+plotCovStats(cs)
 }

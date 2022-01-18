@@ -4,9 +4,18 @@
       alpha, maxColorValue = 255)
 }
 
-.parseFiletypeFromName <- function(x, stopOnUnrecognized=TRUE){
+.parseFiletypeFromName <- function(x, stopOnUnrecognized=TRUE, grOk=FALSE,
+                                   trackOk=FALSE){
+  if(is(x,"GRanges")){
+    if(grOk) return("GRanges")
+    stop("The argument should be a filepath!")
+  }
+  if(inherits(x, "GdObject")){
+    if(trackOk) return("track")
+    stop("The argument should be a filepath!")
+  }
   if(length(x)>1) return(sapply(x, .parseFiletypeFromName))
-  if(grepl("\\.bigwig$|\\.bw$|\\.bam$", x, ignore.case=TRUE)) return("bw")
+  if(grepl("\\.bigwig$|\\.bw$", x, ignore.case=TRUE)) return("bw")
   if(grepl("\\.bam$", x, ignore.case=TRUE)) return("bam")
   if(grepl("\\.bed$|\\.narrowpeak$|\\.broadpeak$|\\.gappedpeak$", x, 
            ignore.case=TRUE)) return("bed")

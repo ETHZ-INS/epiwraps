@@ -13,33 +13,43 @@ plotEnrichedHeatmaps(
   use_raster = NULL,
   row_order = NULL,
   cluster_rows = FALSE,
+  axis_name = NULL,
+  top_annotation = TRUE,
   ...
 )
 }
 \arguments{
-\item{ml}{A named list of matrices as produced by \code{\link{signal2Matrix}}}
+\item{ml}{A named matrix list as produced by \code{\link{signal2Matrix}}.}
 
-\item{trim}{The quantile above which to trim values for the colorscale}
+\item{trim}{The quantile above which to trim values for the colorscale.}
 
-\item{colors}{The heatmap colors to use}
+\item{colors}{The heatmap colors to use.}
 
-\item{scale_title}{The title of the scale}
+\item{scale_title}{The title of the scale.}
 
-\item{title_size}{The size of the heatmap titles}
+\item{title_size}{The size of the heatmap titles.}
 
-\item{use_raster}{Passed to EnrichedHeatmap::EnrichedHeatmap}
+\item{use_raster}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.}
 
-\item{row_order}{Option order of the rows}
+\item{row_order}{Optional order of the rows.}
 
-\item{cluster_rows}{Whether to cluster rows}
+\item{cluster_rows}{Whether to cluster rows.}
 
-\item{...}{Passed to EnrichedHeatmap::EnrichedHeatmap}
+\item{axis_name}{A vector of length 3 giving the labels to put respectively
+on the left, center and right of the x axis of each heatmap.}
+
+\item{top_annotation}{Either a logical indicating whether or not to plot the
+summary profile at the top of each heatmap, or any other value passed to
+\code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.}
+
+\item{...}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}}
 }
 \value{
 A HeatmapList object
 }
 \description{
-Plots enrichment heatmaps from the output of `signal2Matrix`
+Plots enrichment heatmaps from the output of `signal2Matrix`. This is a 
+convenience wrapper around \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 }
 \examples{
 # we first fetch the path to the example bigwig file:

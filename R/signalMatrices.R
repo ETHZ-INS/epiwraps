@@ -57,6 +57,7 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
   
   if(is.character(regions)){
     stopifnot(is.character(regions) && length(regions)==1)
+    if(!file.exists(regions)) stop("The `regions` file appears not to exist.")
     regions <- import(regions)
   }
   stopifnot(is(regions, "GRanges"))
@@ -102,7 +103,7 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
       ####### END BAM INPUT
       
     }else if(grepl("\\.bw$|\\.bigwig$", filepath)){
-      
+
       ####### BIGWIG INPUT
       gr <- rtracklayer::import(filepath, format="BigWig", 
                                 selection=BigWigSelection(regions2))
@@ -128,17 +129,23 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 
 #' plotEnrichedHeatmaps
 #' 
-#' Plots enrichment heatmaps from the output of `signal2Matrix`
+#' Plots enrichment heatmaps from the output of `signal2Matrix`. This is a 
+#' convenience wrapper around \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 #'
-#' @param ml A named list of matrices as produced by \code{\link{signal2Matrix}}
-#' @param trim The quantile above which to trim values for the colorscale
-#' @param colors The heatmap colors to use
-#' @param scale_title The title of the scale
-#' @param title_size The size of the heatmap titles
-#' @param use_raster Passed to EnrichedHeatmap::EnrichedHeatmap
-#' @param row_order Option order of the rows
-#' @param cluster_rows Whether to cluster rows
-#' @param ... Passed to EnrichedHeatmap::EnrichedHeatmap
+#' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
+#' @param trim The quantile above which to trim values for the colorscale.
+#' @param colors The heatmap colors to use.
+#' @param scale_title The title of the scale.
+#' @param title_size The size of the heatmap titles.
+#' @param use_raster Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
+#' @param row_order Optional order of the rows.
+#' @param cluster_rows Whether to cluster rows.
+#' @param ... Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}
+#' @param top_annotation Either a logical indicating whether or not to plot the
+#' summary profile at the top of each heatmap, or any other value passed to
+#' \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
+#' @param axis_name A vector of length 3 giving the labels to put respectively
+#' on the left, center and right of the x axis of each heatmap.
 #'
 #' @return A HeatmapList object
 #' @import EnrichedHeatmap
@@ -164,10 +171,10 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' # any argument accepted by `EnrichedHeatmap` (and hence by 
 #' # `ComplexHeatmap::Heatmap`) can be used, e.g.: 
 #' plotEnrichedHeatmaps(m, row_title="My regions of interest")
-plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100), 
-                                 scale_title="density", title_size=11, 
-                                 use_raster=NULL, row_order=NULL, 
-                                 cluster_rows=FALSE, ...){
+plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100),
+                         scale_title="density", title_size=11, use_raster=NULL, 
+                         row_order=NULL, cluster_rows=FALSE, axis_name=NULL, 
+                         top_annotation=TRUE, ...){
   ml <- .comparableMatrices(ml)
   if(is.null(use_raster)) use_raster <- nrow(ml[[1]])>1000
   hl <- NULL
@@ -183,15 +190,28 @@ plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100),
   }else if(is.null(row_order)){
     row_order <- order(-rowMeans(do.call(cbind, lapply(ml, enriched_score))))
   }
+  if(is.null(axis_name)){
+    a <- attributes(m[[1]])$extend
+    if(all((a %% 1000)==0)){
+      a <- paste0(c("-","+"),a/1000,"kb")
+    }else{
+      a <- paste0(c("-","+"),a,"bp")
+    }
+    axis_name <- c(a[1], "center", a[2])
+  }
   for(m in names(ml)){
     isLast <- m==rev(names(ml))[1]
-    HA <- HeatmapAnnotation(enriched=anno_enriched(ylim=ylim, show_error=TRUE,
-                                                   axis=isLast))
+    if(isFALSE(top_annotation)){
+      top_annotation <- NULL
+    }else if(isTRUE(top_annotation)){
+      top_annotation <- HeatmapAnnotation(
+        enriched=anno_enriched(ylim=ylim, show_error=TRUE, axis=isLast))
+    }
     hl <- hl + EnrichedHeatmap(ml[[m]], column_title=m, col=col_fun, ...,
-                    column_title_gp=gpar(fontsize=title_size), 
-                    cluster_rows = cluster_rows, row_order=row_order,
-                    top_annotation=HA, show_heatmap_legend=isLast,
-                    use_raster=use_raster, name=ifelse(isLast,scale_title,m) )
+                column_title_gp=gpar(fontsize=title_size), axis_name=axis_name,
+                cluster_rows = cluster_rows, row_order=row_order,
+                top_annotation=top_annotation, show_heatmap_legend=isLast,
+                use_raster=use_raster, name=ifelse(isLast,scale_title,m) )
   }
   hl
 }
@@ -202,30 +222,33 @@ plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100),
 #' Aggregates and melts a list of signal matrices, for plotting (with ggplot).
 #'
 #' @param ml A named list of matrices as produced by \code{\link{signal2Matrix}}
-#' @param fun The aggregation to perform. Either "mean", "sum", "median", or
-#' a custom function to be applied on columns.
+#' @param fun An optional custom aggregation function (or named list thereof).
 #'
 #' @return A data.frame.
 #' @export
 #' @importFrom matrixStats colMedians
-meltSignals <- function(ml, fun=c("mean","sum","median")){
+meltSignals <- function(ml, fun=NULL){
   stopifnot(is.list(ml))
-  if(!is.function(fun)) fun <- match.arg(fun)
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
   a <- attributes(ml[[1]])
   x <- c( -1*(a$extend[1]/length(a$upstream_index))*
             rev(seq_along(a$upstream_index)),
           (a$extend[2]/length(a$downstream_index))*
             seq_along(a$downstream_index) )
-  y <- lapply(ml, FUN=function(x){
-    if(is.function(fun)) return(apply(x,2,fun))
-    switch(fun,
-           mean=colMeans(x),
-           sum=colSums(x),
-           median=matrixStats::colMedians(x))
-  })
-  d <- data.frame( position=rep(x, length(ml)), value=unlist(y),
+  d <- data.frame( row.names=NULL, position=rep(x, length(ml)),
                    sample=rep(factor(names(ml), names(ml)), each=length(x)) )
+  d$mean <- unlist(lapply(ml, colMeans))
+  d$SD <- unlist(lapply(ml, matrixStats::colSds))
+  d$SE <- d$SD/sqrt(nrow(ml[[1]]))
+  d$median <- unlist(lapply(ml, matrixStats::colMedians))
+  if(!is.null(fun)){
+    if(!is.list(fun)) fun <- list(fn.value=fun)
+    stopifnot(all(unlist(lapply(fun,is.function))))
+    if(is.null(names(fun)))
+      names(fun) <- make.unique(rep("fn.value",length(fun)))
+    for(fn in names(fun))
+      d[[fn]] <- unlist(lapply(ml, FUN=function(x) apply(x,2,fun[[fn]])))
+  }
   d
 }
 
