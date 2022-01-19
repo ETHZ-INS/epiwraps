@@ -6,7 +6,7 @@
 \usage{
 plotEnrichedHeatmaps(
   ml,
-  trim = 0.998,
+  trim = c(0.01, 0.99),
   colors = inferno(100),
   scale_title = "density",
   title_size = 11,
@@ -21,7 +21,9 @@ plotEnrichedHeatmaps(
 \arguments{
 \item{ml}{A named matrix list as produced by \code{\link{signal2Matrix}}.}
 
-\item{trim}{The quantile above which to trim values for the colorscale.}
+\item{trim}{The quantile above which to trim values for the colorscale. If a
+numeric vector of length 2, will be used as lower and upper quantiles 
+beyond which to trim.}
 
 \item{colors}{The heatmap colors to use.}
 

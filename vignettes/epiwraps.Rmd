@@ -1,5 +1,5 @@
 ---
-title: "epiwraps: easy wrappers for easy epigenomic data visualization"
+title: "epiwraps: wrappers for easy epigenomic data visualization"
 author: 
 - name: Pierre-Luc Germain
   affiliation:
@@ -259,8 +259,10 @@ extreme values. This can be controlled via the `trim` argument (which indicates
 up to which quantile of data points to keep to establish the colorscale). 
 Compare for instance the following two heatmaps:
 
-```{r, fig.height=4, fig.width=4}
+```{r, fig.height=4, fig.width=5}
 plotEnrichedHeatmaps(list("trim=1"=m[[1]]), trim=1, scale_title="trim=1",
+                     top_annotation=FALSE) +
+  plotEnrichedHeatmaps(list("trim=0.99"=m[[1]]), trim=0.99, scale_title="trim=0.99",
                      top_annotation=FALSE) +
   plotEnrichedHeatmaps(list("trim=0.9"=m[[1]]), trim=0.9, 
                        scale_title="trim=0.9", top_annotation=FALSE)
@@ -271,7 +273,8 @@ colorscale to extend to high values, even though most of the data is in the
 very low range, resulting in a very dark heatmap. In the one on the right, it's
 the opposite: so much is trimmed that many points reach the top of the 
 colorscale, resulting in a an 'over-exposed' heatmap. In practice, it is 
-advisable to use minimal trimming (e.g. >0.99 -- the default is 0.998).
+advisable to use minimal trimming (e.g. the default is `c(0.01,0.99)`,
+as in the corresponding DeepTools function).
 
 
 ## Plotting aggregated signals

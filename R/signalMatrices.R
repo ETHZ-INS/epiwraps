@@ -133,7 +133,9 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' convenience wrapper around \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 #'
 #' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
-#' @param trim The quantile above which to trim values for the colorscale.
+#' @param trim The quantile above which to trim values for the colorscale. If a
+#' numeric vector of length 2, will be used as lower and upper quantiles 
+#' beyond which to trim.
 #' @param colors The heatmap colors to use.
 #' @param scale_title The title of the scale.
 #' @param title_size The size of the heatmap titles.
@@ -172,18 +174,21 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' # any argument accepted by `EnrichedHeatmap` (and hence by 
 #' # `ComplexHeatmap::Heatmap`) can be used, e.g.: 
 #' plotEnrichedHeatmaps(m, row_title="My regions of interest")
-plotEnrichedHeatmaps <- function(ml, trim=0.998, colors=inferno(100),
+plotEnrichedHeatmaps <- function(ml, trim=c(0.01,0.99), colors=inferno(100),
                          scale_title="density", title_size=11, use_raster=NULL, 
                          row_order=NULL, cluster_rows=FALSE, axis_name=NULL, 
                          top_annotation=TRUE, ...){
   ml <- .comparableMatrices(ml)
+  stopifnot(length(trim) %in% 1:2 && all(trim>=0 & trim <=1))
   if(is.null(use_raster)) use_raster <- nrow(ml[[1]])>1000
   hl <- NULL
   ylim <- c(0,max(unlist(lapply(ml,FUN=function(x){
     max(colMeans(x)+matrixStats::colSds(x)/sqrt(nrow(x)))
   }))))
-  common_min <- min(unlist(lapply(ml,min)))
-  common_max <- max(unlist(lapply(ml,prob=trim,FUN=quantile)))
+  if(length(trim)==1) trim <- c(0,trim)
+  trim <- sort(trim)
+  common_min <- min(unlist(lapply(ml,prob=trim[1],FUN=quantile)))
+  common_max <- max(unlist(lapply(ml,prob=trim[2],FUN=quantile)))
   breaks <- seq(from=common_min, to=common_max, length.out=length(colors))
   col_fun <- circlize::colorRamp2(breaks, colors)
   if(isTRUE(cluster_rows)){
@@ -276,4 +281,44 @@ mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median")){
   y <- ml[[1]]
   y[seq_len(nrow(y)),seq_len(ncol(y))] <- x
   y
+}
+
+#' renormalizeBorders
+#'
+#' This function renormalizes a list of signal matrices on the assumption that
+#' the left/right borders of the matrices represent background signal which 
+#' should be equal across samples.
+#' \strong{This is not a safe normalization procedure}: it will work only if 
+#' 1) the left/right borders of the matrices are sufficiently far from the 
+#' signal (e.g. peaks), and 2) the signal-to-noise ratio is comparable across 
+#' samples.
+#'
+#' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
+#' @param method Normalization method, passed to 
+#' \code{\link[edgeR]{calcNormFactors}}.
+#'
+#' @return A renormalized list of signal matrices.
+#' @export
+#' @importFrom edgeR calcNormFactors
+renormalizeBorders <- function(ml, method="TMM"){
+  ml <- .comparableMatrices(ml, checkAttributes=TRUE)
+  b <- do.call(cbind, lapply(ml, FUN=function(x) c(x[,1],x[,ncol(x)])))
+  nf <- calcNormFactors(b, method=method, lib.size=rep(1,ncol(b)))
+  rescaleSignalMatrices(ml, 1/nf)
+  ml
+}
+
+#' rescaleSignalMatrices
+#'
+#' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
+#' @param scaleFactors A numeric vector of same length as `ml`, 
+#' indicating the scaling factors by which to multiply each matrix.
+#'
+#' @return A renormalized list of signal matrices.
+#' @export
+rescaleSignalMatrices <- function(ml, scaleFactors){
+  stopifnot(is.numeric(scaleFactors) && length(scaleFactors)==length(ml))
+  ml <- .comparableMatrices(ml, checkAttributes=TRUE)
+  for(i in seq_along(scaleFactors)) ml[[i]] <- ml[[i]]*scaleFactors[i]
+  ml
 }

@@ -73,7 +73,7 @@ breakStrings <- function (x, minSizeForBreak=20, lb="\n"){
 }
 
 
-.getBP <- function(x, progressbar=TRUE, ...){
+.getBP <- function(x, progressbar=FALSE, ...){
   if(is.numeric(x)){
     if(length(x)==1 && isTRUE(x>0)){
       if(x==1) return(BiocParallel::SerialParam(progressbar=progressbar, ...))
