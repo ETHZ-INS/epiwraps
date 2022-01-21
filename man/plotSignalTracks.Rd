@@ -65,17 +65,17 @@ will be interpreted as a fraction of the plotted region.}
 
 \item{transcripts}{Whether to show transcripts (reguires `ensdb`) as "full",
 "collapsed" (default), "coding" (only coding transcripts) or "none".
-Alternatively, can be a custom \code{\link[Gviz](GeneRegionTrack)} object.}
+Alternatively, can be a custom \code{\link[Gviz]{GeneRegionTrack}} object.}
 
 \item{genes.params}{Named list of parameters passed to 
-\code{\link[Gviz](GeneRegionTrack)}.}
+\code{\link[Gviz]{GeneRegionTrack}}.}
 
 \item{align.params}{Named list of parameters passed to 
-\code{\link[Gviz](AlignmentsTrack)}. Only used for plotting bam files with
+\code{\link[Gviz]{AlignmentsTrack}}. Only used for plotting bam files with
 `type="alignments"`.}
 
 \item{tracks.params}{Named list of parameters passed to 
-\code{\link[Gviz](DataTrack)}.}
+\code{\link[Gviz]{DataTrack}}.}
 
 \item{extraTracks}{List of extra custom tracks to be plotted.}
 
@@ -91,7 +91,7 @@ Alternatively, can be a custom \code{\link[Gviz](GeneRegionTrack)} object.}
 
 \item{overlay.alpha}{Transparency (0 to 250) when overlaying tracks.}
 
-\item{...}{Passed to \code{\link[Gviz](plotTracks)}.}
+\item{...}{Passed to \code{\link[Gviz]{plotTracks}}.}
 }
 \value{
 A list of GenomeGraph tracks to be plotted.

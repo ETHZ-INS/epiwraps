@@ -33,13 +33,13 @@
 #' (default), 'median', 'max', 'overlay' or 'heatmap'.
 #' @param transcripts Whether to show transcripts (reguires `ensdb`) as "full",
 #' "collapsed" (default), "coding" (only coding transcripts) or "none".
-#' Alternatively, can be a custom \code{\link[Gviz](GeneRegionTrack)} object.
+#' Alternatively, can be a custom \code{\link[Gviz]{GeneRegionTrack}} object.
 #' @param genes.params Named list of parameters passed to 
-#' \code{\link[Gviz](GeneRegionTrack)}.
+#' \code{\link[Gviz]{GeneRegionTrack}}.
 #' @param tracks.params Named list of parameters passed to 
-#' \code{\link[Gviz](DataTrack)}.
+#' \code{\link[Gviz]{DataTrack}}.
 #' @param align.params Named list of parameters passed to 
-#' \code{\link[Gviz](AlignmentsTrack)}. Only used for plotting bam files with
+#' \code{\link[Gviz]{AlignmentsTrack}}. Only used for plotting bam files with
 #' `type="alignments"`.
 #' @param extraTracks List of extra custom tracks to be plotted.
 #' @param background.title The background color of the track titles.
@@ -47,7 +47,7 @@
 #' @param col.title The color of the track titles.
 #' @param cex.title Expension factor for the font size of the track titles.
 #' @param bed.rotation.title Rotation for track titles of bed files.
-#' @param ... Passed to \code{\link[Gviz](plotTracks)}.
+#' @param ... Passed to \code{\link[Gviz]{plotTracks}}.
 #'
 #' @return A list of GenomeGraph tracks to be plotted.
 #' 
@@ -92,6 +92,10 @@ plotSignalTracks <- function(files=c(), region, ensdb=NULL, colors="darkblue",
   
   # region of interest
   region <- .parseRegion(region, ensdb)
+  if(all(extend<=1) & all(extend>=0))
+    extend <- round(extend*(region[[3]]-region[[2]]))
+  if(length(extend)<2) extend <- c(extend,extend)
+  region2 <- list(region[[1]], region[[2]]-extend[1], region[[3]]+extend[1])
   
   # check file formats (from names)
   fm <- lapply(files, .parseFiletypeFromName, grOk=TRUE, trackOk=TRUE)
@@ -124,10 +128,9 @@ plotSignalTracks <- function(files=c(), region, ensdb=NULL, colors="darkblue",
   if(!is.null(ensdb) && !is(transcripts, "GeneRegionTrack") && 
      transcripts!="none"){
     ggr <- getGeneRegionTrackForGviz(ensdb, chromosome=region[[1]],
-                                     start=region[[2]], end=region[[3]],
-                                     featureIs=ifelse(
-                                       transcripts=="collapsed",
-                                       "gene_biotype","tx_biotype" ) )
+             start=region2[[2]], end=region2[[3]],
+             featureIs=ifelse(transcripts=="collapsed",
+                              "gene_biotype","tx_biotype") )
     if(is.null(genes.params$transcriptAnnotation))
       genes.params$transcriptAnnotation <- ifelse(transcripts=="collapsed",
                                                   "symbol","transcript")
@@ -196,7 +199,7 @@ plotSignalTracks <- function(files=c(), region, ensdb=NULL, colors="darkblue",
                             fill=thecol, col=thecol))
       return(tr[[1]])
     }
-    gr <- signalsAcrossSamples(files[[subf]], region)
+    gr <- signalsAcrossSamples(files[[subf]], region2)
     if(aggregation=="heatmap"){
       tp$type <- "heatmap"
       tp$range <- gr
@@ -207,7 +210,7 @@ plotSignalTracks <- function(files=c(), region, ensdb=NULL, colors="darkblue",
                               sum=rowSums, median=matrixStats::rowMedians)
       sig <- aggregation(as.matrix(mcols(gr)))
       mcols(gr) <- NULL
-      gr$score <- sig
+      score(gr) <- sig
       tp$range <- gr
     }
     do.call(DataTrack,tp)
@@ -233,11 +236,8 @@ plotSignalTracks <- function(files=c(), region, ensdb=NULL, colors="darkblue",
     }
   }
   
-  if(all(extend<=1) & all(extend>=0))
-    extend <- round(extend*(region[[3]]-region[[2]]))
-  if(length(extend)<2) extend <- c(extend,extend)
-  plotTracks(c(tracks, extraTracks, gt, ga), chromosome=region[[1]], 
-             from=region[[2]]-extend[1], to=region[[3]]+extend[2], 
+  plotTracks(c(tracks, extraTracks, gt, ga), 
+             chromosome=region2[[1]], from=region2[[2]], to=region2[[3]], 
              background.title=background.title, col.axis=col.axis, 
              col.title=col.title, cex.title=cex.title, ...)
 }
@@ -263,12 +263,11 @@ plotSignalTracks <- function(files=c(), region, ensdb=NULL, colors="darkblue",
 #' @importFrom rtracklayer import.bw
 signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
   region <- .parseRegion(region, asGR=TRUE)
-  gp <- GPos(seqnames(region), start(region):end(region))
   files <- lapply(files, which=region, rtracklayer::import.bw)
   grs <- lapply(files,FUN=function(x) x[x$score>0])
   gr <- disjoin(unlist(GRangesList(grs)), ignore.strand=ignore.strand)
   m <- sapply(grs, FUN=function(x){
-    o <- findOverlaps(gr,x)
+    o <- findOverlaps(gr,x, ignore.strand=ignore.strand)
     y <- rep(0,length(gr))
     y[o@from] <- x$score[o@to]
     y
@@ -281,12 +280,12 @@ signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
 #' @importFrom AnnotationFilter SymbolFilter GeneIdFilter TxIdFilter
 .parseRegion <- function(region, ensdb=NULL, asGR=FALSE){
   if(is.list(region) && length(region)==3 && all(lengths(region)==1) &&
-     all(is.integer(unlist(region[2:3])))){
+     all(is.numeric(unlist(region[2:3])))){
     if(asGR) return(GRanges(region[[1]], IRanges(region[[2]], region[[3]])))
     return(region)
   }
   stopifnot(length(region)==1)
-  if(is(region,"GRanges")) return(region)
+  if(is(region,"GRanges") && asGR) return(region)
   region <- as.character(region)
   stopifnot(is.character(region))
   region <- strsplit(gsub("-",":",region),":")[[1]]
