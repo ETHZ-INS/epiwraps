@@ -133,14 +133,14 @@ To display only the gene track, the first argument can simply be omitted.
 In addition to the `colors` and `type` argument (and a number of others), which 
 can customize the appearance of tracks, any additional parameters supported by 
 the respective `r BiocStyle::Biocpkg("Gviz")` function can be passed through the
-`genes.params` (for \code{\link[Gviz](GeneRegionTrack)}), `align.params` (for 
-\code{\link[Gviz](AlignmentsTrack)}, when plotting individual reads), or 
-`tracks.params` (for any other \code{\link[Gviz](DataTrack)}).
+`genes.params` (for Gviz's `GeneRegionTrack`), `align.params` (for Gviz's 
+`AlignmentsTrack`, when plotting individual reads), or `tracks.params` (for any 
+other Gviz `DataTrack`).
 
-Also, in addition to passing filepaths or `GRanges`, any 
-`r BiocStyle::Biocpkg("Gviz")` track(s) can be passed (i.e. objects inheriting 
-the `GdObject` class) can be passed, enabling full track customization when 
-needed.
+Also, in addition to passing filepaths or `GRanges`, any Gviz track(s) can be 
+passed (i.e. objects inheriting the `GdObject` class) can be passed, enabling 
+full track customization when needed.
+
 
 <br/><br/>
 
