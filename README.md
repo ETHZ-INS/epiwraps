@@ -6,6 +6,12 @@ without an extensive bioinformatics background. The `epiwraps` package was
 therefore developed as a simpler entry-point to such tasks, providing a simple
 interface to the more powerful capabilities of other packages.
 
+Install with:
+
+```r
+BiocManager::install("ETHZ-INS/epiwraps")
+```
+
 # Plotting signals in a region
 
 The `plotSignalTracks` function is a wrapper around the 
@@ -312,6 +318,7 @@ plotCovStats(cs)
 ```
 
 ![](readme_files/figure-html/covstats-1.png)<!-- -->
+
 Panel A shows the proportion of sampled regions which are above a certain read 
 density (relative because this is a normalized bigwig file, would be coverage 
 otherwise). This shows us, for example, that as expected only a minority of 
