@@ -137,9 +137,9 @@ the respective `r BiocStyle::Biocpkg("Gviz")` function can be passed through the
 \code{\link[Gviz](AlignmentsTrack)}, when plotting individual reads), or 
 `tracks.params` (for any other \code{\link[Gviz](DataTrack)}).
 
-In addition, in addition to passing filepaths or `GRanges`, any 
+Also, in addition to passing filepaths or `GRanges`, any 
 `r BiocStyle::Biocpkg("Gviz")` track(s) can be passed (i.e. objects inheriting 
-the `GdObject` class) can be passed, enabled full track customization when 
+the `GdObject` class) can be passed, enabling full track customization when 
 needed.
 
 <br/><br/>
