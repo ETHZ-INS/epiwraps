@@ -7,8 +7,7 @@ author:
     - Lab of Statistical Bioinformatics, UZH
 package: epiwraps
 output:
-  html_document:
-    keep_md: yes
+  BiocStyle::html_document
 abstract: |
   This vignette introduces the epiwraps package and some of its main 
   functionalities, in particular for plotting data along genomic coordinates 
