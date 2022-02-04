@@ -111,7 +111,7 @@ plotSignalTracks(c(coverage=bwf1), region="BMP1", ensdb=ensdb,
                  transcripts="full")
 ```
 
-<img src="docs/TracksWithTranscripts.png" width="700" />
+<img src="inst/docs/TracksWithTranscripts.png" width="700" />
 Now we can see that the coverage is nicely restricted to exons, and that some 
 transcripts/exons are not expressed as highly as others. The transcripts could 
 also have been collapsed into a gene model using `transcripts="collapsed"` (the
