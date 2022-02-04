@@ -102,7 +102,7 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
       
       ####### END BAM INPUT
       
-    }else if(grepl("\\.bw$|\\.bigwig$", filepath)){
+    }else if(grepl("\\.bw$|\\.bigwig$", filepath, ignore.case=TRUE)){
 
       ####### BIGWIG INPUT
       gr <- rtracklayer::import(filepath, format="BigWig", 
@@ -148,6 +148,16 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 #' \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 #' @param axis_name A vector of length 3 giving the labels to put respectively
 #' on the left, center and right of the x axis of each heatmap.
+#' 
+#' @details 
+#' 
+#' When plotting large matrices, the heatmap body will be rasterized to keep its
+#' memory footprint decent. Depending on your settings, if the heatmap is very
+#' big you might hit the preset limits of `magick` base rasterization, which
+#' could result in an error such as 'Image must have at least 1 frame to write a 
+#' bitmap'. In such cases, you might have to degrade to a lower-quality 
+#' rasterization using the additional arguments 
+#' `raster_by_magick=FALSE, raster_device="CairoJPEG"` .
 #'
 #' @return A HeatmapList object
 #' @import EnrichedHeatmap
