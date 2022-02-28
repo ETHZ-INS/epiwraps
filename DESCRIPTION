@@ -30,6 +30,7 @@ Imports:
     viridisLite,
     ggplot2
 Suggests: 
+    cowplot,
     knitr,
     rmarkdown,
     BiocStyle,
