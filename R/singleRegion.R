@@ -289,7 +289,6 @@ signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
   region <- as.character(region)
   stopifnot(is.character(region))
   region <- strsplit(gsub("-",":",region),":")[[1]]
-  print(region)
   if(length(region)==1){
     # assumes an ID is given; check in that order:
     # gene symbols, gene ids, transcript ids, or partial gene symbol matches
