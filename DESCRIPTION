@@ -28,9 +28,9 @@ Imports:
     matrixStats,
     circlize,
     viridisLite,
-    ggplot2
+    ggplot2,
+    cowplot
 Suggests: 
-    cowplot,
     knitr,
     rmarkdown,
     BiocStyle,
