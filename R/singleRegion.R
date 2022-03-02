@@ -289,18 +289,20 @@ signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
   region <- as.character(region)
   stopifnot(is.character(region))
   region <- strsplit(gsub("-",":",region),":")[[1]]
+  print(region)
   if(length(region)==1){
     # assumes an ID is given; check in that order:
     # gene symbols, gene ids, transcript ids, or partial gene symbol matches
     if(is.null(ensdb))
       stop("`ensdb` is required when defining the region with a gene name.")
-    region <- reduce(genes(ensdb, filter=SymbolFilter(region)))
+    gname <- region
+    region <- reduce(genes(ensdb, filter=SymbolFilter(gname)))
     if(length(region)==0) 
-      region <- reduce(genes(ensdb, filter=GeneIdFilter(region)))
+      region <- reduce(genes(ensdb, filter=GeneIdFilter(gname)))
     if(length(region)==0) 
-      region <- reduce(genes(ensdb, filter=TxIdFilter(region)))
+      region <- reduce(genes(ensdb, filter=TxIdFilter(gname)))
     if(length(region)==0){
-      region <- reduce(genes(ensdb, filter=SymbolFilter(region,"startsWith")))
+      region <- reduce(genes(ensdb, filter=SymbolFilter(gname,"startsWith")))
       if(length(region)>1)
         stop("Gene not found with this exact name, and mutliple genes match ",
              "this string.")
