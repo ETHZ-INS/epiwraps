@@ -24,57 +24,11 @@ library(BiocStyle)
 
 # Introduction
 
-
-
-# Quality control
-
-## Coverage statistics
-
-Coverage statistics give an overview of how the reads are distributed across 
-the genome (or more precisely, across a large number of random regions). The 
-`getCovStats` will compute such statistics from bam or bigwig files (from 
-bigwig files will be considerably faster, but if the files are normalized 
-the coverage/density will be relative).
-
-Because our example data spans only part of a chromosome, we'll exclude 
-completely empty regions using the `exclude` parameter, which would normally
-be used to exclude regions likely to be technical artefacts (e.g. blacklisted
-regions). 
-
-```{r, message=FALSE}
-library(GenomicRanges)
-library(epiwraps)
-# get the path to an example bigwig file:
-bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
-cs <- getCovStats(bwf, exclude=GRanges("1", IRanges(1, 4300000)))
-plotCovStats(cs)
-```
-Panel A shows the proportion of sampled regions which are above a certain read 
-density (relative because this is a normalized bigwig file, would be coverage 
-otherwise). This shows us, for example, that as expected only a minority of 
-regions have any reads at all (indicating that the reads are not randomly 
-distributed).
-Panel B is what is sometimes called a fingerprint plot. It similarly shows us 
-that the reads are concentrated in very few regions, since the vast majority of
-regions have only a very low fraction of the coverage of a few high-density 
-regions.
-Randomly distributed reads would go along the diagonal, but one normally has a 
-curve somewhere between this line and the lower-right corner -- the farther 
-away from the diagonal, to more strongly enriched the data is.
-
-This can be done for multiple files simultaneously. If we have several files, 
-we can also use the coverage in the random windows to computer their similarity 
-(see `?plotCorFromCovStats`).
-
-# Fragment length distributions
-
-Given one or more paired-end bam files, we can extract and plot the fragment 
-length distribution using:
-
-```{r, fig.width=4, fig.height=3}
-bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
-fragSizesDist(bam, what=100)
-```
+Bioconductor offers power packages for the analysis and visualization of 
+(epi)genomic data, however they are often not always easy to approach for users 
+without an extensive bioinformatics background. The `epiwraps` package was 
+therefore developed as a simpler entry-point to such tasks, providing a simple
+interface to the more powerful capabilities of other packages.
 
 # Plotting signals in a region
 
@@ -89,32 +43,37 @@ region in which to display the signals (can be given as a GRanges or as a
 string). The function then automatically determines the relevant track type and 
 setting from the file types.
 
-```{r, fig.width=6, fig.height=2.5}
-bwf2 <- system.file("extdata/example_rna.bw", package="epiwraps")
-plotSignalTracks(list(RNA=bwf2), region="8:22165140-22212326", genomeAxis=TRUE)
+```{r signal1, fig.width=6, fig.height=2.5, message=FALSE}
+library(GenomicRanges)
+library(epiwraps)
+# get the path to an example bigwig file:
+bwf1 <- system.file("extdata/example_rna.bw", package="epiwraps")
+plotSignalTracks(list(RNA=bwf1), region="8:22165140-22212326", genomeAxis=TRUE)
 # we could plot multiple tracks as follows:
-plotSignalTracks(list(track1=bwf2, track2=bwf2), region="8:22165140-22212326")
+plotSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326")
 ```
 
 `GRanges` objects can also be plotted as annotation tracks alongside other data:
 
-```{r, fig.width=6, fig.height=2}
+```{r signal2, fig.width=6, fig.height=2}
 myregions=GRanges("8", IRanges(c(22166000,22202300), width=3000))
-plotSignalTracks(list(RNA=bwf2, regions=myregions), region="8:22165140-22212326")
+plotSignalTracks(list(RNA=bwf1, regions=myregions), region="8:22165140-22212326")
 ```
 
 Colors, track display types, and such parameters can either be set for all tracks
 or for each individual track, for example:
 
-```{r, fig.width=6, fig.height=2}
+```{r signal3, fig.width=6, fig.height=2}
 myregions <- GRanges("8", IRanges(c(22166000,22202300), width=3000))
-plotSignalTracks(list(RNA=bwf2, regions=myregions), colors=c("red", "black"),
+plotSignalTracks(list(RNA=bwf1, regions=myregions), colors=c("red", "black"),
                  region="8:22165140-22212326")
 ```
 
 
 For bam files, we can also plot individual reads:
-```{r}
+```{r signalAlignments}
+# we fetch an example bam file:
+bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 plotSignalTracks(c("my bam file"=bam), "seq1:1-1500", type="alignments")
 ```
 
@@ -124,8 +83,8 @@ In addition to being displayed one below the other, data tracks can be combined
 in different ways. To do this, the tracks can simply be given in a nested 
 fashion:
 
-```{r, fig.width=6, fig.height=2.5}
-plotSignalTracks(list(track1=bwf2, combined=c(bwf2,bwf2)),
+```{r mergingSignals, eval=FALSE}
+plotSignalTracks(list(track1=bwf1, combined=c(bwf1,bwf1)),
                  region="8:22165140-22212326")
 ```
 
@@ -146,18 +105,18 @@ instead of specifying the region as coordinates, one can specify a gene or
 transcript name, and the corresponding region will be fetched. In addition, the
 genes or transcripts can be displayed. For example:
 
-```{r, eval=FALSE}
+```{r ensdb, eval=FALSE}
 # we fetch the GRCh38 Ensembl 103 annotation (this is not run in the vignette,
 # as it takes some time to download the annotation the first time is used):
 library(AnnotationHub)
 ah <- AnnotationHub()
 ensdb <- ah[["AH89426"]]
 # we plot our previous RNA bigwig file, around the BMP1 locus:
-plotSignalTracks(c(coverage=bwf2), region="BMP1", ensdb=ensdb, 
+plotSignalTracks(c(coverage=bwf1), region="BMP1", ensdb=ensdb, 
                  transcripts="full")
 ```
 
-```{r echo=FALSE}
+```{r trackWithTx, echo=FALSE}
 knitr::include_graphics(system.file('docs', 'TracksWithTranscripts.png', 
                                     package='epiwraps'))
 ```
@@ -173,14 +132,14 @@ To display only the gene track, the first argument can simply be omitted.
 In addition to the `colors` and `type` argument (and a number of others), which 
 can customize the appearance of tracks, any additional parameters supported by 
 the respective `r BiocStyle::Biocpkg("Gviz")` function can be passed through the
-`genes.params` (for \code{\link[Gviz](GeneRegionTrack)}), `align.params` (for 
-\code{\link[Gviz](AlignmentsTrack)}, when plotting individual reads), or 
-`tracks.params` (for any other \code{\link[Gviz](DataTrack)}).
+`genes.params` (for Gviz's `GeneRegionTrack`), `align.params` (for Gviz's 
+`AlignmentsTrack`, when plotting individual reads), or `tracks.params` (for any 
+other Gviz `DataTrack`).
 
-In addition, in addition to passing filepaths or `GRanges`, any 
-`r BiocStyle::Biocpkg("Gviz")` track(s) can be passed (i.e. objects inheriting 
-the `GdObject` class) can be passed, enabled full track customization when 
-needed.
+Also, in addition to passing filepaths or `GRanges`, any Gviz track(s) can be 
+passed (i.e. objects inheriting the `GdObject` class) can be passed, enabling 
+full track customization when needed.
+
 
 <br/><br/>
 
@@ -234,8 +193,9 @@ instance using subsetting (e.g. `m[1:2]`), but even using transformations, e.g.:
 m2 <- lapply(m, sqrt)
 ```
 
-In addition, signal matrices can be combined either manually, or using the 
-following convenience function:
+For re-normalizing lists of signal matrices, see `?rescaleSignalMatrices` and/or
+`?renormalizeBorders`. In addition, signal matrices can be combined either 
+manually, or using the following convenience function:
 
 ```{r}
 merged <- mergeSignalMatrices(m, aggregation="mean")
@@ -247,7 +207,7 @@ merged <- mergeSignalMatrices(m, aggregation="mean")
 Once the matrices have been created, we can plot heatmaps based on them as 
 follows:
 
-```{r, fig.height=4, fig.width=4}
+```{r heatmap1, fig.height=4, fig.width=4}
 plotEnrichedHeatmaps(m)
 # we  can use most arguments that are supported by EnrichedHeatmap, e.g.:
 plotEnrichedHeatmaps(m, col=c("white","darkred"), cluster_rows=TRUE,
@@ -259,7 +219,7 @@ extreme values. This can be controlled via the `trim` argument (which indicates
 up to which quantile of data points to keep to establish the colorscale). 
 Compare for instance the following two heatmaps:
 
-```{r, fig.height=4, fig.width=5}
+```{r heatmapTrim, fig.height=4, fig.width=5}
 plotEnrichedHeatmaps(list("trim=1"=m[[1]]), trim=1, scale_title="trim=1",
                      top_annotation=FALSE) +
   plotEnrichedHeatmaps(list("trim=0.99"=m[[1]]), trim=0.99, scale_title="trim=0.99",
@@ -291,8 +251,56 @@ head(d)
 ```
 This can then be used for plotting, e.g.:
 
-```{r, fig.width=4, fig.height=3}
+```{r aggPlot, fig.width=4, fig.height=3}
 library(ggplot2)
-ggplot(d, aes(position, mean, colour=sample)) + geom_line(lwd=2)
+ggplot(d, aes(position, mean, colour=sample)) + 
+  geom_vline(xintercept=0, linetype="dashed") + geom_line(lwd=2)
 ```
 
+
+# Quality control
+
+## Coverage statistics
+
+Coverage statistics give an overview of how the reads are distributed across 
+the genome (or more precisely, across a large number of random regions). The 
+`getCovStats` will compute such statistics from bam or bigwig files (from 
+bigwig files will be considerably faster, but if the files are normalized 
+the coverage/density will be relative).
+
+Because our example data spans only part of a chromosome, we'll exclude 
+completely empty regions using the `exclude` parameter, which would normally
+be used to exclude regions likely to be technical artefacts (e.g. blacklisted
+regions). 
+
+```{r covstats, message=FALSE}
+# get the path to an example bigwig file:
+bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
+cs <- getCovStats(bwf, exclude=GRanges("1", IRanges(1, 4300000)))
+plotCovStats(cs)
+```
+Panel A shows the proportion of sampled regions which are above a certain read 
+density (relative because this is a normalized bigwig file, would be coverage 
+otherwise). This shows us, for example, that as expected only a minority of 
+regions have any reads at all (indicating that the reads are not randomly 
+distributed).
+Panel B is what is sometimes called a fingerprint plot. It similarly shows us 
+that the reads are concentrated in very few regions, since the vast majority of
+regions have only a very low fraction of the coverage of a few high-density 
+regions.
+Randomly distributed reads would go along the diagonal, but one normally has a 
+curve somewhere between this line and the lower-right corner -- the farther 
+away from the diagonal, to more strongly enriched the data is.
+
+This can be done for multiple files simultaneously. If we have several files, 
+we can also use the coverage in the random windows to computer their similarity 
+(see `?plotCorFromCovStats`).
+
+# Fragment length distributions
+
+Given one or more paired-end bam files, we can extract and plot the fragment 
+length distribution using:
+
+```{r fragSize, fig.width=4, fig.height=3}
+fragSizesDist(bam, what=100)
+```

@@ -53,6 +53,15 @@ A HeatmapList object
 Plots enrichment heatmaps from the output of `signal2Matrix`. This is a 
 convenience wrapper around \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 }
+\details{
+When plotting large matrices, the heatmap body will be rasterized to keep its
+memory footprint decent. Depending on your settings, if the heatmap is very
+big you might hit the preset limits of `magick` base rasterization, which
+could result in an error such as 'Image must have at least 1 frame to write a 
+bitmap'. In such cases, you might have to degrade to a lower-quality 
+rasterization using the additional arguments 
+`raster_by_magick=FALSE, raster_device="CairoJPEG"` .
+}
 \examples{
 # we first fetch the path to the example bigwig file:
 bw <- system.file("extdata/example_atac.bw", package="epiwraps")
