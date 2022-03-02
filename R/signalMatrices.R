@@ -177,9 +177,26 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
 plotEnrichedHeatmaps <- function(ml, trim=c(0.01,0.99), colors=inferno(100),
                          scale_title="density", title_size=11, use_raster=NULL, 
                          row_order=NULL, cluster_rows=FALSE, axis_name=NULL, 
-                         top_annotation=TRUE, ...){
+                         scale_rows=FALSE, top_annotation=TRUE, minRowVal=0, ...){
   ml <- .comparableMatrices(ml)
   stopifnot(length(trim) %in% 1:2 && all(trim>=0 & trim <=1))
+  stopifnot(length(scale_rows)==1)
+  if(isTRUE(minRowVal>0)){
+    rMax <- do.call(cbind, lapply(ml, FUN=matrixStats::rowMaxs))
+    w <- which(rMax>minRowVal)
+    ml <- lapply(ml, FUN=function(x) x[w,seq_len(ncol(x))])
+  }
+  if(!isFALSE(scale_rows)){
+    if(isTRUE(scale_rows) || scale_rows=="global"){
+      m <- do.call(cbind, ml)
+      rM <- rowMeans(m, na.rm=TRUE)
+      rSD <- matrixStats::rowSds(m, na.rm=TRUE)
+      ml <- lapply(ml, FUN=function(x) (x-rM)/rSD)
+      ################
+    }else{
+      ml <- lapply(ml, FUN=function(x) t(scale(t(x))))
+    }
+  }
   if(is.null(use_raster)) use_raster <- nrow(ml[[1]])>1000
   hl <- NULL
   ylim <- c(0,max(unlist(lapply(ml,FUN=function(x){
@@ -196,14 +213,14 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.01,0.99), colors=inferno(100),
   }else if(is.null(row_order)){
     row_order <- order(-rowMeans(do.call(cbind, lapply(ml, enriched_score))))
   }
-  if(is.null(axis_name)){
-    a <- attributes(m[[1]])$extend
+  if(is.null(axis_name) || length(axis_name)==1){
+    a <- attributes(ml[[1]])$extend
     if(all((a %% 1000)==0)){
       a <- paste0(c("-","+"),a/1000,"kb")
     }else{
       a <- paste0(c("-","+"),a,"bp")
     }
-    axis_name <- c(a[1], "center", a[2])
+    axis_name <- c(a[1], ifelse(is.null(axis_name),"center",axis_name), a[2])
   }
   for(m in names(ml)){
     isLast <- m==rev(names(ml))[1]
@@ -304,7 +321,7 @@ renormalizeBorders <- function(ml, method="TMM"){
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
   b <- do.call(cbind, lapply(ml, FUN=function(x) c(x[,1],x[,ncol(x)])))
   nf <- calcNormFactors(b, method=method, lib.size=rep(1,ncol(b)))
-  rescaleSignalMatrices(ml, 1/nf)
+  ml <- rescaleSignalMatrices(ml, 1/nf)
   ml
 }
 
