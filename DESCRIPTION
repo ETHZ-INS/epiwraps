@@ -30,6 +30,7 @@ Imports:
     viridisLite,
     ggplot2,
     cowplot,
+    edgeR,
     UpSetR
 Suggests: 
     knitr,
