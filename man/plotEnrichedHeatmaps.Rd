@@ -14,7 +14,9 @@ plotEnrichedHeatmaps(
   row_order = NULL,
   cluster_rows = FALSE,
   axis_name = NULL,
+  scale_rows = FALSE,
   top_annotation = TRUE,
+  minRowVal = 0,
   ...
 )
 }
