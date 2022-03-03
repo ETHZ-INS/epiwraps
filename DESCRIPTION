@@ -16,6 +16,7 @@ Imports:
     GenomeInfoDb,
     GenomicAlignments,
     GenomicFiles,
+    genomation,
     Rsamtools,
     rtracklayer,
     EnrichedHeatmap,
