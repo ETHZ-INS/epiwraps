@@ -18,7 +18,8 @@
 #' @return
 #' @export
 #' @importFrom UpSetR upset fromList
-#' @importFrom GenomicRanges reduce disjoin overlapsAny
+#' @importFrom GenomicRanges reduce disjoin 
+#' @importFrom IRanges IRanges overlapsAny
 #'
 #' @examples
 #' # random list of GRanges:
