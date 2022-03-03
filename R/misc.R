@@ -117,3 +117,60 @@ breakStrings <- function (x, minSizeForBreak=20, lb="\n"){
   }
   ml
 }
+
+
+#' importBedlike
+#'
+#' Imports a bed-like file as a GRanges object. Uses
+#' `rtracklayer` import functions if possible, and falls
+#' back onto an import that's not format-committed 
+#' otherwise.
+#'
+#' @param x The path to a bed or bed-like file (can be 
+#' gzipped)
+#' @param ... passed to \code{\link[data.table]{fread}}
+#'
+#' @return A `GRanges` object
+#' @export
+#' @importFrom data.table fread
+#' @importFrom rtracklayer import.bed import.bed15
+#' @importFrom GenomicRanges GRanges score<-
+#' @importFrom S4Vectors mcols mcols<-
+#'
+#' @examples
+#' # example bed file:
+#' filepath <- system.file("extdata/example_peaks.bed", 
+#'                         package="epiwraps"
+#' b <- importBedlike(filepath, ...)
+importBedlike <- function(x, ...){
+  y <- try(rtracklayer::import.bed(x), silent=TRUE)
+  if(is(y,"try-error"))
+    y <- try(rtracklayer::import.bed15(x), silent=TRUE)
+  if(!is(y,"try-error")) return(y)
+  y <- as.data.frame(data.table::fread(x, ...))
+  strInfo <- NULL
+  if(ncol(y)>=6 && all(y[[6]] %in% c(".","*","+","-"))){
+    y[[6]] <- gsub(".","*",y[[6]],fixed=TRUE)
+    if(!all(y[[6]]==".")) strInfo <- y[[6]]
+    y <- y[,-6]
+  }
+  gr <- GRanges(y[,1], IRanges(y[,2],y[,3]), strand=strInfo)
+  if(ncol(y)>=5){
+    if(is.numeric(y[[5]])){
+      if(!all(y[[5]]==0L)) score(gr) <- y[[5]]
+      y <- y[,-5]
+    }else if(all(y[,5]==".")){
+      y <- y[,-5]
+    }
+  }
+  if(ncol(y)>=4){
+    if(length(unique(y[[4]]))==nrow(y)){
+      names(gr) <- y[[4]]
+      y <- y[,-4]
+    }else{
+      if(all(y[,4]==".")) y <- y[,-4]
+    }
+  }
+  mcols(gr) <- cbind(mcols(gr),y[,-1:-3,drop=FALSE])
+  gr
+}
