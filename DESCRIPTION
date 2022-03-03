@@ -1,7 +1,7 @@
 Package: epiwraps
 Type: Package
 Title: epiwraps: Wrappers for dealing and plotting with epigenomics data
-Version: 0.99.7
+Version: 0.99.8
 Depends: R (>= 3.6)
 Date: 2022-03-03
 Authors@R: c(
@@ -29,7 +29,8 @@ Imports:
     circlize,
     viridisLite,
     ggplot2,
-    cowplot
+    cowplot,
+    UpSetR
 Suggests: 
     knitr,
     rmarkdown,
