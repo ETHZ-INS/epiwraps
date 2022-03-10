@@ -1,6 +1,9 @@
 #' bam2bw
 #' 
 #' Creates a coverage bigwig file from a bam file.
+#' The implementation requires loading the reads in memory, which can be quite
+#' memory-hungry, so consider setting `splitByChr` to an integer above 1 to split
+#' the work into chunks.
 #'
 #' @param bamfile The path to the bam file.
 #' @param output_bw The path to the output bigwig file
@@ -25,10 +28,9 @@
 #' @param maxFragLength Maximum fragment length (ignored if `paired=FALSE`)
 #' @param log1p Whether to log-transform (`log(x+1)`) the (scaled) signal.
 #' @param splitByChr Whether to process chromosomes separately, and if so by how
-#'   many chunks. The should not affect the output, and is simply a slower 
-#'   option when the memory of the whole file would be prohibitive. Can be a 
-#'   logical value, but if used we recommend giving a positive integer giving 
-#'   the number of chunks.
+#'   many chunks. The should not affect the output, and is simply slightly 
+#'   slower and consumes less memory. Can be a logical value, but we instead
+#'   recommend giving a positive integer indicating the number of chunks.
 #' @param ... Passed to `ScanBamParam`
 #' 
 #' @return The bigwig filepath
@@ -49,7 +51,7 @@ bam2bw <- function(bamfile, output_bw, paired=NULL, binWidth=20L, extend=0L,
                    scaling=TRUE, type=c("full","center","start","end"),
                    strand=c("*","+","-"), filter=1L, shift=0L, log1p=FALSE,
                    includeDuplicates=TRUE, includeSecondary=TRUE, minMapq=1L, 
-                   minFragLength=1L, maxFragLength=5000L, splitByChr=FALSE, 
+                   minFragLength=1L, maxFragLength=5000L, splitByChr=3, 
                    ...){
   # check inputs
   stopifnot(length(bamfile)==1 && file.exists(bamfile))
@@ -65,14 +67,15 @@ bam2bw <- function(bamfile, output_bw, paired=NULL, binWidth=20L, extend=0L,
   }
   if(paired) extend <- 0L
   
+  seqs <- Rsamtools::scanBamHeader(bamfile)[[1]]$targets
+  
   # prepare flags for bam reading
   flgs <- scanBamFlag(isDuplicate=ifelse(includeDuplicates,NA,FALSE), 
                       isSecondaryAlignment=ifelse(includeSecondary,NA,FALSE),
                       isMinusStrand=switch(strand, "*"=NA, "+"=FALSE, "-"=TRUE),
                       isNotPassingQualityControls=FALSE)
   
-  if(splitByChr || binWidth>1) # load chr sizes if needed
-    seqs <- Rsamtools::scanBamHeader(bamfile)[[1]]$targets
+  
   
   # generate list of reading params
   if(splitByChr){

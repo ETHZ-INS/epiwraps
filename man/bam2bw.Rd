@@ -21,7 +21,7 @@ bam2bw(
   minMapq = 1L,
   minFragLength = 1L,
   maxFragLength = 5000L,
-  splitByChr = FALSE,
+  splitByChr = 3,
   ...
 )
 }
@@ -65,10 +65,9 @@ duplicates.}
 \item{maxFragLength}{Maximum fragment length (ignored if `paired=FALSE`)}
 
 \item{splitByChr}{Whether to process chromosomes separately, and if so by how
-many chunks. The should not affect the output, and is simply a slower 
-option when the memory of the whole file would be prohibitive. Can be a 
-logical value, but if used we recommend giving a positive integer giving 
-the number of chunks.}
+many chunks. The should not affect the output, and is simply slightly 
+slower and consumes less memory. Can be a logical value, but we instead
+recommend giving a positive integer indicating the number of chunks.}
 
 \item{...}{Passed to `ScanBamParam`}
 }
@@ -77,6 +76,9 @@ The bigwig filepath
 }
 \description{
 Creates a coverage bigwig file from a bam file.
+The implementation requires loading the reads in memory, which can be quite
+memory-hungry, so consider setting `splitByChr` to an integer above 1 to split
+the work into chunks.
 }
 \examples{
 # get an example bam file
