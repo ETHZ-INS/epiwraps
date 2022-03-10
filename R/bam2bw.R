@@ -27,6 +27,8 @@
 #' @param minFragLength Minimum fragment length (ignored if `paired=FALSE`)
 #' @param maxFragLength Maximum fragment length (ignored if `paired=FALSE`)
 #' @param log1p Whether to log-transform (`log(x+1)`) the (scaled) signal.
+#' @param keepSeqLvls An optional vector of seqLevels (i.e. chromosomes) to 
+#'   include.
 #' @param splitByChr Whether to process chromosomes separately, and if so by how
 #'   many chunks. The should not affect the output, and is simply slightly 
 #'   slower and consumes less memory. Can be a logical value, but we instead
@@ -50,9 +52,9 @@
 bam2bw <- function(bamfile, output_bw, paired=NULL, binWidth=20L, extend=0L, 
                    scaling=TRUE, type=c("full","center","start","end"),
                    strand=c("*","+","-"), filter=1L, shift=0L, log1p=FALSE,
-                   includeDuplicates=TRUE, includeSecondary=TRUE, minMapq=1L, 
-                   minFragLength=1L, maxFragLength=5000L, splitByChr=3, 
-                   keepSeqLvls=NULL, ...){
+                   includeDuplicates=TRUE, includeSecondary=FALSE, minMapq=1L, 
+                   minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
+                   splitByChr=3, ...){
   # check inputs
   stopifnot(length(bamfile)==1 && file.exists(bamfile))
   stopifnot(length(output_bw)==1 && is.character(output_bw))
@@ -69,7 +71,7 @@ bam2bw <- function(bamfile, output_bw, paired=NULL, binWidth=20L, extend=0L,
   
   seqs <- Rsamtools::scanBamHeader(bamfile)[[1]]$targets
   if(!is.null(keepSeqLvls)){
-    if(length(missingLvls <- setdiff(keepSeqLvls), names(seqs))>0)
+    if(length(missingLvls <- setdiff(keepSeqLvls, names(seqs))>0))
       stop(paste0(
         "Some of the seqLevels specified by `keepSeqLvls` are not in the data.
 The first few are:",

@@ -17,10 +17,11 @@ bam2bw(
   shift = 0L,
   log1p = FALSE,
   includeDuplicates = TRUE,
-  includeSecondary = TRUE,
+  includeSecondary = FALSE,
   minMapq = 1L,
   minFragLength = 1L,
   maxFragLength = 5000L,
+  keepSeqLvls = NULL,
   splitByChr = 3,
   ...
 )
@@ -64,6 +65,9 @@ duplicates.}
 
 \item{maxFragLength}{Maximum fragment length (ignored if `paired=FALSE`)}
 
+\item{keepSeqLvls}{An optional vector of seqLevels (i.e. chromosomes) to 
+include.}
+
 \item{splitByChr}{Whether to process chromosomes separately, and if so by how
 many chunks. The should not affect the output, and is simply slightly 
 slower and consumes less memory. Can be a logical value, but we instead
@@ -76,9 +80,9 @@ The bigwig filepath
 }
 \description{
 Creates a coverage bigwig file from a bam file.
-The implementation requires loading the reads in memory, which can be quite
-memory-hungry, so consider setting `splitByChr` to an integer above 1 to split
-the work into chunks.
+Note that the implementation requires loading the reads in memory, which can 
+be quite memory-hungry. Increasing `splitByChr` will decrease the memory 
+footprint.
 }
 \examples{
 # get an example bam file
