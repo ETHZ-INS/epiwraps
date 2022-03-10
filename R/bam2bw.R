@@ -1,9 +1,9 @@
 #' bam2bw
 #' 
 #' Creates a coverage bigwig file from a bam file.
-#' The implementation requires loading the reads in memory, which can be quite
-#' memory-hungry, so consider setting `splitByChr` to an integer above 1 to split
-#' the work into chunks.
+#' Note that the implementation requires loading the reads in memory, which can 
+#' be quite memory-hungry. Increasing `splitByChr` will decrease the memory 
+#' footprint.
 #'
 #' @param bamfile The path to the bam file.
 #' @param output_bw The path to the output bigwig file
@@ -52,7 +52,7 @@ bam2bw <- function(bamfile, output_bw, paired=NULL, binWidth=20L, extend=0L,
                    strand=c("*","+","-"), filter=1L, shift=0L, log1p=FALSE,
                    includeDuplicates=TRUE, includeSecondary=TRUE, minMapq=1L, 
                    minFragLength=1L, maxFragLength=5000L, splitByChr=3, 
-                   ...){
+                   keepSeqLvls=NULL, ...){
   # check inputs
   stopifnot(length(bamfile)==1 && file.exists(bamfile))
   stopifnot(length(output_bw)==1 && is.character(output_bw))
@@ -68,14 +68,20 @@ bam2bw <- function(bamfile, output_bw, paired=NULL, binWidth=20L, extend=0L,
   if(paired) extend <- 0L
   
   seqs <- Rsamtools::scanBamHeader(bamfile)[[1]]$targets
+  if(!is.null(keepSeqLvls)){
+    if(length(missingLvls <- setdiff(keepSeqLvls), names(seqs))>0)
+      stop(paste0(
+        "Some of the seqLevels specified by `keepSeqLvls` are not in the data.
+The first few are:",
+        head(paste(missingLvls, collapse=", "), 3)))
+    seqs <- seqs[keepSeqLvls]
+  }
   
   # prepare flags for bam reading
   flgs <- scanBamFlag(isDuplicate=ifelse(includeDuplicates,NA,FALSE), 
                       isSecondaryAlignment=ifelse(includeSecondary,NA,FALSE),
                       isMinusStrand=switch(strand, "*"=NA, "+"=FALSE, "-"=TRUE),
                       isNotPassingQualityControls=FALSE)
-  
-  
   
   # generate list of reading params
   if(splitByChr){
@@ -92,26 +98,37 @@ bam2bw <- function(bamfile, output_bw, paired=NULL, binWidth=20L, extend=0L,
       ScanBamParam(flag=flgs, mapqFilter=minMapq, 
                    which=GRanges(names(x), IRanges(1L,x)), ...))
   }else{
-    param <- list(wg=ScanBamParam(flag=flgs, mapqFilter=minMapq, ...))
+    chrGroup <- list(wg=seqs)
+    param <- list(wg=ScanBamParam(flag=flgs, mapqFilter=minMapq, ..., 
+                                  which=GRanges(names(seqs), IRanges(1L,seqs))))
   }
 
   # obtain coverage (and total count)
-  res <- lapply(names(param), FUN=function(x){
-    bam <- .bam2bwGetReads(bamfile, paired, param[[x]], scaling, type, extend,
-                           minFragLength, maxFragLength)
-    if(splitByChr) seqs <- chrGroup[[x]]
-    co <- .bam2bwGetCov(bam, binWidth=binWidth, shift=shift, seqs=seqs, 
+  # need to replace the `supressWarnings` with a fix for out-of-chr warnings due
+  #   to extension
+  res <- suppressWarnings(lapply(names(param), FUN=function(x){
+    bam <- .bam2bwGetReads(bamfile, paired, param=param[[x]], scaling=scaling, 
+                           type=type, extend=extend, minFragLength=minFragLength,
+                           maxFragLength=maxFragLength)
+    co <- .bam2bwGetCov(bam, binWidth=binWidth, shift=shift, seqs=chrGroup[[x]], 
                         filter=filter)
-    ls <- metadata(bam)$reads
+    metadata(co)$reads <- metadata(bam)$reads
     rm(bam)
     gc(verbose=FALSE)
-    list(cov=co, ls=ls)
-  })
+    co
+  }))
 
   if(isTRUE(scaling))
-    scaling <- sum(unlist(lapply(res, FUN=function(x) x$ls)), na.rm=TRUE)/10^6
+    scaling <- sum(unlist(lapply(res, FUN=function(x) metadata(x)$reads )),
+                          na.rm=TRUE)/10^6
   
-  res <- suppressWarnings(do.call(c, lapply(res, FUN=function(x) x$cov)))
+  if(is(res[[1]], "GRanges")){
+    res <- unlist(GRangesList(res))
+  }else{
+    res <- lapply(res, as.list)
+    names(res) <- NULL
+    res <- do.call(RleList, unlist(res, recursive=FALSE))
+  }
   if(!isFALSE(scaling)){
     stopifnot(scaling>0)
     if(is(res, "RleList")){
@@ -145,7 +162,7 @@ bam2bw <- function(bamfile, output_bw, paired=NULL, binWidth=20L, extend=0L,
   }else{
     bam <- as(readGAlignments(bamfile, param=param), "GRanges")
     ls <- length(bam)
-    if(type %in% c("full","center"))
+    if(type %in% c("full","center") && extend!=0L)
       bam <- resize(bam, width(bam)+as.integer(extend), use.names=FALSE)
   }
   if(type!="full") bam <- resize(bam, width=1L, fix=type, use.names=FALSE)
@@ -154,7 +171,7 @@ bam2bw <- function(bamfile, output_bw, paired=NULL, binWidth=20L, extend=0L,
 }
 
 .bam2bwGetCov <- function(bam, binWidth, shift, seqs, filter){
-  if(binWidth==1L) return(coverage(bam, shift=shift))
+  if(binWidth==1L) return(coverage(bam, shift=shift)[names(seqs)])
   if(shift!=0) bam <- shift(bam, shift=shift, use.names=FALSE)
   tiles <- tileGenome(seqs, tilewidth=binWidth, cut.last.tile.in.chrom=TRUE)
   score(tiles) <- countOverlaps(tiles, bam, minoverlap=1L)
