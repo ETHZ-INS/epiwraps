@@ -95,7 +95,7 @@ plotSignalTracks <- function(files=c(), region, ensdb=NULL, colors="darkblue",
   if(all(extend<=1) & all(extend>=0))
     extend <- round(extend*(region[[3]]-region[[2]]))
   if(length(extend)<2) extend <- c(extend,extend)
-  region2 <- list(region[[1]], max(0L, region[[2]]-extend[1]), 
+  region2 <- list(region[[1]], max(1L, region[[2]]-extend[1]), 
                   region[[3]]+extend[2])
   
   # check file formats (from names)
