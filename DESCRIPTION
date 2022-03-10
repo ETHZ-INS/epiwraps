@@ -1,9 +1,9 @@
 Package: epiwraps
 Type: Package
 Title: epiwraps: Wrappers for dealing and plotting with epigenomics data
-Version: 0.99.9
+Version: 0.99.10
 Depends: R (>= 3.6)
-Date: 2022-03-03
+Date: 2022-03-10
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
             role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
@@ -40,8 +40,9 @@ Suggests:
     BiocStyle,
     testthat (>= 3.0.0)
 Description:
-    A set of wrappers to facilitate working with epigenomics data, in particular
-    plotting...
+    A set of wrappers to facilitate working with epigenomics data.
+    Includes in particular wrappers for producing multitrack single-regions plots,
+    enrichment heatmaps, bigwig generation, as well as some extra functions.
 License: GPL-3
 VignetteBuilder: knitr
 RoxygenNote: 7.1.2

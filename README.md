@@ -294,56 +294,13 @@ ggplot(d, aes(position, mean, colour=sample)) +
 ![](readme_files/figure-html/aggPlot-1.png)<!-- -->
 
 
-# Quality control
+# Extra functions
 
-## Coverage statistics
+The package furthermore includes functions to perform the following tasks:
 
-Coverage statistics give an overview of how the reads are distributed across 
-the genome (or more precisely, across a large number of random regions). The 
-`getCovStats` will compute such statistics from bam or bigwig files (from 
-bigwig files will be considerably faster, but if the files are normalized 
-the coverage/density will be relative).
-
-Because our example data spans only part of a chromosome, we'll exclude 
-completely empty regions using the `exclude` parameter, which would normally
-be used to exclude regions likely to be technical artefacts (e.g. blacklisted
-regions). 
-
-
-```r
-# get the path to an example bigwig file:
-bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
-cs <- getCovStats(bwf, exclude=GRanges("1", IRanges(1, 4300000)))
-plotCovStats(cs)
-```
-
-![](readme_files/figure-html/covstats-1.png)<!-- -->
-
-Panel A shows the proportion of sampled regions which are above a certain read 
-density (relative because this is a normalized bigwig file, would be coverage 
-otherwise). This shows us, for example, that as expected only a minority of 
-regions have any reads at all (indicating that the reads are not randomly 
-distributed).
-Panel B is what is sometimes called a fingerprint plot. It similarly shows us 
-that the reads are concentrated in very few regions, since the vast majority of
-regions have only a very low fraction of the coverage of a few high-density 
-regions.
-Randomly distributed reads would go along the diagonal, but one normally has a 
-curve somewhere between this line and the lower-right corner -- the farther 
-away from the diagonal, to more strongly enriched the data is.
-
-This can be done for multiple files simultaneously. If we have several files, 
-we can also use the coverage in the random windows to computer their similarity 
-(see `?plotCorFromCovStats`).
-
-# Fragment length distributions
-
-Given one or more paired-end bam files, we can extract and plot the fragment 
-length distribution using:
-
-
-```r
-fragSizesDist(bam, what=100)
-```
-
-![](readme_files/figure-html/fragSize-1.png)<!-- -->
+* Bigwig file generation (see `?bam2bw`)
+* Basic peak calling (see `?callPeaks`)
+* Some quality controls, in particular coverage statistics (see `?getCovStats`)
+  and fragment length distributions (see `?fragSizesDist`).
+  
+See the package's vignette for more information.

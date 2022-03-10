@@ -257,10 +257,27 @@ ggplot(d, aes(position, mean, colour=sample)) +
   geom_vline(xintercept=0, linetype="dashed") + geom_line(lwd=2)
 ```
 
+# Extra functionalities
 
-# Quality control
+## Generating bigwig files
 
-## Coverage statistics
+The `bam2bw` function can be used to create a bigwig file from a bam file:
+
+```{r}
+bam2bw(bamfile=bam, output_bw="test.bw", binWidth=10, scaling=TRUE)
+```
+
+## Peak calling
+
+A very simple peak calling based on `r BiocStyle::Biocpkg("csaw")` can be used,
+either against an input control or against local or global backgrounds:
+
+```{r}
+p <- callPeaks(bam)
+```
+## Quality control
+
+### Coverage statistics
 
 Coverage statistics give an overview of how the reads are distributed across 
 the genome (or more precisely, across a large number of random regions). The 
@@ -296,7 +313,7 @@ This can be done for multiple files simultaneously. If we have several files,
 we can also use the coverage in the random windows to computer their similarity 
 (see `?plotCorFromCovStats`).
 
-# Fragment length distributions
+### Fragment length distributions
 
 Given one or more paired-end bam files, we can extract and plot the fragment 
 length distribution using:
