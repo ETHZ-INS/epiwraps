@@ -267,6 +267,8 @@ The `bam2bw` function can be used to create a bigwig file from a bam file:
 bam2bw(bamfile=bam, output_bw="test.bw", binWidth=10, scaling=TRUE)
 ```
 
+See `?bam2bw` for more detail.
+
 ## Peak calling
 
 A very simple peak calling based on `r BiocStyle::Biocpkg("csaw")` can be used,
@@ -275,6 +277,11 @@ either against an input control or against local or global backgrounds:
 ```{r}
 p <- callPeaks(bam)
 ```
+
+Note however that the caller hasn't been thoroughly tested, and given its 
+simplicity it's very likely that it is less robust than more established
+methods. This being said, when the data is unambiguous, so are the peaks.
+
 ## Quality control
 
 ### Coverage statistics

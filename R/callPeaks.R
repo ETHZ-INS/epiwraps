@@ -28,6 +28,9 @@
 #' narrow peaks (see \code{\link[csaw]{filterWindowsLocal}}), or based on a 
 #' global background for broad peaks (see 
 #' \code{\link[csaw]{filterWindowsGlobal}}).
+#' Note that the caller hasn't been thoroughly tested, and given its 
+#' simplicity it's very likely that it is less robust than more established
+#' methods.
 #'
 #' @importFrom csaw windowCounts findMaxima regionCounts filterWindowsLocal
 #' @importFrom csaw filterWindowsControl readParam
