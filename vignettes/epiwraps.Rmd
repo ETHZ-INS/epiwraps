@@ -13,7 +13,7 @@ abstract: |
   functionalities, in particular for plotting data along genomic coordinates 
   (genome-browser-like), plotting signal heatmaps, etc.
 vignette: |
-  %\VignetteIndexEntry{1_epiwraps}
+  %\VignetteIndexEntry{epiwraps}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
