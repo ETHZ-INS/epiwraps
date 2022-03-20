@@ -7,11 +7,13 @@
 bam2bw(
   bamfile,
   output_bw,
+  bgbam = NULL,
   paired = NULL,
   binWidth = 20L,
   extend = 0L,
+  compType = c("ppois", "subtract", "logFE"),
   scaling = TRUE,
-  type = c("full", "center", "start", "end"),
+  type = c("full", "center", "start", "end", "ends"),
   strand = c("*", "+", "-"),
   filter = 1L,
   shift = 0L,
@@ -23,13 +25,18 @@ bam2bw(
   maxFragLength = 5000L,
   keepSeqLvls = NULL,
   splitByChr = 3,
+  pseudocount = 1L,
+  verbose = TRUE,
   ...
 )
 }
 \arguments{
-\item{bamfile}{The path to the bam file.}
+\item{bamfile}{The path to the signal bam file.}
 
 \item{output_bw}{The path to the output bigwig file}
+
+\item{bgbam}{The optional path to the control/input bam file to compute 
+relative signal (see the `compType` argument).}
 
 \item{paired}{Logical; whether to consider fragments instead of reads for 
 paired-end data. For spliced (e.g. RNA-seq) data, paired should always be 
@@ -38,21 +45,33 @@ set to FALSE.}
 \item{binWidth}{The window size. A lower value (min 1) means a higher 
 resolution, but larger file size.}
 
-\item{extend}{How much to extend single-end reads}
+\item{extend}{The amount *by* which to extend single-end reads (e.g. 
+fragment length minus read length). Ignored if `paired=TRUE`.}
+
+\item{compType}{The type of relative signal to compute (ignored if `bgbam` 
+isn't given). Can either be `ppois` (-log10 Poisson p-value), `logFE` 
+(log10 fold-enrichment), or `subtract`. If `logFE`, the `pseudocount` 
+will be added before computing the ratio.}
 
 \item{scaling}{Either TRUE (performs Count Per Million scaling), FALSE (no 
-scaling), or a numeric value by which the signal will be divided.}
+scaling), or a numeric value by which the signal will be divided. If 
+`bgbam` is given and `scaling=TRUE`, the background will be scaled to the
+main signal.}
 
 \item{type}{Type of the coverage to compile. Either full (full read/fragment),
-start (count read/fragment start locations), end, or center.}
+start (count read/fragment start locations), end, center, or 'ends' (both
+ends of the read/fragment).}
 
-\item{strand}{Strand(s) to capture}
+\item{strand}{Strand(s) to capture (any by default).}
 
-\item{filter}{Minimum count for a bin to be considered.}
+\item{filter}{Minimum count (in the signal) for a bin to be considered.}
 
-\item{shift}{Shift (from 3' to 5') by which reads/fragments will be shifted.}
+\item{shift}{Shift (from 3' to 5') by which reads/fragments will be shifted.
+If `shift` is an integer vector of length 2, the first value will represent
+the shift for the positive strand, and the second for the negative strand.}
 
-\item{log1p}{Whether to log-transform (`log(x+1)`) the (scaled) signal.}
+\item{log1p}{Whether to log-transform (`log(x+1)`) the (scaled) signal.
+Ignored when the signal is relative to a background.}
 
 \item{includeDuplicates}{Logical, whether to include reads flagged as 
 duplicates.}
@@ -70,8 +89,14 @@ include.}
 
 \item{splitByChr}{Whether to process chromosomes separately, and if so by how
 many chunks. The should not affect the output, and is simply slightly 
-slower and consumes less memory. Can be a logical value, but we instead
-recommend giving a positive integer indicating the number of chunks.}
+slower and consumes less memory. Can be a logical value (in which case each
+chromosome is processed separately), but we instead recommend giving a 
+positive integer indicating the number of chunks.}
+
+\item{pseudocount}{The count to be added before fold-enrichment calculation 
+between signals. Only used for `compType="logFE"`.}
+
+\item{verbose}{Logical; whether to print progress messages}
 
 \item{...}{Passed to `ScanBamParam`}
 }
@@ -79,14 +104,27 @@ recommend giving a positive integer indicating the number of chunks.}
 The bigwig filepath
 }
 \description{
-Creates a coverage bigwig file from a bam file.
-Note that the implementation requires loading the reads in memory, which can 
-be quite memory-hungry. Increasing `splitByChr` will decrease the memory 
-footprint.
+Creates a coverage bigwig file from an alignment bam file.
+}
+\details{
+* For single-end ChIPseq data, extend reads to the expected fragment size 
+  using the `extend` argument.
+* The implementation involves reading the reads before processing, which can
+ be quite memory-hungry. To avoid this the files are read by chunks (composed
+  of chromosomes of balanced sizes), controlled by the `splitByChr` argument.
+  This reduces memory usage but also creates overhead which reduces the 
+  speed. In contexts where the file is small or memory isn't a problem, using 
+ `splitByChr=FALSE` will achieve the best speed. Otherwise, increasing 
+ `splitByChr` will decrease the memory footprint.
+* Consider restricting the read quality using `includeDuplicates=FALSE` 
+  and `minMapq=20` for example.
 }
 \examples{
 # get an example bam file
 bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 # create bigwig
-bam2bw(bam, scaling=TRUE)
+bam2bw(bam, "output.bw")
+}
+\author{
+Pierre-Luc Germain
 }
