@@ -26,6 +26,7 @@ bam2bw(
   keepSeqLvls = NULL,
   splitByChr = 3,
   pseudocount = 1L,
+  localBackground = c(1000L, 5000L),
   verbose = TRUE,
   ...
 )
@@ -95,6 +96,13 @@ positive integer indicating the number of chunks.}
 
 \item{pseudocount}{The count to be added before fold-enrichment calculation 
 between signals. Only used for `compType="logFE"`.}
+
+\item{localBackground}{Whether to use the local background instead of the 
+count at the specific position/window when computing relative signal 
+(analogous to MACS). Can either be a logical value, or an integer vector of
+multiple sizes at which to compute a local background (as average signal).
+The maximum of the average background signal across the window sizes will 
+be used. If TRUE, will use 1kb and 5kb.}
 
 \item{verbose}{Logical; whether to print progress messages}
 

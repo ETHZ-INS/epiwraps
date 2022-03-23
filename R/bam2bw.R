@@ -46,6 +46,12 @@
 #'   will be added before computing the ratio.
 #' @param pseudocount The count to be added before fold-enrichment calculation 
 #'   between signals. Only used for `compType="logFE"`.
+#' @param localBackground Whether to use the local background instead of the 
+#'   count at the specific position/window when computing relative signal 
+#'   (analogous to MACS). Can either be a logical value, or an integer vector of
+#'   multiple sizes at which to compute a local background (as average signal).
+#'   The maximum of the average background signal across the window sizes will 
+#'   be used. If TRUE, will use 1kb and 5kb.
 #' @param verbose Logical; whether to print progress messages
 #' @param ... Passed to `ScanBamParam`
 #' 
@@ -73,7 +79,8 @@
 #' @importFrom GenomicRanges resize countOverlaps width score score<- coverage 
 #' @importFrom GenomicRanges tileGenome shift trim
 #' @importFrom GenomeInfoDb Seqinfo seqinfo seqinfo<-
-#' @importFrom S4Vectors metadata metadata<-
+#' @importFrom S4Vectors metadata metadata<- runmean
+#' @importFrom IRanges Rle
 #' 
 #' @examples 
 #' # get an example bam file
@@ -86,7 +93,8 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
                    strand=c("*","+","-"), filter=1L, shift=0L, log1p=FALSE,
                    includeDuplicates=TRUE, includeSecondary=FALSE, minMapq=1L, 
                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
-                   splitByChr=3, pseudocount=1L, verbose=TRUE, ...){
+                   splitByChr=3, pseudocount=1L, localBackground=c(1000L,5000L),
+                   verbose=TRUE, ...){
   # check inputs
   stopifnot(length(bamfile)==1 && file.exists(bamfile))
   if(!is.null(bgbam)){
@@ -189,6 +197,11 @@ The first few are:",
   }
   res <- .bam2bwScaleCovList(res, scaling=FALSE)
   bg <- .bam2bwScaleCovList(bg, scaling=scaling)
+  
+  if(!isFALSE(localBackground)){
+    if(isTRUE(localBackground)) localBackground <- 1000L*c(1L,5L)
+    bg <- .bam2bwLocalBackground(bg, binWidth=binWidth, windows=localBackground)
+  }
   
   if(is(res, "RleList")){
     res <- switch(compType,
@@ -314,4 +327,26 @@ The first few are:",
     }
   }
   res
+}
+
+#' @importFrom stats pmax
+# calculates local background at positions, analogous to MACS
+.bam2bwLocalBackground <- function(x, binWidth=1L, windows=1000L*c(1L,5L)){
+  if(is(x,"GRanges")){
+    x <- x[order(seqnames(x))]
+    score(x) <- Rle(score(x))
+    score(x) <- unlist(.bam2bwLocalBackground(
+      split(Rle(score(x)), seqnames(x)), binWidth=binWidth, windows=windows))
+    return(x)
+  }
+  if(is.numeric(x)) x <- Rle(x)
+  stopifnot(is(x,"RleList") || is(x,"Rle"))
+  windows <- windows[windows>=binWidth]
+  if(length(windows)==0) return(x)
+  windows <- as.integer(windows/binWidth)
+  if(length(windows)==1) return(runmean(x, k=windows, endrule = "constant"))
+  do.call(pmax, lapply(windows, FUN=function(w){
+    if(w==1) return(x)
+    runmean(x, k=w, endrule = "constant")
+  }))
 }
