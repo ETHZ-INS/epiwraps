@@ -34,7 +34,7 @@ regionUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
     if(is.null(names(x)) && all(unlist(lapply(x,is.character))) && 
        all(lengths(x)==1))
       names(x) <- unlist(x)
-    if(any(lapply(x,FUN=function(x){
+    if(any(unlist(lapply(x,FUN=function(x){
       if(is.character(x)){
         if(length(x)!=0) return(TRUE)
         if(!file.exists(x)) return(TRUE)
@@ -42,9 +42,11 @@ regionUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
         return(TRUE)
       }
       FALSE
-    }))) stop("`x` should either be i) a named list of GRanges, ii) a 
-              GRangesList, or iii) a named list of character vectors, each of
-              length 1 and providing the path to a bed file.")
+    })))){
+      stop("`x` should either be i) a named list of GRanges, ii) a 
+            GRangesList, or iii) a named list of character vectors, each of
+            length 1 and providing the path to a bed file.")
+    }
     x <- lapply(x, FUN=function(x){
       if(is.character(x)){
         if(grepl("\\.rds$",x,ignore.case=TRUE)){
