@@ -73,3 +73,40 @@ regionUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
   if(returnList) return(x)
   UpSetR::upset(UpSetR::fromList(x), ...)
 }
+
+
+#' regionOverlaps
+#'
+#' @param listOfRegions A named list of two or more (non-empty) `GRanges`
+#' @param ignore.strand Logical; whether to ignore strand for overlaps
+#' @param color Heatmap colorscale
+#' @param number_color Values color
+#' @param ... Passed to \code{\link[ComplexHeatmap]{pheatmap}}
+#'
+#' @return A `Heatmap` showing the overlap coefficient as colors, and the 
+#'   overlap size as values.
+#' @importFrom IRanges overlapsAny
+#' @importFrom ComplexHeatmap pheatmap
+#' @importFrom viridis plasma
+#' @export
+regionOverlaps <- function(listOfRegions, ignore.strand=TRUE, 
+                           color=viridis::plasma(100),
+                           number_color="black", ...){
+  stopifnot(length(listOfRegions)>1 && all(lengths(listOfRegions)>0) &&
+              all(sapply(listOfRegions,class2="GRanges",is)))
+  o <- suppressWarnings(sapply(listOfRegions, FUN=function(x){
+    sapply(listOfRegions, FUN=function(y){
+      if(identical(x,y)) return(length(x))
+      sum(overlapsAny(x,y,ignore.strand=ignore.strand))
+    })
+  }))
+  co <- sapply(seq_along(listOfRegions), FUN=function(x){
+    sapply(seq_along(listOfRegions), FUN=function(y){
+      if(identical(x,y)) return(NA_real_)
+      round(o[x,y]/min(lengths(listOfRegions[c(x,y)])),2)
+    })
+  })
+  dimnames(co) <- dimnames(o)
+  ComplexHeatmap::pheatmap(co, display_numbers=o, number_color=number_color,
+                           name="overlap\ncoefficient", color=color, ...)
+}
