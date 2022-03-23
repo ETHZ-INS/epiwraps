@@ -7,8 +7,8 @@
 signal2Matrix(
   filepaths,
   regions,
-  extend = 1000,
-  w = 10,
+  extend = 2000,
+  w = round(max(10, extend/200)),
   cuts = FALSE,
   ...,
   RPM = TRUE,

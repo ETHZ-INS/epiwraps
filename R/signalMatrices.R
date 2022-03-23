@@ -43,8 +43,9 @@
 #' # the matrix has the same size, but shows broader regions:
 #' dim(m[[1]])
 #' plotEnrichedHeatmaps(m)
-signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE, 
-                          ..., RPM=TRUE, BPPARAM=1L,
+signal2Matrix <- function(filepaths, regions, extend=2000, 
+                          w=round(max(10,extend/200)), cuts=FALSE, ..., 
+                          RPM=TRUE, BPPARAM=1L,
                           flgs=scanBamFlag(isDuplicate=FALSE,
                                            isSecondaryAlignment=FALSE)){
   if(!all(unlist(lapply(filepaths, file.exists))))
