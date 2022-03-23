@@ -21,7 +21,6 @@
 #' @import GenomicRanges
 #' @importFrom BiocParallel bplapply SerialParam MulticoreParam
 #' @importFrom Rsamtools scanBamFlag ScanBamParam countBam
-#' @importFrom genomation ScoreMatrix
 #' @import EnrichedHeatmap
 #' @importFrom rtracklayer import BigWigSelection
 #' @importFrom GenomicAlignments readGAlignmentPairs
@@ -71,7 +70,9 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
     message("Reading ", filepath)
     if(grepl("\\.bam$",filepath,ignore.case=TRUE)){
       ####### BAM INPUT
-      
+      if(!suppressWarnings(requireNamespace("genomation", quietly=TRUE)))
+        stop("Please install the `genomation` package to enable plotting 
+             directly from bam files.")
       libsize <- NULL
       if(is.null(RPM) || RPM)
         libsize <- Rsamtools::countBam(filepath, 
@@ -80,6 +81,7 @@ signal2Matrix <- function(filepaths, regions, extend=1000, w=10, cuts=FALSE,
         params <- Rsamtools::ScanBamParam(which=regions2, flag=flgs)
         bam <- GenomicAlignments::readGAlignmentPairs(filepath, param=params)
         bam <- coverage(.align2cuts(bam))
+        
         mat <- genomation::ScoreMatrix(bam, windows=regions2, 
                                        strand.aware=FALSE, library.size=libsize)
         rm(bam)
