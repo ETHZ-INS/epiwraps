@@ -112,3 +112,73 @@ regionOverlaps <- function(listOfRegions, ignore.strand=TRUE,
   ComplexHeatmap::pheatmap(co, display_numbers=o, number_color=number_color,
                            name="overlap\ncoefficient", color=color, ...)
 }
+
+
+
+#' regionCAT
+#'
+#' Computes/plots the 'concordance at the top' (CAT) of two lists of genomic
+#'   regions.
+#'
+#' @param regions1 A GRanges object
+#' @param regions2 A GRanges object
+#' @param start The rank at which to start plotting (removes large variations
+#'   at the beginning when very few regions are considered)
+#' @param concord.type Concordance type to plot, either 'inTop', 'inAll', or 
+#'   'both' (see details). Ignored if `returnData=TRUE`.
+#' @param returnData Logical; whether to return the data instead of plotting.
+#' @param ignore.strand Logical; whether to ignore the strand for computing
+#'   overlap (default TRUE)
+#'   
+#' @details 
+#' The two concordance types are as follows:
+#' * 'inTop' indicates the proportion of the top X regions that are in the top 
+#'   X in both lists.
+#' * 'all' indicates the proportion of the top X regions that are anywhere in 
+#'   the other list (since this relationship is asymmetrical, the mean of both
+#'   two directions is used).
+#'
+#' @return A ggplot object, or a data.frame if `returnData=TRUE`.
+#' @export
+#' @importFrom GenomicRanges reduce
+regionCAT <- function(regions1, regions2, start=5L,
+                      concord.type=c("both","inTop","inAll"),
+                      returnData=FALSE, ignore.strand=TRUE){
+  stopifnot(is(regions1,"GRanges") && is(regions1,"GRanges"))
+  stopifnot(length(regions1)>start && length(regions1)>start)
+  stopifnot(!is.null(regions1$score) && !is.null(regions2$score))
+  concord.type <- match.arg(concord.type)
+  o <- reduce(c(regions1,regions2), with.revmap=TRUE,
+              ignore.strand=ignore.strand)$revmap
+  o <- unlist(o[lengths(o)>1])
+  o1 <- o[o<=length(regions1)]
+  o2 <- o[o>length(regions1)]-length(regions1)
+  regions1$overlaps <- seq_along(regions1) %in% o1
+  regions2$overlaps <- seq_along(regions2) %in% o2
+  regions1 <- head(regions1$overlaps[order(-regions1$score)], 
+                   min(length(regions1),length(regions2)))
+  regions2 <- head(regions2$overlaps[order(-regions2$score)], 
+                   min(length(regions1),length(regions2)))
+  d <- data.frame(rank=seq_along(regions1), 
+                  p.all=(cumsum(regions1)/seq_along(regions1) + 
+                           cumsum(regions2)/seq_along(regions2))/2,
+                  p.top=cumsum(regions1 & regions2)/seq_along(regions1))
+  if(returnData) return(d)
+  
+  d <- d[d$rank>=start,]
+  if(concord.type=="both"){
+    d <- rbind( cbind(type=rep("inTop",nrow(d)),
+                      setNames(d[,c("rank","p.top")], c("rank","prop"))),
+                cbind(type=rep("inAll",nrow(d)),
+                      setNames(d[,c("rank","p.all")], c("rank","prop"))) )
+    return(ggplot(d, aes(rank, prop, colour=type)) + geom_line(size=1.5) +
+             labs(x="Rank", y="Proportion of overlap"))
+  }else if(concord.type=="inTop"){
+    d$prop <- d$p.top
+  }else{
+    d$prop <- d$p.all
+  }
+  requireNamespace("ggplot2")
+  ggplot2::ggplot(d, ggplot2::aes(rank, prop)) + ggplot2::geom_line(size=1.5) +
+    ggplot2::labs(x="Rank", y="Proportion of overlap")
+}
