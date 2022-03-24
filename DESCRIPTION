@@ -1,7 +1,7 @@
 Package: epiwraps
 Type: Package
 Title: epiwraps: Wrappers for plotting and dealing with epigenomics data
-Version: 0.99.15
+Version: 0.99.16
 Depends: R (>= 4.0)
 Date: 2022-03-23
 Authors@R: c(

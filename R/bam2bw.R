@@ -79,8 +79,8 @@
 #' @importFrom GenomicRanges resize countOverlaps width score score<- coverage 
 #' @importFrom GenomicRanges tileGenome shift trim
 #' @importFrom GenomeInfoDb Seqinfo seqinfo seqinfo<-
-#' @importFrom S4Vectors metadata metadata<- runmean
-#' @importFrom IRanges Rle
+#' @importFrom S4Vectors metadata metadata<- runmean Rle
+#' @importFrom IRanges RleList
 #' 
 #' @examples 
 #' # get an example bam file
@@ -329,7 +329,6 @@ The first few are:",
   res
 }
 
-#' @importFrom stats pmax
 # calculates local background at positions, analogous to MACS
 .bam2bwLocalBackground <- function(x, binWidth=1L, windows=1000L*c(1L,5L)){
   if(is(x,"GRanges")){
