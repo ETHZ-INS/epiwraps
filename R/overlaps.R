@@ -83,8 +83,7 @@ regionUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
 #' @param listOfRegions A named list of two or more (non-empty) `GRanges`
 #' @param ignore.strand Logical; whether to ignore strand for overlaps
 #' @param color Heatmap colorscale
-#' @param cluster_cols Logical; whether to cluster columns
-#' @param cluster_rows Logical; whether to cluster rows
+#' @param cluster Logical; whether to cluster rows/columns
 #' @param number_color Values color
 #' @param ... Passed to \code{\link[ComplexHeatmap]{pheatmap}}
 #'
@@ -95,9 +94,8 @@ regionUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
 #' @importFrom viridis plasma
 #' @export
 regionOverlaps <- function(listOfRegions, ignore.strand=TRUE, 
+                           cluster=length(listOfRegions)>2,
                            color=viridis::plasma(100),
-                           cluster_cols=length(listOfRegions)>2,
-                           cluster_rows=length(listOfRegions)>2,
                            number_color="black", ...){
   stopifnot(length(listOfRegions)>1 && all(lengths(listOfRegions)>0) &&
               all(sapply(listOfRegions,class2="GRanges",is)))
@@ -113,10 +111,12 @@ regionOverlaps <- function(listOfRegions, ignore.strand=TRUE,
       round(o[x,y]/min(lengths(listOfRegions[c(x,y)])),2)
     })
   })
+  h <- NULL
+  if(cluster) h <- hclust(dist(co))
   if(length(unique(as.numeric(co)))<3) co[is.na(co)] <- 1
   dimnames(co) <- dimnames(o)
   ComplexHeatmap::pheatmap(co, display_numbers=o, number_color=number_color,
-                          
+                           cluster_rows=h, cluster_cols=h,
                            name="overlap\ncoefficient", color=color, ...)
 }
 
