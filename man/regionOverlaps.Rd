@@ -8,6 +8,8 @@ regionOverlaps(
   listOfRegions,
   ignore.strand = TRUE,
   color = viridis::plasma(100),
+  cluster_cols = length(listOfRegions) > 2,
+  cluster_rows = length(listOfRegions) > 2,
   number_color = "black",
   ...
 )
@@ -18,6 +20,10 @@ regionOverlaps(
 \item{ignore.strand}{Logical; whether to ignore strand for overlaps}
 
 \item{color}{Heatmap colorscale}
+
+\item{cluster_cols}{Logical; whether to cluster columns}
+
+\item{cluster_rows}{Logical; whether to cluster rows}
 
 \item{number_color}{Values color}
 
