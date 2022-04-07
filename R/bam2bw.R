@@ -52,6 +52,9 @@
 #'   multiple sizes at which to compute a local background (as average signal).
 #'   The maximum of the average background signal across the window sizes will 
 #'   be used. If TRUE, will use 1kb and 5kb.
+#' @param forceSeqlevelsStyle If specified, forces the use of the specified 
+#'   seqlevel style for the output bigwig. Can take any value accepted by
+#'   `seqlevelsStyle`.
 #' @param verbose Logical; whether to print progress messages
 #' @param ... Passed to `ScanBamParam`
 #' 
@@ -94,7 +97,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
                    includeDuplicates=TRUE, includeSecondary=FALSE, minMapq=1L, 
                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
                    splitByChr=3, pseudocount=1L, localBackground=c(1000L,5000L),
-                   verbose=TRUE, ...){
+                   forceSeqlevelsStyle=NULL, verbose=TRUE, ...){
   # check inputs
   stopifnot(length(bamfile)==1 && file.exists(bamfile))
   if(!is.null(bgbam)){
@@ -163,7 +166,7 @@ The first few are:",
     .bam2bwReadChunk(bamfile, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
-                     seqs=chrGroup[[x]])
+                     seqs=chrGroup[[x]], forceStyle=forceSeqlevelsStyle)
   })
   
   if(is.null(bgbam)){
@@ -184,7 +187,8 @@ The first few are:",
     .bam2bwReadChunk(bgbam, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
-                     seqs=chrGroup[[x]], filter=0, tiles=tiles)
+                     seqs=chrGroup[[x]], filter=0, tiles=tiles,
+                     forceStyle=forceSeqlevelsStyle)
   })
 
   if(verbose) message("Computing relative signal...")
@@ -229,9 +233,15 @@ The first few are:",
 }
 
 .bam2bwReadChunk <- function(bamfile, param, binWidth, seqs, filter=0,
-                             tiles=NULL, ...){
+                             tiles=NULL, forceStyle=NULL, ...){
   # get reads/fragments from chunk
   bam <- .bam2bwGetReads(bamfile, param=param, si=seqs, ...)
+  if(!is.null(forceStyle)){
+    seqlevelsStyle(bam) <- forceStyle
+    si <- Seqinfo(names(seqs), as.integer(seqs))
+    seqlevelsStyle(si) <- forceStyle
+    seqs <- seqlengths(si)
+  }
   # compute coverages
   co <- .bam2bwGetCov(bam, binWidth=binWidth, seqs=seqs, 
                       tiles=tiles, filter=filter)
@@ -309,6 +319,10 @@ The first few are:",
   }else{
     res <- lapply(res, as.list)
     names(res) <- NULL
+    res <- lapply(res, FUN=function(x){
+      x[!sapply(x, FUN=function(x) length(x@values)==1L && all(x@values==0L))]
+    })
+    res <- res[lengths(res)>0L]
     res <- do.call(RleList, unlist(res, recursive=FALSE))
   }
   if(!isFALSE(scaling)){
@@ -348,4 +362,10 @@ The first few are:",
     if(w==1) return(x)
     runmean(x, k=w, endrule = "constant")
   }))
+}
+
+.align2cuts <- function(x){
+  x <- granges(GRanges(x))
+  sort(c(resize(x, width=1L, fix="start", use.names=FALSE),
+         resize(x, width=1L, fix="end", use.names=FALSE)))
 }

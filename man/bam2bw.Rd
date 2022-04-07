@@ -27,6 +27,7 @@ bam2bw(
   splitByChr = 3,
   pseudocount = 1L,
   localBackground = c(1000L, 5000L),
+  forceSeqlevelsStyle = NULL,
   verbose = TRUE,
   ...
 )
@@ -103,6 +104,10 @@ count at the specific position/window when computing relative signal
 multiple sizes at which to compute a local background (as average signal).
 The maximum of the average background signal across the window sizes will 
 be used. If TRUE, will use 1kb and 5kb.}
+
+\item{forceSeqlevelsStyle}{If specified, forces the use of the specified 
+seqlevel style for the output bigwig. Can take any value accepted by
+`seqlevelsStyle`.}
 
 \item{verbose}{Logical; whether to print progress messages}
 

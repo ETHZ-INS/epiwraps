@@ -4,12 +4,16 @@
 \alias{renormalizeBorders}
 \title{renormalizeBorders}
 \usage{
-renormalizeBorders(ml, method = "TMM")
+renormalizeBorders(
+  ml,
+  method = "linear",
+  nWindows = max(floor(ncol(ml[[1]])/20), 1)
+)
 }
 \arguments{
 \item{ml}{A named matrix list as produced by \code{\link{signal2Matrix}}.}
 
-\item{method}{Normalization method, passed to 
+\item{method}{Either "linear", or a normalization method, passed to 
 \code{\link[edgeR]{calcNormFactors}}.}
 }
 \value{

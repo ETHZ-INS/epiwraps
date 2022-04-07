@@ -287,7 +287,7 @@ signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
   }
   stopifnot(length(region)==1)
   if(is(region,"GRanges") && asGR) return(region)
-  region <- as.character(region)
+  region <- as.character(GRanges(region))
   stopifnot(is.character(region))
   region <- strsplit(gsub("-",":",region),":")[[1]]
   if(length(region)==1){
@@ -312,7 +312,7 @@ signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
       stop("Region input is ambiguous (multiple non-overlapping regions)")
     region <- strsplit(gsub("-",":",as.character(region)),":")[[1]][1:3]
   }
-  stopifnot(length(region)==3)
+  stopifnot(length(region) %in% 3:4)
   region <- as.list(region)
   region[[2]] <- as.integer(region[[2]])
   region[[3]] <- as.integer(region[[3]])

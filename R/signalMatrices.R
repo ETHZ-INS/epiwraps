@@ -190,20 +190,23 @@ signal2Matrix <- function(filepaths, regions, extend=2000,
 plotEnrichedHeatmaps <- function(ml, trim=c(0.01,0.99), colors=inferno(100),
                          scale_title="density", title_size=11, use_raster=NULL, 
                          row_order=NULL, cluster_rows=FALSE, axis_name=NULL, 
-                         scale_rows=FALSE, top_annotation=TRUE, minRowVal=0, ...){
+                         scale_rows=FALSE, top_annotation=TRUE, minRowVal=0, 
+                         ...){
   ml <- .comparableMatrices(ml)
   stopifnot(length(trim) %in% 1:2 && all(trim>=0 & trim <=1))
   stopifnot(length(scale_rows)==1)
   if(isTRUE(minRowVal>0)){
-    rMax <- do.call(cbind, lapply(ml, FUN=matrixStats::rowMaxs))
+    rMax <- matrixStats::rowMaxs(do.call(cbind,
+                                         lapply(ml, FUN=matrixStats::rowMaxs)))
     w <- which(rMax>minRowVal)
-    ml <- lapply(ml, FUN=function(x) x[w,seq_len(ncol(x))])
+    ml <- lapply(ml, i=w, FUN=.resizeNmatrix)
   }
   if(!isFALSE(scale_rows)){
     if(isTRUE(scale_rows) || scale_rows=="global"){
       m <- do.call(cbind, ml)
       rM <- rowMeans(m, na.rm=TRUE)
       rSD <- matrixStats::rowSds(m, na.rm=TRUE)
+      rSD[rSD==0] <- max(rM)
       ml <- lapply(ml, FUN=function(x) (x-rM)/rSD)
       ################
     }else{
@@ -212,13 +215,14 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.01,0.99), colors=inferno(100),
   }
   if(is.null(use_raster)) use_raster <- nrow(ml[[1]])>1000
   hl <- NULL
-  ylim <- c(0,max(unlist(lapply(ml,FUN=function(x){
+  ymin <- min(c(0,unlist(lapply(ml,FUN=min))))
+  ymax <- max(unlist(lapply(ml,FUN=function(x){
     max(colMeans(x)+matrixStats::colSds(x)/sqrt(nrow(x)))
-  }))))
+  })))
   if(length(trim)==1) trim <- c(0,trim)
   trim <- sort(trim)
-  common_min <- min(unlist(lapply(ml,prob=trim[1],FUN=quantile)))
-  common_max <- max(unlist(lapply(ml,prob=trim[2],FUN=quantile)))
+  common_min <- min(unlist(lapply(ml,prob=trim[1],na.rm=TRUE,FUN=quantile)))
+  common_max <- max(unlist(lapply(ml,prob=trim[2],na.rm=TRUE,FUN=quantile)))
   breaks <- seq(from=common_min, to=common_max, length.out=length(colors))
   col_fun <- circlize::colorRamp2(breaks, colors)
   if(isTRUE(cluster_rows)){
@@ -241,7 +245,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.01,0.99), colors=inferno(100),
       top_annotation <- NULL
     }else if(isTRUE(top_annotation)){
       top_annotation <- HeatmapAnnotation(
-        enriched=anno_enriched(ylim=ylim, show_error=TRUE, axis=isLast))
+        enriched=anno_enriched(ylim=c(ymin,ymax), show_error=TRUE, axis=isLast))
     }
     hl <- hl + EnrichedHeatmap(ml[[m]], column_title=m, col=col_fun, ...,
                 column_title_gp=gpar(fontsize=title_size), axis_name=axis_name,
@@ -324,16 +328,25 @@ mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median")){
 #' samples.
 #'
 #' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
-#' @param method Normalization method, passed to 
-#' \code{\link[edgeR]{calcNormFactors}}.
+#' @param method Either "linear", or a normalization method, passed to 
+#'   \code{\link[edgeR]{calcNormFactors}}.
 #'
 #' @return A renormalized list of signal matrices.
 #' @export
 #' @importFrom edgeR calcNormFactors
-renormalizeBorders <- function(ml, method="TMM"){
+renormalizeBorders <- function(ml, method="linear", 
+                               nWindows=max(floor(ncol(ml[[1]])/20),1)){
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
-  b <- do.call(cbind, lapply(ml, FUN=function(x) c(x[,1],x[,ncol(x)])))
-  nf <- calcNormFactors(b, method=method, lib.size=rep(1,ncol(b)))
+  b <- do.call(cbind, lapply(ml, FUN=function(x){
+    as.numeric(cbind(x[,seq_len(nWindows)],
+                     x[,seq(from=ncol(x)-nWindows+1, to=ncol(x))]))
+  }))
+  if(method=="linear"){
+    nf <- apply(b, 2, trim=0.01, FUN=mean)
+    nf <- nf/median(nf)
+  }else{
+    nf <- calcNormFactors(b, method=method, lib.size=rep(1,ncol(b)))
+  }
   ml <- rescaleSignalMatrices(ml, 1/nf)
   ml
 }
@@ -351,4 +364,17 @@ rescaleSignalMatrices <- function(ml, scaleFactors){
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
   for(i in seq_along(scaleFactors)) ml[[i]] <- ml[[i]]*scaleFactors[i]
   ml
+}
+
+.resizeNmatrix <- function(x, i=seq_len(nrow(x)), j=seq_len(ncol(x))){
+  a <- attributes(x)
+  xcl <- class(x)
+  a$dimnames[[1]] <- a$dimnames[[1]][i]
+  a$dimnames[[2]] <- a$dimnames[[2]][j]
+  a$names <- a$names[i]
+  x <- x[i,j,drop=FALSE]
+  a$dim <- dim(x)
+  attributes(x) <- a
+  class(x) <- xcl
+  x
 }
