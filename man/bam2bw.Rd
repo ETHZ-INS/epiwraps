@@ -15,7 +15,6 @@ bam2bw(
   scaling = TRUE,
   type = c("full", "center", "start", "end", "ends"),
   strand = c("*", "+", "-"),
-  filter = 1L,
   shift = 0L,
   log1p = FALSE,
   includeDuplicates = TRUE,
@@ -65,8 +64,6 @@ start (count read/fragment start locations), end, center, or 'ends' (both
 ends of the read/fragment).}
 
 \item{strand}{Strand(s) to capture (any by default).}
-
-\item{filter}{Minimum count (in the signal) for a bin to be considered.}
 
 \item{shift}{Shift (from 3' to 5') by which reads/fragments will be shifted.
 If `shift` is an integer vector of length 2, the first value will represent

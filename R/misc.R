@@ -174,3 +174,49 @@ importBedlike <- function(x, ...){
   mcols(gr) <- cbind(mcols(gr),y[,-1:-3,drop=FALSE])
   gr
 }
+
+
+#' Inject (insert) values at positions in a vector
+#'
+#' @param what The values to inject
+#' @param inWhat The vector in which to inject them
+#' @param at The positions in the vector *after* which to inject the values.
+#'
+#' @return A vector of same mode at `inWhat`, and of length equal to the sum of 
+#'   the lengths of `what` and `inWhat`.
+#' @export
+#'
+#' @examples
+#' inWhat <- 1:10
+#' inject(c(21,22,23), inWhat, at=as.integer(c(0,5,10)))
+inject <- function(what, inWhat, at){
+  stopifnot(is.integer(at))
+  if(length(at)==0L) return(inWhat)
+  stopifnot(is.vector(inWhat) && is.vector(what))
+  if(length(what)==1L) what <- rep(what, length(at))
+  stopifnot(length(what)==length(at))
+  if(is.factor(inWhat)){
+    stopifnot(all(unique(what) %in% levels(inWhat)))
+    return(factor(inject(as.integer(factor(what, levels(inWhat))),
+                         as.integer(inWhat), at),
+                  levels=seq_along(levels(inWhat)), labels=levels(inWhat)))
+  }
+  stopifnot(min(at)>=0L & max(at)<=(length(inWhat)))
+  stopifnot(mode(what)==mode(inWhat))
+  # create output vector
+  x <- vector(mode=mode(inWhat), length=length(what)+length(inWhat))
+  # get index increases
+  if(length(at)==1){
+    ii <- as.integer(seq_along(inWhat)>at)
+  }else{
+    ii <- as.integer(cut(seq_along(inWhat), 
+                         unique(c(0L,at,length(inWhat))), labels=FALSE))
+    ii[is.na(ii)] <- 0L
+    if(!any(at==0L)) ii <- ii-1L
+  }
+  # inject original values
+  x[seq_along(inWhat)+ii] <- inWhat
+  # inject new values
+  x[at+seq_along(at)] <- what
+  x
+}
