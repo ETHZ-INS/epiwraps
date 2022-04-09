@@ -307,14 +307,17 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
     return(as(lapply(x, bs=bs, method=method, FUN=tileRle), "RleList"))
   stopifnot(is(x,"Rle"))
   
-  cs <- cumsum(runLength(x))
+  # define the new ends of runs based on the number of full 'bs'
+  cs <- cumsum(runLength(x)) # gives the end position of each run
+  # floored end tiled position, except for the last bit (to respect chr sizes)
   csf <- c(bs*floor(cs[-length(cs)]/bs), cs[length(cs)])
+  # new run lengths based on the difference to the floored end of previous run
   new.lengths <- pmax(c(csf[-length(csf)],tail(cs,1)) - 
                         (bs*ceiling(c(0L,cs[-length(cs)])/bs)), 0L)
 
-  # runs whose ends doesn't fall on a bin end
+  # identify the runs whose ends doesn't fall on a tile end
   w <- which(cs > csf)
-  # get the values for in-between bins
+  # get the values for tiles that overlap more than one run
   bins <- Views(x, IRanges(unique(csf[w])+1L, width=bs))
   binVals <- switch(method,
                     max=viewMaxs(bins),
@@ -322,11 +325,11 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
                     mean=viewMeans(bins))
   if(roundSummary) binVals <- round(binVals)
   
-  # remove runs that are contained in a bin
+  # remove runs that are entirely contained in a tile (except very last)
   removedRuns <- setdiff(which(runLength(x)<bs), length(cs))
   new.lengths[removedRuns] <- 0L
   
-  # create new runs for boundary bins
+  # create new runs for boundary tiles, and inject them in the Rle vectors
   extra.w <- w[!duplicated(csf[w])]
   Rle(values=inject(binVals, runValue(x), at=extra.w),
       lengths=inject(bs, pmax(new.lengths,0L), at=extra.w))
