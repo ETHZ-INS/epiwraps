@@ -13,7 +13,8 @@
 #' @param BPPARAM A \code{\link[BiocParallel]{BiocParallelParam}} object, or 
 #' the number of threads to use to read and prepare the data.
 #' @param flgs Flags for bam reading
-#' @param ... Passed to \code{\link[EnrichedHeatmap]{normalizeToMatrix}}.
+#' @param verbose Logical; whether to print processing information
+#' @param ... Passed to \code{\link{bwNormFactors}}.
 #'
 #' @return A list of `normalizeToMatrix` objects
 #' @export
@@ -44,8 +45,8 @@
 #' dim(m[[1]])
 #' plotEnrichedHeatmaps(m)
 signal2Matrix <- function(filepaths, regions, extend=2000, 
-                          w=round(max(10,extend/200)), cuts=FALSE, ..., 
-                          RPM=TRUE, BPPARAM=1L,
+                          w=round(max(10,extend/200)), 
+                          cuts=FALSE, RPM=TRUE, BPPARAM=1L, verbose=TRUE, ..., 
                           flgs=scanBamFlag(isDuplicate=FALSE,
                                            isSecondaryAlignment=FALSE)){
   if(!all(unlist(lapply(filepaths, file.exists))))
@@ -54,6 +55,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000,
     stop("`cuts` can only be used with BAM files.")
   if(is.null(names(filepaths)))
     names(filepaths) <- .cleanFileNames(filepaths)
+  w <- as.integer(w)
   
   if(is.character(regions)){
     stopifnot(is.character(regions) && length(regions)==1)
@@ -65,7 +67,8 @@ signal2Matrix <- function(filepaths, regions, extend=2000,
     names(regions) <- paste0("region", seq_along(regions))
   regions2 <- resize(regions, fix="center", width=extend*2)
   
-  bplapply(setNames(names(filepaths),names(filepaths)), BPPARAM=.getBP(BPPARAM), 
+  ml <- bplapply(setNames(names(filepaths),names(filepaths)), 
+                 BPPARAM=.getBP(BPPARAM), 
            FUN=function(filename){
     filepath <- filepaths[[filename]]
     message("Reading ", filepath)
@@ -101,31 +104,71 @@ signal2Matrix <- function(filepaths, regions, extend=2000,
       }
       mat <- EnrichedHeatmap::as.normalizedMatrix( 
         unclass(mat), extend=extend, signal_name=filename, k_target=0, 
-        k_upstream=extend, k_downstream=extend+(w==1) )
+        k_upstream=extend/(2*w), k_downstream=extend/(2*w)+(w==1), ... )
       
       ####### END BAM INPUT
       
     }else if(grepl("\\.bw$|\\.bigwig$", filepath, ignore.case=TRUE)){
 
       ####### BIGWIG INPUT
-      gr <- rtracklayer::import(filepath, format="BigWig", 
+      if(length(missing <- setdiff(seqlevelsInUse(regions2),
+                                   seqlevels(BigWigFile(filepath))))>0){
+        toRemove <- seqnames(regions2) %in% missing
+        if(verbose) warning(length(missing),
+                            " seqlevel(s) missing from the bigwig file.\n",
+                            sum(toRemove), " regions on these sequences ",
+                            "will be ignored.")
+        regions2 <- regions2[!toRemove]
+        regions2 <- keepSeqlevels(regions2, seqlevelsInUse(regions2))
+      }
+      co <- rtracklayer::import(filepath, format="BigWig", 
                                 selection=BigWigSelection(regions2))
-      mat <- EnrichedHeatmap::normalizeToMatrix( signal=gr, ..., w=w,
-                                target=resize(regions, fix="center", width=1),
-                                mean_mode="w0", target_ratio = 0,
-                                value_column="score", extend=extend )
+      if(TRUE){
+        # this implementation is 2 to 4x faster than EnrichedHeatmap
+        co <- coverage(co, weight=co$score)
+        regions2 <- keepSeqlevels(regions2, seqlevelsInUse(regions2), 
+                                  pruning.mode="coarse")
+        co <- Views(co[seqlevels(regions2)], 
+                    split(ranges(regions2), seqnames(regions2), drop=TRUE))
+        mat <- do.call(rbind, lapply(co, FUN=function(x){
+          t(sapply(x, FUN=function(x){
+            if(w==1L) return(as.numeric(x))
+            x <- tileRle(x,bs=as.integer(w))
+            x <- Rle(values=runValue(x), lengths=pmax(round(runLength(x)/w),0L))
+            as.numeric(x)
+          }))
+        }))
+        wRev <- which(strand(regions2)=="-")
+        mat[wRev,] <- mat[wRev,seq(from=ncol(mat), to=1L)]
+        mat <- EnrichedHeatmap::as.normalizedMatrix(unclass(mat), extend=extend,
+                  signal_name=filename, k_target=0, 
+                  k_upstream=extend/w, k_downstream=extend/w )
+      }else{
+        # prior implementation
+        mat <- EnrichedHeatmap::normalizeToMatrix( 
+          signal=co, ..., w=w, target=resize(regions, fix="center", width=1),
+          mean_mode="w0", target_ratio=0, value_column="score", extend=extend )
+      }
+      
+      
       ####### END BIGWIG INPUT
       
     }else{
       stop("Unknown file format")
     }
-    tryCatch({
-      names(mat) <- names(regions)
-      mat
-    }, error=function(e){
-      warning(e)
-      mat
-    })
+    if(is.null(names(regions))) mat <- tryCatch({
+        names(mat) <- names(regions)
+        mat
+      }, error=function(e){
+        if(verbose) warning(e)
+        mat
+      })
+    mat
+  })
+  
+  tryCatch(.comparableMatrices(ml), error=function(e){
+    if(verbose) warning(e)
+    ml
   })
 }
 
@@ -355,14 +398,34 @@ renormalizeBorders <- function(ml, method="linear",
 #'
 #' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
 #' @param scaleFactors A numeric vector of same length as `ml`, 
-#' indicating the scaling factors by which to multiply each matrix.
+#'   indicating the scaling factors by which to multiply each matrix.
+#'   Alternatively, a numeric matrix with a number of rows equal to the length 
+#'   of `ml`, and two columns indicating the alpha and beta arguments of a 
+#'   s3norm normalization.
 #'
 #' @return A renormalized list of signal matrices.
 #' @export
-rescaleSignalMatrices <- function(ml, scaleFactors){
-  stopifnot(is.numeric(scaleFactors) && length(scaleFactors)==length(ml))
+rescaleSignalMatrices <- function(ml, scaleFactors, applyLinearly=NULL){
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
-  for(i in seq_along(scaleFactors)) ml[[i]] <- ml[[i]]*scaleFactors[i]
+  if(is.matrix(scaleFactors)){
+    stopifnot(ncol(scaleFactors)==2 && nrow(scaleFactors)==length(ml))
+    if(is.null(applyLinearly)){
+      if(is.null(applyLinearly <- attributes(scaleFactors)[["applyLinearly"]]))
+        stop("Could not determine whether the scaling factors should be",
+              "applied linearly or on the log scale. Please use the ",
+              "`applyLinearly` argument.")
+    }
+    for(i in seq_along(ml)){
+      if(applyLinearly){
+        ml[[i]] <- scaleFactors[i,1]+ml[[i]]*scaleFactors[i,2]
+      }else{
+        ml[[i]] <- scaleFactors[i,1]*ml[[i]]^scaleFactors[i,2]
+      }
+    }
+  }else{
+    stopifnot(is.numeric(scaleFactors) && length(scaleFactors)==length(ml))
+    for(i in seq_along(scaleFactors)) ml[[i]] <- ml[[i]]*scaleFactors[i]
+  }
   ml
 }
 
@@ -378,3 +441,115 @@ rescaleSignalMatrices <- function(ml, scaleFactors){
   class(x) <- xcl
   x
 }
+
+
+#' bwNormFactors
+#' 
+#' Estimates normalization factors for a set of bigwig files.
+#'
+#' @param x A vector of paths to bigwig files, or alternatively a list of 
+#'   coverages in RleList format.
+#' @param wsize The size of the random windows
+#' @param nwind The number of random windows
+#' @param peaks A list of peaks (GRanges) for each experiment in `x`, or a
+#'   vector of paths to such files
+#' @param trim Amount of trimming when calculating means
+#' @param method Normalization method (see details)
+#' 
+#' @value A vector of normalization factors, or for the 'S3norm' and '2cLinear'
+#'   methods, a numeric matrix with a number of rows equal to the length 
+#'   of `x`, and two columns indicating the alpha and beta terms.
+#' 
+#' @details 
+#' The 'background' or 'SES' normalization method (they are synonyms here)
+#' (Diaz et al., Stat Appl Gen et Mol Biol, 2012) assumes that the background
+#' noise should on average be the same across experiments, an assumption that 
+#' works well in practice when there are not very large differences in 
+#' signal-to-noise ratio. The 'MAnorm' approach (Shao et al., Genome Biology 
+#' 2012) assumes that regions that are commonly enriched in two experiments
+#' should on average have the same signal in the two experiments. These methods
+#' then use linear scaling.
+#' The 'S3norm' (Xiang et al., NAR 2020) and '2cLinear' methods try to 
+#' normalize both simultaneously. S3norm does this in a log-linear fashion (as 
+#' in the publication), while '2cLinear' does it on the original scale.
+#'
+#' @return
+#' @export
+bwNormFactors <- function(x, wsize=20L, nwind=5000L, peaks=NULL, trim=0.05,
+                          method=c("background","SES","MAnorm","S3norm",
+                                   "2cLinear")){
+  method <- match.arg(method)
+  if(is.character(x[1])){
+    chrsizes <- seqlengths(BigWigFile(x[1]))
+  }else if(is(x[1],"RleList")){
+    chrsizes <- pmax(lengths(x[1]),lengths(x[2]))
+  }else{
+    stop("Unrecognized input")
+  }
+  names(seqlvls) <- seqlvls <- names(chrsizes)
+  if(!(method %in% c("background","SES")) && is.null(peaks))
+    stop("The selected normalization method requires peaks.")
+
+  getVals <- function(x, windows){
+    if(is.character(x)){
+      x <- rtracklayer::import(x, format="BigWig", 
+                               selection=BigWigSelection(windows))
+      x <- coverage(x, weight=x$score)
+    }
+    return(unlist(viewMaxs(Views(x, windows)), use.names=FALSE))
+  }
+    
+  if(method!="MAnorm"){
+    winPerChr <- nwind*(chrsizes/sum(chrsizes))
+    windows <- as(IRangesList(lapply(seqlvls, FUN=function(x){
+      possibleWindows <- floor(chrsizes[x]/wsize)
+      if(possibleWindows<winPerChr[x])
+        stop("Too many requested windows for estimated sizes")
+      IRanges(sort(wsize*sample.int(possibleWindows, winPerChr[x])), width=wsize)
+    })), "GRanges")
+    
+    wc <- do.call(cbind, lapply(x, windows=windows, FUN=getVals))
+    if(method %in% c("background","SES")){
+      nf <- apply(wc, 2, trim=trim, FUN=mean)
+      return(setNames(median(nf)/nf, names(x)))
+    }
+  }
+
+  stopifnot(length(peaks)==length(x))
+  peaks <- lapply(peaks, FUN=function(x){
+    if(is.character(x)) x <- rtracklayer::import(x)
+    x
+  })
+  wc <- wc[!overlapsAny(windows, 
+                        reduce(unlist(GRangesList(peaks), use.names=FALSE))),]
+  
+  cost <- function(p){
+    a <- p["a"]
+    b <- p["b"]
+    if(method=="S3norm"){
+      x1 <- a*(x1)^b
+      bg1 <- a*(bg1[bg1>0])^b
+    }else{
+      x1 <- a+b*x1
+      bg1 <- a+(bg1[bg1>0])*b
+    }
+    abs(mean(x1, trim=trim)-mean(x2, trim=trim)) +
+      abs(mean(bg1, trim=trim) - mean(bg2[bg2>0L], trim=trim))
+  }
+  
+  nf <- lapply(seq_along(x)[-1], FUN=function(i){
+    common <- reduce(resize(intersect(peaks[[1]],peaks[[i]]), width=wsize))
+    x1 <- getVals(x[[1]], common)
+    x2 <- getVals(x[[i]], common)
+    if(method=="MAnorm") return(mean(x1,trim=trim)/mean(x2,trim=trim))
+    optim(c(a=ifelse(method=="S3norm",1,0), b=1), fn=cost)$par
+  })
+  if(method=="MAnorm") return(setNames(c(1,unlist(nf)), names(x)))
+  
+  nf <- rbind(c(ifelse(method=="S3norm",1,0),1), do.call(rbind, nf))
+  row.names(nf) <- names(x)
+  colnames(nf) <- letters[1:2]
+  attributes(nf)$applyLinearly <- method=="2cLinear"
+  nf
+}
+
