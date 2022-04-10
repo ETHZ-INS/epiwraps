@@ -286,8 +286,10 @@ signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
     return(region)
   }
   stopifnot(length(region)==1)
-  if(is(region,"GRanges") && asGR) return(region)
-  region <- as.character(GRanges(region))
+  if(is(region,"GRanges")){
+    if(asGR) return(region)
+    region <- as.character(GRanges(region))
+  }
   stopifnot(is.character(region))
   region <- strsplit(gsub("-",":",region),":")[[1]]
   if(length(region)==1){
