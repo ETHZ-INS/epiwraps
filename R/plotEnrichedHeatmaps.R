@@ -103,7 +103,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, colors=inferno
   if(is.null(axis_name) || length(axis_name)<neededAxisLabs){
     e <- a$extend
     if(all((e %% 1000)==0)){
-      e <- paste0(c("-","+"),e/1000,"kb")
+      e <- paste0(c("-","+"),round(e/1000),"kb")
     }else{
       e <- paste0(c("-","+"),e,"bp")
     }

@@ -55,8 +55,9 @@
 signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
                           scaledBins=50L, type=c("center","scale"),
                           binMethod=c("max","mean","min"), BPPARAM=1L, 
-                          verbose=TRUE, ...){
+                          ret=c("list","ESE"), verbose=TRUE, ...){
   type <- match.arg(type)
+  ret <- match.arg(ret)
   binMethod <- match.arg(binMethod)
   if(!all(unlist(lapply(filepaths, file.exists))))
     stop("Some of the files given do not exist, check the paths provided.")
@@ -161,10 +162,18 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     mat
   })
   
-  tryCatch(.comparableMatrices(ml), error=function(e){
+  ml <- tryCatch(.comparableMatrices(ml), error=function(e){
     if(verbose) warning(e)
     ml
   })
+  if(ret=="ESE"){
+    ml <- tryCatch(.ml2ese(ml, rowRanges=regions), error=function(e){
+      if(verbose)
+        warning("Could not create ESE object (list returned instead):", e)
+      ml
+    })
+  }
+  ml
 }
 
 .filterRegions <- function(regions, seqlvls, verbose=TRUE){
@@ -197,7 +206,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
       if(w==1L) return(as.numeric(x))
       if(useRLE) x <- tileRle(x, bs=as.integer(w), method=method)
       x <- as.numeric(x)
-      if(!length(x)!=desiredW){
+      if(length(x)!=desiredW){
         x <- rep(x,each=max(1L,ceiling(desiredW/length(x))))
         x <- splitAsList(x, cut(seq_along(x), breaks=desiredW, labels=FALSE))
         x <- switch(method, max=max(x), min=min(x), mean=mean(x))
@@ -206,8 +215,8 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     }))
   }))
   wRev <- which(strand(regions2)=="-")
-  if(length(wRev)>0)
-    mat[wRev,,drop=FALSE] <- mat[wRev,seq(from=ncol(mat), to=1L),drop=FALSE]
+  if(length(wRev)>0) 
+    mat[wRev,] <- mat[wRev,seq(from=ncol(mat), to=1L),drop=FALSE]
   mat
 }
 
