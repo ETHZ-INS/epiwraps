@@ -300,8 +300,9 @@ The first few are:",
 #' cov2 <- tileRle(cov, bs=5L)
 #' lines(cov2, col="red")
 tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE){
-  if(bs==1L) return(x)
-  stopifnot(is.integer(bs) && bs>1L)
+  bs <- as.integer(bs)
+  stopifnot(bs>=1L)
+  if(bs<=min(runLength(x))) return(x)
   method <- match.arg(method)
   if(is(x,"RleList"))
     return(as(lapply(x, bs=bs, method=method, FUN=tileRle), "RleList"))
