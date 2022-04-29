@@ -140,8 +140,8 @@ breakStrings <- function (x, minSizeForBreak=20, lb="\n"){
 #' @examples
 #' # example bed file:
 #' filepath <- system.file("extdata/example_peaks.bed", 
-#'                         package="epiwraps"
-#' b <- importBedlike(filepath, ...)
+#'                         package="epiwraps")
+#' b <- importBedlike(filepath)
 importBedlike <- function(x, ...){
   y <- try(rtracklayer::import.bed(x), silent=TRUE)
   if(is(y,"try-error"))

@@ -260,6 +260,7 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
 }
 
 
+#' @importFrom IRanges IRangesList
 .randomTiles <- function(chrsizes, nwind, wsize){
   winPerChr <- round(nwind*(chrsizes/sum(chrsizes)))
   winPerChr <- winPerChr[winPerChr>=1]

@@ -24,6 +24,6 @@ otherwise.
 \examples{
 # example bed file:
 filepath <- system.file("extdata/example_peaks.bed", 
-                        package="epiwraps"
-b <- importBedlike(filepath, ...)
+                        package="epiwraps")
+b <- importBedlike(filepath)
 }

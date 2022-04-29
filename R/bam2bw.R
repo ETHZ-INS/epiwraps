@@ -193,6 +193,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
   return(invisible(output_bw))
 }
 
+#' @importFrom GenomeInfoDb seqlevelsStyle<- seqlevelsInUse
 .bam2bwReadChunk <- function(bamfile, param, binWidth, forceStyle=NULL, ...){
   # get reads/fragments from chunk
   bam <- .bam2bwGetReads(bamfile, param=param, ...)
