@@ -10,7 +10,6 @@
 #' @param colors The heatmap colors to use.
 #' @param scale_title The title of the scale.
 #' @param title_size The size of the heatmap titles.
-#' @param use_raster Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 #' @param row_order Optional order of the rows.
 #' @param cluster_rows Whether to cluster rows.
 #' @param ... Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}
@@ -56,10 +55,10 @@
 #' # `ComplexHeatmap::Heatmap`) can be used, e.g.: 
 #' plotEnrichedHeatmaps(m, row_title="My regions of interest")
 plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, colors=inferno(100),
-                                 scale_title="density", title_size=11, use_raster=NULL, 
+                                 scale_title="density", title_size=11, 
                                  row_order=NULL, cluster_rows=FALSE, axis_name=NULL, 
                                  scale_rows=FALSE, top_annotation=TRUE, minRowVal=0, 
-                                 ...){
+                                 show_heatmap_legend=TRUE, ...){
   if(is(ml, "SummarizedExperiment")) ml <- .ese2ml(ml, assay=assay)
   ml <- .comparableMatrices(ml)
   stopifnot(length(trim) %in% 1:2 && all(trim>=0 & trim <=1))
@@ -81,7 +80,6 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, colors=inferno
       ml <- lapply(ml, FUN=function(x) t(scale(t(x))))
     }
   }
-  if(is.null(use_raster)) use_raster <- nrow(ml[[1]])>1000
   hl <- NULL
   ymin <- min(c(0,unlist(lapply(ml,FUN=min))))
   ymax <- max(unlist(lapply(ml,FUN=function(x){
@@ -125,10 +123,11 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, colors=inferno
         enriched=anno_enriched(ylim=c(ymin,ymax), show_error=TRUE, axis=isLast))
     }
     hl <- hl + EnrichedHeatmap(ml[[m]], column_title=m, col=col_fun, ...,
-                               column_title_gp=gpar(fontsize=title_size), axis_name=axis_name,
-                               cluster_rows = cluster_rows, row_order=row_order,
-                               top_annotation=top_annotation, show_heatmap_legend=isLast,
-                               use_raster=use_raster, name=ifelse(isLast,scale_title,m) )
+                           column_title_gp=gpar(fontsize=title_size),
+                           cluster_rows = cluster_rows, row_order=row_order,
+                           show_heatmap_legend=isLast && show_heatmap_legend,
+                           top_annotation=top_annotation, axis_name=axis_name,
+                           name=ifelse(isLast,scale_title,m) )
   }
   hl
 }

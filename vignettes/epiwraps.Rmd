@@ -19,7 +19,8 @@ vignette: |
 ---
 
 ```{r, include=FALSE}
-library(BiocStyle)
+#library(BiocStyle)
+devtools::load_all("~/bioinfo/plg/epiwraps/")
 ```
 
 # Introduction
@@ -168,7 +169,7 @@ bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
 regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
 # we obtain the matrix of the signal around the regions. For the purpose of this
 # example, we'll read twice from the same:
-m <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000)
+m <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L)
 lapply(m,dim)
 ```
 The result is a named list of matrices (more specifically, `normalizedMatrix`
@@ -271,16 +272,12 @@ See `?bam2bw` for more detail.
 
 ## Peak calling
 
-A very simple peak calling based on `r BiocStyle::Biocpkg("csaw")` can be used,
-either against an input control or against local or global backgrounds:
+A peak calling function can be used, either against an input control or against local or global backgrounds:
 
 ```{r}
 p <- callPeaks(bam)
 ```
 
-Note however that the caller hasn't been thoroughly tested, and given its 
-simplicity it's very likely that it is less robust than more established
-methods. This being said, when the data is unambiguous, so are the peaks.
 
 ## Quality control
 

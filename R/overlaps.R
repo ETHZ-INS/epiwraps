@@ -91,7 +91,7 @@ regionUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
 #'   overlap size as values.
 #' @importFrom IRanges overlapsAny
 #' @importFrom ComplexHeatmap pheatmap
-#' @importFrom viridis plasma
+#' @importFrom viridisLite plasma
 #' @export
 regionOverlaps <- function(listOfRegions, ignore.strand=TRUE, 
                            cluster=length(listOfRegions)>2,

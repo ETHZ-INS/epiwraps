@@ -158,7 +158,7 @@ rescaleSignalMatrices <- function(ml, scaleFactors, applyLinearly=NULL){
 #' @param trim Amount of trimming when calculating means
 #' @param method Normalization method (see details)
 #' 
-#' @value A vector of normalization factors, or for the 'S3norm' and '2cLinear'
+#' @return A vector of normalization factors, or for the 'S3norm' and '2cLinear'
 #'   methods, a numeric matrix with a number of rows equal to the length 
 #'   of `x`, and two columns indicating the alpha and beta terms.
 #' 
@@ -178,6 +178,7 @@ rescaleSignalMatrices <- function(ml, scaleFactors, applyLinearly=NULL){
 #' @return
 #' @export
 bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
+                          useSeqLevels=NULL, 
                           method=c("background","SES","MAnorm","S3norm",
                                    "2cLinear")){
   method <- match.arg(method)
@@ -192,18 +193,28 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
   chrsizes <- do.call(cbind, lapply(chrsizes, FUN=function(x) x[tt]))
   chrsizes <- matrixStats::rowMins(chrsizes)
   names(chrsizes) <- tt
+  if(!is.null(useSeqLevels)){
+    if(!all(useSeqLevels %in% names(chrsizes)))
+      stop("Some of the requested seqlevels are not found in the data!")
+    chrsizes <- chrsizes[useSeqLevels]
+  }
+  stopifnot(length(chrsizes)>0)
   names(seqlvls) <- seqlvls <- names(chrsizes)
   
   if(!(method %in% c("background","SES")) && is.null(peaks))
     stop("The selected normalization method requires peaks.")
 
   if(method!="MAnorm"){
+    if(is.null(useSeqLevels)) chr
     windows <- .randomTiles(chrsizes, nwind, wsize)
     wc <- do.call(cbind, lapply(x, windows=windows, FUN=.getCovVals))
-    wc <- wc[rowSums(is.na(wc))==0,]
+    wc <- wc[which(rowSums(is.na(wc))==0 & rowSums(wc)>0),]
+    if(any(colSums(wc)<50))
+      warning("Some samples have less than 50 non-zero windows. Consider ",
+              "increasing the window size or (better) the number of windows.")
     if(method %in% c("background","SES")){
-      nf <- apply(wc, 2, trim=trim, FUN=mean)
-      return(setNames(median(nf)/nf, names(x)))
+      nf <- apply(wc, 2, trim=trim, na.rm=TRUE, FUN=mean)
+      return(setNames(median(nf, na.rm=TRUE)/nf, names(x)))
     }
   }
 

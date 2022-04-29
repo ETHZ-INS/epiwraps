@@ -63,8 +63,8 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     stop("Some of the files given do not exist, check the paths provided.")
   if(type!="center" && any(grepl("\\.bam$",filepaths,ignore.case=TRUE)))
     stop("Only `type='center'` can be used for BAM files.")
-  w <- as.integer(w)
   if(is.null(w) || is.na(w)) w <- round(max(1,mean(extend)/100))
+  w <- as.integer(w)
   stopifnot(w>0)
   if(!all((extend %% w)==0)) stop("`extend` should be a multiple of `w`!")
   extend <- as.integer(extend)
@@ -214,7 +214,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
       x
     }))
   }))
-  wRev <- which(strand(regions2)=="-")
+  wRev <- which(as.factor(strand(regions2))=="-")
   if(length(wRev)>0) 
     mat[wRev,] <- mat[wRev,seq(from=ncol(mat), to=1L),drop=FALSE]
   mat

@@ -61,6 +61,7 @@ findMotifInstances <- function(seqs, motif, keepMatchedSeq=FALSE, ...){
 #'
 #' @return A plot
 #' @export
+#' @importFrom GenomeInfoDb seqlevels seqlevels<- seqlengths seqlengths<-
 motifFootprint <- function(bamfile, motif, motif_occurences, genome=NULL,
                            around=100){
   stopifnot(is.matrix(motif))
