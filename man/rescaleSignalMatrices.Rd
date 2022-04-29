@@ -4,13 +4,16 @@
 \alias{rescaleSignalMatrices}
 \title{rescaleSignalMatrices}
 \usage{
-rescaleSignalMatrices(ml, scaleFactors)
+rescaleSignalMatrices(ml, scaleFactors, applyLinearly = NULL)
 }
 \arguments{
 \item{ml}{A named matrix list as produced by \code{\link{signal2Matrix}}.}
 
 \item{scaleFactors}{A numeric vector of same length as `ml`, 
-indicating the scaling factors by which to multiply each matrix.}
+indicating the scaling factors by which to multiply each matrix.
+Alternatively, a numeric matrix with a number of rows equal to the length 
+of `ml`, and two columns indicating the alpha and beta arguments of a 
+s3norm normalization.}
 }
 \value{
 A renormalized list of signal matrices.

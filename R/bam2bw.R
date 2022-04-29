@@ -118,43 +118,18 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
   if(paired) extend <- 0L
   if(type=="ends" && !paired && verbose)
     warning("type='ends' only makes sense with paired-end libraries...")
-  
-  seqs <- Rsamtools::scanBamHeader(bamfile)[[1]]$targets
-  if(!is.null(keepSeqLvls)){
-    if(length(missingLvls <- setdiff(keepSeqLvls, names(seqs))>0))
-      stop(paste0(
-        "Some of the seqLevels specified by `keepSeqLvls` are not in the data.
-The first few are:",
-        head(paste(missingLvls, collapse=", "), 3)))
-    seqs <- seqs[keepSeqLvls]
-  }
-  
-  # prepare flags for bam reading
+
   flgs <- scanBamFlag(isDuplicate=ifelse(includeDuplicates,NA,FALSE), 
                       isSecondaryAlignment=ifelse(includeSecondary,NA,FALSE),
                       isMinusStrand=switch(strand, "*"=NA, "+"=FALSE, "-"=TRUE),
-                      isNotPassingQualityControls=FALSE)
+                      isNotPassingQualityControls=FALSE)  
+    
+  seqs <- Rsamtools::scanBamHeader(bamfile)[[1]]$targets
+  param <- .getBamChunkParams(bamfile, flgs=flgs, keepSeqLvls=keepSeqLvls, 
+                              nChunks=splitByChr)
+  seqs <- seqs[.checkMissingSeqLevels(seqs, keepSeqLvls)]
   
-  # generate list of reading params
-  if(splitByChr){
-    if(is.numeric(splitByChr) && splitByChr>=2){
-      splitByChr <- as.integer(splitByChr)
-      seqs <- sort(seqs, dec=TRUE)
-      chrGroup <- head(rep(seq_len(splitByChr), 
-                           ceiling(length(seqs)/splitByChr)), length(seqs))
-      chrGroup <- split(seqs, chrGroup)
-    }else{
-      chrGroup <- split(seqs, names(seqs))
-    }
-    param <- lapply(chrGroup, FUN=function(x)
-      ScanBamParam(flag=flgs, mapqFilter=minMapq, 
-                   which=GRanges(names(x), IRanges(1L,x)), ...))
-  }else{
-    chrGroup <- list(wg=seqs)
-    param <- list(wg=ScanBamParam(flag=flgs, mapqFilter=minMapq, ..., 
-                                  which=GRanges(names(seqs), IRanges(1L,seqs))))
-  }
-
+  # prepare flags for bam reading
   if(verbose) message("Reading in signal...")
   
   # obtain coverage (and total count)
@@ -162,7 +137,7 @@ The first few are:",
     .bam2bwReadChunk(bamfile, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
-                     seqs=chrGroup[[x]], forceStyle=forceSeqlevelsStyle)
+                     forceStyle=forceSeqlevelsStyle)
   })
   
   if(is.null(bgbam)){
@@ -181,7 +156,7 @@ The first few are:",
     .bam2bwReadChunk(bgbam, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
-                     seqs=chrGroup[[x]], forceStyle=forceSeqlevelsStyle)
+                     forceStyle=forceSeqlevelsStyle)
   })
 
   if(verbose) message("Computing relative signal...")
@@ -218,16 +193,11 @@ The first few are:",
   return(invisible(output_bw))
 }
 
-.bam2bwReadChunk <- function(bamfile, param, binWidth, seqs, forceStyle=NULL, 
-                             ...){
+#' @importFrom GenomeInfoDb seqlevelsStyle<- seqlevelsInUse
+.bam2bwReadChunk <- function(bamfile, param, binWidth, forceStyle=NULL, ...){
   # get reads/fragments from chunk
-  bam <- .bam2bwGetReads(bamfile, param=param, si=seqs, ...)
-  if(!is.null(forceStyle)){
-    seqlevelsStyle(bam) <- forceStyle
-    si <- Seqinfo(names(seqs), as.integer(seqs))
-    seqlevelsStyle(si) <- forceStyle
-    seqs <- seqlengths(si)
-  }
+  bam <- .bam2bwGetReads(bamfile, param=param, ...)
+  if(!is.null(forceStyle)) seqlevelsStyle(bam) <- forceStyle
   # compute coverages
   co <- tileRle(coverage(bam), bs=binWidth)
   # save library size for later normalization
@@ -291,6 +261,7 @@ The first few are:",
 #'
 #' @return An object of same class and length as `x`
 #' @export
+#' @importFrom IRanges viewMins median quantile
 #'
 #' @examples
 #' # creating a dummy coverage and visualizing it:
@@ -300,8 +271,9 @@ The first few are:",
 #' cov2 <- tileRle(cov, bs=5L)
 #' lines(cov2, col="red")
 tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE){
-  if(bs==1L) return(x)
-  stopifnot(is.integer(bs) && bs>1L)
+  bs <- as.integer(bs)
+  stopifnot(bs>=1L)
+  if(bs<=min(min(runLength(x)))) return(x)
   method <- match.arg(method)
   if(is(x,"RleList"))
     return(as(lapply(x, bs=bs, method=method, FUN=tileRle), "RleList"))
@@ -377,6 +349,7 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
 }
 
 # calculates local background at positions, analogous to MACS
+# TO DO: handle chr that are smaller than windows !!!
 .bam2bwLocalBackground <- function(x, binWidth=1L, windows=1000L*c(1L,5L)){
   if(is(x,"GRanges")){
     x <- x[order(seqnames(x))]

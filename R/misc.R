@@ -140,8 +140,8 @@ breakStrings <- function (x, minSizeForBreak=20, lb="\n"){
 #' @examples
 #' # example bed file:
 #' filepath <- system.file("extdata/example_peaks.bed", 
-#'                         package="epiwraps"
-#' b <- importBedlike(filepath, ...)
+#'                         package="epiwraps")
+#' b <- importBedlike(filepath)
 importBedlike <- function(x, ...){
   y <- try(rtracklayer::import.bed(x), silent=TRUE)
   if(is(y,"try-error"))
@@ -219,4 +219,21 @@ inject <- function(what, inWhat, at){
   # inject new values
   x[at+seq_along(at)] <- what
   x
+}
+
+
+.checkMissingSeqLevels <- function(x, seqlvls, fatal=TRUE){
+  if(!is.vector(x)) x <- seqlevels(x)
+  if(is.integer(x)) x <- names(x)
+  if(is.null(seqlvls)) return(invisible(x))
+  x <- intersect(x, seqlvls)
+  if(length(x)==0) stop("No seqLevel retained!")
+  if(length(missingLvls <- setdiff(seqlvls, x)==0)) return(invisible(x))
+  msg <- paste0(
+    "Some of the seqLevels specified by `keepSeqLvls` are not in the data.
+The first few are:",
+head(paste(missingLvls, collapse=", "), 3))
+  if(fatal) stop(msg)
+  warning(msg)
+  invisible(x)
 }

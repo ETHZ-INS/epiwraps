@@ -5,67 +5,65 @@
 \title{callPeaks}
 \usage{
 callPeaks(
-  signalBam,
-  controlBam = NULL,
-  broad = FALSE,
-  fragSize = 125L,
-  wWidth = NULL,
-  spacing = NULL,
-  localSize = NULL,
-  minLFC = log2(3),
-  prior.count = 3L,
-  filter = 1L + prior.count,
-  p.threshold = 10^-4,
+  bam,
+  ctrl = NULL,
+  paired = FALSE,
+  type = c("narrow", "broad"),
   blacklist = NULL,
-  BPPARAM = NULL,
-  verbose = TRUE
+  binSize = 5L,
+  fragLength = NULL,
+  minPeakCount = 5L,
+  minFoldChange = 1.5,
+  pthres = 10^-3,
+  priorFragLength = 150L,
+  bgWindow = c(1, 5) * 1000,
+  outFormat = c("custom", "narrowPeak"),
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
-\item{signalBam}{Path to the ChIP bam file}
+\item{bam}{A signal bam file}
 
-\item{controlBam}{Optional path to the input (i.e. negative control) bam file}
+\item{ctrl}{An optional (but highly recommended) control bam file}
 
-\item{broad}{Logical, whether to call broad regions rather than narrow peaks}
+\item{paired}{Logical, whether the reads are paired}
 
-\item{fragSize}{Fragment length}
+\item{type}{The type of peaks to identify ('narrow' or 'broad').}
 
-\item{wWidth}{Window width. Defaults to twice the fragment length 
-(`fragSize`) for narrow peaks and four times for broad.}
+\item{blacklist}{An optional `GRanges` of regions to be excluded (or the path
+to such a file).}
 
-\item{spacing}{Shift between sliding windows}
+\item{binSize}{Binsize used to estimate peak shift}
 
-\item{localSize}{Local neighborhood size}
+\item{fragLength}{Fragment length. Ignored if `paired=TRUE`. If not given,
+will be estimated from the data.}
 
-\item{minLFC}{Minimum log2-foldchange}
+\item{minPeakCount}{The minimum summit count for a region to be considered.
+Decreasing this can substantially increase the running time.}
 
-\item{prior.count}{Prior count added to compute foldchange}
+\item{minFoldChange}{The minimum fold-change for a region to be considered.
+Decreasing this can substantially increase the running time.}
 
-\item{filter}{The minimum count for a window to be considered}
+\item{pthres}{The p-value threshold to use}
 
-\item{p.threshold}{P-value threshold (poisson probability)}
+\item{priorFragLength}{Prior fragment length (ignored if `paired=TRUE`). This
+is used for coverage computation to estimate peak shift.}
 
-\item{blacklist}{An optional GRanges of regions to be ignored.}
+\item{bgWindow}{The windows to consider (in addition to the peak itself) 
+for local background.}
 
-\item{BPPARAM}{BiocParallel BPPARAM}
+\item{outFormat}{The output format ('custom' or 'narrowPeak')}
 
-\item{verbose}{Logical; whether to print progress messages}
+\item{verbose}{Logical; whether to output progress messages}
+
+\item{...}{Passed to `estimateFragSize`}
 }
 \value{
-A GRanges object
+A `GRanges`
 }
 \description{
-This is a very simple peak calling function wrapping around several 
-\code{\link{csaw}} functions.
-}
-\details{
-The function supports broad and narrow peak calling, as well as calls based
-on the comparison to a control (based on csaw's 
-\code{\link[csaw]{filterWindowsControl}}), based on a local background for 
-narrow peaks (see \code{\link[csaw]{filterWindowsLocal}}), or based on a 
-global background for broad peaks (see 
-\code{\link[csaw]{filterWindowsGlobal}}).
-Note that the caller hasn't been thoroughly tested, and given its 
-simplicity it's very likely that it is less robust than more established
-methods.
+This is a R-based implementation of the general MACS2 strategy (Zhang et al.,
+ Genome Biology 2008), taking some freedom here and there in comparison to 
+ the original.
 }
