@@ -66,10 +66,10 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
   if(verbose) message("Reading signal coverage...")
   if(paired){
     co <- bamChrChunkApply(bam, paired=TRUE, FUN=function(x){
-      list(fl=median(width(x)), cov=coverage)
+      list(fl=median(width(x)), cov=coverage(x))
     })
-    fragLength <- median(unlist(lapply(co, FUN=function(x) x$fl)))
-    co <- Reduce("+", lapply(co, FUN=function(x) x$cov))
+    fragLength <- median(unlist(lapply(co, FUN=function(x) x$fl)), na.rm=TRUE)
+    co <- list(cov=Reduce("+", lapply(co, FUN=function(x) x$cov)))
   }else{
     co <- .getStrandedCoverages(bam, binSize=binSize, fragLength=priorFragLength)
     if(is.null(fragLength)){
