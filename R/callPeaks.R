@@ -80,8 +80,7 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
       if(verbose) message("Estimating fragment size...")
       fragLength <- estimateFragSize(co, ctrl, binSize=binSize, ...,
                                      priorFragLength=priorFragLength,
-                                     blacklist=blacklist, ret="table")
-      fragLength <- abs(fragLength$perPeakDistance$distance)
+                                     blacklist=blacklist, ret="distances")
       if(verbose) message("  mean: ", round(mean(fragLength)),"; 90% CI: ",
                           paste(round(quantile(fragLength,c(0.05,0.95))),
                                 collapse="-"))

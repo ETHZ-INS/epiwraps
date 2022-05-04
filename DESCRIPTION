@@ -34,7 +34,8 @@ Imports:
     UpSetR,
     ComplexHeatmap,
     dplyr,
-    Biostrings
+    Biostrings,
+    stats
 Suggests: 
     knitr,
     genomation,

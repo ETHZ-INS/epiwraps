@@ -34,7 +34,7 @@
 estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
                              minSummitCount=8L, useSeqLevels=NULL,
                              maxSize=2500L, priorLength=200L, blacklist=NULL, 
-                             ret=c("mode", "median", "mean", "tables", "plots"),
+                             ret=c("mode", "median", "mean", "tables", "plots", "distances"),
                              BPPARAM=SerialParam()){
   ret <- match.arg(ret)
 
@@ -132,6 +132,7 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
   if(ret=="tables") return(list(perPeakDistance=dn, coverages=d1))
   if(ret=="mean") return(mean(abs(dn$distance)))
   if(ret=="median") return(median(abs(dn$distance)))
+  if(ret=="distances") return(abs(dn$distance))
   if(ret=="mode"){
     d <- density(abs(dn$distance))
     return(round(d$x[which.max(d$y)]))
@@ -140,8 +141,8 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
 }
 
 .strandedCovTable <- function(regions, co){
+  regions <- regions[start(regions)>=1]
   vp <- Views(co$cop, regions)
-  vp <- lapply(vp, FUN=function(x) Reduce("+",as(x, "IntegerList")))
   vp <- Reduce("+",as(vp[lengths(vp)>0], "IntegerList"))
   vn <- Views(co$con, regions)
   vn <- lapply(vn, FUN=function(x) Reduce("+",as(x, "IntegerList")))

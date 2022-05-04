@@ -275,7 +275,7 @@ See `?bam2bw` for more detail.
 A peak calling function can be used, either against an input control or against local or global backgrounds:
 
 ```{r}
-p <- callPeaks(bam)
+p <- callPeaks(bam, fragLength=50)
 ```
 
 
