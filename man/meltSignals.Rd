@@ -4,7 +4,7 @@
 \alias{meltSignals}
 \title{meltSignals}
 \usage{
-meltSignals(ml, fun = NULL)
+meltSignals(ml, fun = NULL, splitBy = NULL)
 }
 \arguments{
 \item{ml}{A named list of matrices as produced by \code{\link{signal2Matrix}}}
