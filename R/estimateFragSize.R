@@ -31,10 +31,10 @@
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 #' # create bigwig
 #' estimateFragSize(bam)
-estimateFragSize <- function(bam, ctrl=NULL, binSize=5L, mfold=c(10,50), ...,
+estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
                              minSummitCount=8L, useSeqLevels=NULL,
                              maxSize=2500L, priorLength=200L, blacklist=NULL, 
-                             ret=c("mode", "median", "mean", "table", "plot"),
+                             ret=c("mode", "median", "mean", "tables", "plots"),
                              BPPARAM=SerialParam()){
   ret <- match.arg(ret)
 
@@ -60,16 +60,18 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=5L, mfold=c(10,50), ...,
                  }))
       } 
     }
-    ret2 <- ifelse(ret=="plot", "table", ret)
+    ret2 <- ifelse(ret=="plots", "tables", ret)
     names(bam) <- bam
     res <- bplapply(bam, ctrl=ctrl, binSize=binSize, mfold=mfold, ret=ret2, 
                     maxSize=maxSize, useSeqLevels=useSeqLevels,
                     minSummitCount=minSummitCount, ...,
                     FUN=estimateFragSize, BPPARAM=BPPARAM)
-    if(ret2!="table") return(unlist(res))
-    res <- dplyr::bind_rows(res, .id="sample")
-    if(ret=="table") return(res)
-    return(.plotDistDist(res))
+    if(ret2!="tables") return(unlist(res))
+    res <- lapply(setNames(names(res[[1]]),names(res[[1]])), FUN=function(x){
+      dplyr::bind_rows(lapply(res, FUN=function(y) y[[x]]), .id="sample")
+    })
+    if(ret=="tables") return(res)
+    return(.fragLengthPlots(res))
   }else{
     # obtain the coverages
     co <- .getStrandedCoverages(bam, keepSeqLvls=useSeqLevels, binSize=5L,
@@ -84,22 +86,28 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=5L, mfold=c(10,50), ...,
         coverage(trim(x))
       }))
     }
-    ctrl <- setNames(ctrl*sum(mean(co$cov))/sum(mean(ctrl)), names(ctrl))
-    co$cov <- setNames((1L+co$cov)/(1L+ctrl), names(co$cov))
+    nf <- .covTrimmedMean(co$cov)/.covTrimmedMean(ctrl)
+    co$cov <- setNames((1L+co$cov)/(1L+ctrl*nf), names(co$cov))
   }
   msize <- co$msize
   # identify mfold-based peaks for estimation
   regions <- slice(co$cov, mfold[1], mfold[2], rangesOnly=TRUE)
-  # keep only regions larger than the median read size, and enlarge a bit
+  # keep only regions larger than the median read size
   regions <- GRanges(rep(factor(names(regions),names(regions)), lengths(regions)),
                      unlist(regions))
   regions <- regions[which(width(regions)>msize)]
-  regions <- trim(resize(regions, width(regions)+as.integer(msize),
-                         fix="center"))
-  # remove potential blacklist & overlaps
-  if(!is.null(blacklist)) regions <- regions[overlapsAny(regions, blacklist)]
   regions <- reduce(regions, min.gapwidth=msize)
   regions <- regions[width(regions)<=maxSize]
+  
+  # enlarge around the summit
+  regions <- trim(resize(.viewl2gr(viewRangeMaxs(Views(co$cov, regions))), 
+                         maxSize, fix="center"))
+  # remove potential blacklist & overlaps
+  if(!is.null(blacklist)) regions <- regions[overlapsAny(regions, blacklist)]
+  
+  if(ret %in% c("tables","plots"))
+    d1 <- .strandedCovTable(regions, co)
+  
   # for each region, find the + and - summits and their distance
   regions <- split(ranges(regions), seqnames(regions), drop=TRUE)
   names(seqlvls) <- seqlvls <- names(regions)
@@ -108,34 +116,58 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=5L, mfold=c(10,50), ...,
     sp <- .getSummits(co$cop[[x]], mfold, regions)
     sn <- .getSummits(co$con[[x]], mfold, regions)
     data.frame(peak.size=unlist(width(regions)),
-               distance=end(sp)-start(sn),
+               distance=end(sn)-start(sp),
                score.pos=as.numeric(mcols(sp)$score),
                score.neg=as.numeric(mcols(sn)$score))
   }))
   # difference between summit counts shouldn't be too large
   dn$absDiff <- abs(dn$score.pos-dn$score.neg)
   # keep only pairs of summits that are convincing
-  dn <- dn[abs(dn$distance)<maxSize & dn$absDiff<(3*median(dn$absDiff)) &
+  dn <- dn[abs(dn$distance)<maxSize & abs(dn$distance)>msize & 
+             dn$absDiff<(3*median(dn$absDiff)) &
              (dn$score.pos+dn$score.neg)>=minSummitCount ,]
   if(nrow(dn)<50)
     warning("A low number of regions was retained to estimate fragment size.",
             "You may consider increase the `mfold` range.")
-  if(ret=="table") return(dn)
+  if(ret=="tables") return(list(perPeakDistance=dn, coverages=d1))
   if(ret=="mean") return(mean(abs(dn$distance)))
   if(ret=="median") return(median(abs(dn$distance)))
   if(ret=="mode"){
     d <- density(abs(dn$distance))
     return(round(d$x[which.max(d$y)]))
   }
-  .plotDistDist(dn)
+  .fragLengthPlots(list(perPeakDistance=dn, coverages=d1))
 }
 
-# plots a histogram of the distances
-.plotDistDist <- function(dn){
-  dn <- dn[dn$distance<quantile(dn$distance, 0.98),]
-  hist(abs(dn$distance), breaks=100, 
-       main="Estimated fragment length", xlab="Length")
-  abline(v=median(abs(dn$distance)), col="blue", lwd=3)
+.strandedCovTable <- function(regions, co){
+  vp <- Views(co$cop, regions)
+  vp <- lapply(vp, FUN=function(x) Reduce("+",as(x, "IntegerList")))
+  vp <- Reduce("+",as(vp[lengths(vp)>0], "IntegerList"))
+  vn <- Views(co$con, regions)
+  vn <- lapply(vn, FUN=function(x) Reduce("+",as(x, "IntegerList")))
+  vn <- Reduce("+",as(vn[lengths(vn)>0], "IntegerList"))
+  size <- length(vp)
+  data.frame(rel_pos=seq(from=-floor(size/2), to=ceiling(size/2), length.out=length(vp)),
+             count=c(vp,vn), strand=rep(c("+","-"),each=length(vp)))
+}
+
+.fragLengthPlots <- function(x, span=0.05){
+  if(!requireNamespace("ggplot2", quietly=TRUE))
+    stop("The 'ggplot2' package is required.")
+  dn <- x$perPeakDistance
+  d1 <- x$coverages
+  q <- quantile(abs(dn$distance), c(0.05,0.5,0.95))
+  p1 <- ggplot(dn, aes(abs(distance))) + geom_histogram(bins=50) + 
+    geom_vline(xintercept=q, linetype=c("dashed","solid","dashed")) +
+    annotate("label", x=q[2], label=round(q[2]), y=2) +
+    labs(x="Per-peak fragment length distribution", y="Count")
+  p2 <- ggplot(d1, aes(rel_pos, count, colour=strand)) + geom_line(alpha=0.5) + 
+    geom_smooth(formula=y~x, method="loess", span=span, size=1.2) + 
+    labs(x="Relative position", y="Read start count")
+  if(requireNamespace("cowplot", quietly=TRUE))
+    return(plot_grid(p1, p2, nrow=2))
+  print(p1)
+  print(p2)
 }
 
 # sets coverages below a threshold to 0
