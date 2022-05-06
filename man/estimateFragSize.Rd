@@ -7,7 +7,7 @@
 estimateFragSize(
   bam,
   ctrl = NULL,
-  binSize = 5L,
+  binSize = 10L,
   mfold = c(10, 50),
   ...,
   minSummitCount = 8L,
@@ -15,7 +15,7 @@ estimateFragSize(
   maxSize = 2500L,
   priorLength = 200L,
   blacklist = NULL,
-  ret = c("mode", "median", "mean", "table", "plot"),
+  ret = c("mode", "median", "mean", "tables", "plots"),
   BPPARAM = SerialParam()
 )
 }

@@ -119,17 +119,18 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
   if(type=="ends" && !paired && verbose)
     warning("type='ends' only makes sense with paired-end libraries...")
 
+  # prepare flags for bam reading
+  strandflg <- switch(strand, "*"=NA, "+"=FALSE, "-"=TRUE)
+  if(paired) strandflg <- NA
   flgs <- scanBamFlag(isDuplicate=ifelse(includeDuplicates,NA,FALSE), 
                       isSecondaryAlignment=ifelse(includeSecondary,NA,FALSE),
-                      isMinusStrand=switch(strand, "*"=NA, "+"=FALSE, "-"=TRUE),
-                      isNotPassingQualityControls=FALSE)  
+                      isMinusStrand=strandflg,isNotPassingQualityControls=FALSE)  
     
   seqs <- Rsamtools::scanBamHeader(bamfile)[[1]]$targets
   param <- .getBamChunkParams(bamfile, flgs=flgs, keepSeqLvls=keepSeqLvls, 
                               nChunks=splitByChr)
   seqs <- seqs[.checkMissingSeqLevels(seqs, keepSeqLvls)]
   
-  # prepare flags for bam reading
   if(verbose) message("Reading in signal...")
   
   # obtain coverage (and total count)
@@ -137,9 +138,10 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
     .bam2bwReadChunk(bamfile, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
-                     forceStyle=forceSeqlevelsStyle)
+                     forceStyle=forceSeqlevelsStyle,
+                     keepStrand=ifelse(paired && strand!="*",strand,"*"))
   })
-  
+
   if(is.null(bgbam)){
     if(verbose) message("Writing bigwig...")
     res <- .bam2bwScaleCovList(res, scaling=scaling, log1p=log1p)
@@ -156,12 +158,13 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
     .bam2bwReadChunk(bgbam, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
-                     forceStyle=forceSeqlevelsStyle)
+                     forceStyle=forceSeqlevelsStyle,
+                     keepStrand=ifelse(paired && strand!="*",strand,"*"))
   })
 
   if(verbose) message("Computing relative signal...")
   
-  if(scaling){
+  if(isTRUE(scaling)){
     scaling <- sum(unlist(lapply(res, FUN=function(x) metadata(x)$reads )),
                    na.rm=TRUE)/
                 sum(unlist(lapply(bg, FUN=function(x) metadata(x)$reads )),
@@ -194,9 +197,11 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
 }
 
 #' @importFrom GenomeInfoDb seqlevelsStyle<- seqlevelsInUse
-.bam2bwReadChunk <- function(bamfile, param, binWidth, forceStyle=NULL, ...){
+.bam2bwReadChunk <- function(bamfile, param, binWidth, forceStyle=NULL, 
+                             keepStrand="*", ...){
   # get reads/fragments from chunk
   bam <- .bam2bwGetReads(bamfile, param=param, ...)
+  if(keepStrand != "*") bam <- bam[which(strand(bam)==keepStrand)]
   if(!is.null(forceStyle)) seqlevelsStyle(bam) <- forceStyle
   # compute coverages
   co <- tileRle(coverage(bam), bs=binWidth)
@@ -210,7 +215,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
 
 # reads reads from bam file.
 .bam2bwGetReads <- function(bamfile, paired, param, type, extend,
-                            shift, minFragL, maxFragL, si=NULL){
+                            shift=0L, minFragL, maxFragL, si=NULL){
   if(paired){
     bam <- readGAlignmentPairs(bamfile, param=param)
     bam <- as(bam[isProperPair(bam)], "GRanges")
@@ -312,6 +317,7 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
 # eventually applies a scaling
 .bam2bwScaleCovList <- function(res, scaling, log1p=FALSE){
   if(isTRUE(scaling)){
+    saveRDS(res, file="~/TMP.rds")
     # get scaling from chunks read counts
     scaling <- sum(unlist(lapply(res, FUN=function(x) metadata(x)$reads )),
                    na.rm=TRUE)/10^6
@@ -322,13 +328,7 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
   if(is(res[[1]], "GRanges")){
     res <- unlist(GRangesList(res))
   }else{
-    res <- lapply(res, as.list)
-    names(res) <- NULL
-    res <- lapply(res, FUN=function(x){
-      x[!sapply(x, FUN=function(x) length(x@values)==1L && all(x@values==0L))]
-    })
-    res <- res[lengths(res)>0L]
-    res <- do.call(RleList, unlist(res, recursive=FALSE))
+    res <- Reduce("+", res)
   }
   if(!isFALSE(scaling)){
     stopifnot(scaling>0)

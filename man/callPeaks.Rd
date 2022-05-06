@@ -13,10 +13,11 @@ callPeaks(
   binSize = 5L,
   fragLength = NULL,
   minPeakCount = 5L,
-  minFoldChange = 1.5,
+  minFoldChange = 1.3,
   pthres = 10^-3,
   priorFragLength = 150L,
-  bgWindow = c(1, 5) * 1000,
+  bgWindow = c(1, 5, 10) * 1000,
+  pseudoCount = 1L,
   outFormat = c("custom", "narrowPeak"),
   verbose = TRUE,
   ...
@@ -32,7 +33,9 @@ callPeaks(
 \item{type}{The type of peaks to identify ('narrow' or 'broad').}
 
 \item{blacklist}{An optional `GRanges` of regions to be excluded (or the path
-to such a file).}
+to such a file). Since the blacklisted regions are removed from both the
+signal and control peaks, this also has an important impact on the 
+empirical FDR (when `ctrl` is given).}
 
 \item{binSize}{Binsize used to estimate peak shift}
 

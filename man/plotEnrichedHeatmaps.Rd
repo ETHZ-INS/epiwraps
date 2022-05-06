@@ -13,11 +13,14 @@ plotEnrichedHeatmaps(
   title_size = 11,
   row_order = NULL,
   cluster_rows = FALSE,
+  row_split = NULL,
   axis_name = NULL,
+  minRowVal = 0,
   scale_rows = FALSE,
   top_annotation = TRUE,
-  minRowVal = 0,
+  left_annotation = NULL,
   show_heatmap_legend = TRUE,
+  mean_color = "red",
   ...
 )
 }
@@ -27,6 +30,8 @@ plotEnrichedHeatmaps(
 \item{trim}{The quantile above which to trim values for the colorscale. If a
 numeric vector of length 2, will be used as lower and upper quantiles 
 beyond which to trim.}
+
+\item{assay}{Assay to use (ignored unless `ml` is an ESE object)}
 
 \item{colors}{The heatmap colors to use.}
 
@@ -38,12 +43,27 @@ beyond which to trim.}
 
 \item{cluster_rows}{Whether to cluster rows.}
 
+\item{row_split}{Splitting of rows.}
+
 \item{axis_name}{A vector of length 3 giving the labels to put respectively
 on the left, center and right of the x axis of each heatmap.}
+
+\item{minRowVal}{Minimum value a row should have to be included}
+
+\item{scale_rows}{Whether to scale rows, either FALSE (default), 'local' 
+(scales each matrix separately) or 'global'.}
 
 \item{top_annotation}{Either a logical indicating whether or not to plot the
 summary profile at the top of each heatmap, or any other value passed to
 \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.}
+
+\item{left_annotation}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}}
+
+\item{show_heatmap_legend}{Logical, whether to show the heatmap legend}
+
+\item{mean_color}{Color of the mean signal line in the top annotation. If
+`row_split` is used, `mean_color` can be a named vector indicating the 
+colors for each cluster. Can also be a `gpar` object.}
 
 \item{...}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}}
 }

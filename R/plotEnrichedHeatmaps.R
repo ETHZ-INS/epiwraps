@@ -11,6 +11,7 @@
 #' @param scale_title The title of the scale.
 #' @param title_size The size of the heatmap titles.
 #' @param row_order Optional order of the rows.
+#' @param row_split Splitting of rows.
 #' @param cluster_rows Whether to cluster rows.
 #' @param ... Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}
 #' @param top_annotation Either a logical indicating whether or not to plot the
@@ -18,9 +19,17 @@
 #' \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 #' @param axis_name A vector of length 3 giving the labels to put respectively
 #' on the left, center and right of the x axis of each heatmap.
+#' @param assay Assay to use (ignored unless `ml` is an ESE object)
+#' @param minRowVal Minimum value a row should have to be included
+#' @param scale_rows Whether to scale rows, either FALSE (default), 'local' 
+#'   (scales each matrix separately) or 'global'.
+#' @param left_annotation Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}
+#' @param show_heatmap_legend Logical, whether to show the heatmap legend
+#' @param mean_color Color of the mean signal line in the top annotation. If
+#'   `row_split` is used, `mean_color` can be a named vector indicating the 
+#'   colors for each cluster. Can also be a `gpar` object.
 #' 
 #' @details 
-#' 
 #' When plotting large matrices, the heatmap body will be rasterized to keep its
 #' memory footprint decent. Depending on your settings, if the heatmap is very
 #' big you might hit the preset limits of `magick` base rasterization, which
@@ -56,18 +65,22 @@
 #' plotEnrichedHeatmaps(m, row_title="My regions of interest")
 plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, colors=inferno(100),
                                  scale_title="density", title_size=11, 
-                                 row_order=NULL, cluster_rows=FALSE, axis_name=NULL, 
-                                 scale_rows=FALSE, top_annotation=TRUE, minRowVal=0, 
-                                 show_heatmap_legend=TRUE, ...){
+                                 row_order=NULL, cluster_rows=FALSE, 
+                                 row_split=NULL, axis_name=NULL, minRowVal=0, 
+                                 scale_rows=FALSE, top_annotation=TRUE, 
+                                 left_annotation=NULL,
+                                 show_heatmap_legend=TRUE, mean_color="red", ...){
   if(is(ml, "SummarizedExperiment")) ml <- .ese2ml(ml, assay=assay)
   ml <- .comparableMatrices(ml)
   stopifnot(length(trim) %in% 1:2 && all(trim>=0 & trim <=1))
   stopifnot(length(scale_rows)==1)
+  if(!is.null(row_split)) stopifnot(length(row_split)==nrow(ml[[1]]))
   if(isTRUE(minRowVal>0)){
     rMax <- matrixStats::rowMaxs(do.call(cbind,
                                          lapply(ml, FUN=matrixStats::rowMaxs)))
     w <- which(rMax>minRowVal)
     ml <- lapply(ml, i=w, FUN=.resizeNmatrix)
+    if(!is.null(row_split)) row_split <- row_split[w]
   }
   if(!isFALSE(scale_rows)){
     if(isTRUE(scale_rows) || scale_rows=="global"){
@@ -80,10 +93,26 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, colors=inferno
       ml <- lapply(ml, FUN=function(x) t(scale(t(x))))
     }
   }
-  hl <- NULL
+  mean_gp <- gpar(col="red")
+  if(is.null(row_split)){
+    rs <- rep(1L, nrow(ml[[1]]))
+  }else{
+    rs <- row_split <- as.factor(row_split)
+    if(is(mean_color, "gpar")){
+      mean_gp <- mean_color
+    }else if(length(mean_color)>1){
+      if(is.null(names(mean_color)))
+        stop("When clustering rows, provide the names of the clusters in `mean_color`.")
+      stopifnot(all(levels(row_split) %in% names(mean_color)))
+      mean_gp <- gpar(col=mean_color[levels(row_split)])
+    }
+  }
   ymin <- min(c(0,unlist(lapply(ml,FUN=min))))
-  ymax <- max(unlist(lapply(ml,FUN=function(x){
-    max(colMeans(x)+matrixStats::colSds(x)/sqrt(nrow(x)))
+  ymax <- max(unlist(lapply(ml, FUN=function(x){
+    max(unlist(lapply(split(seq_along(rs), rs), FUN=function(i){
+      x2 <- x[i,]
+      max(colMeans(x2)+matrixStats::colSds(x2)/sqrt(nrow(x2)))
+    })))
   })))
   if(length(trim)==1) trim <- c(0,trim)
   trim <- sort(trim)
@@ -114,20 +143,28 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, colors=inferno
     }
     axis_name <- c(e[1], axis_name, e[2])
   }
+  hl <- NULL
   for(m in names(ml)){
     isLast <- m==rev(names(ml))[1]
     if(isFALSE(top_annotation)){
       top_annotation <- NULL
     }else if(isTRUE(top_annotation)){
       top_annotation <- HeatmapAnnotation(
-        enriched=anno_enriched(ylim=c(ymin,ymax), show_error=TRUE, axis=isLast))
+        enriched=anno_enriched(ylim=c(ymin,ymax), show_error=TRUE, axis=isLast,
+                               gp=mean_gp))
+    }
+    if(is.null(la <- left_annotation) && m==names(ml)[1] &&
+       !is.null(row_split) && !is(mean_color, "gpar") && length(mean_color)>1){
+      la <- rowAnnotation(cluster=row_split, annotation_name_side="top",
+                          col=list(cluster=mean_color), show_legend=FALSE)
     }
     hl <- hl + EnrichedHeatmap(ml[[m]], column_title=m, col=col_fun, ...,
                            column_title_gp=gpar(fontsize=title_size),
+                           left_annotation=la, 
                            cluster_rows = cluster_rows, row_order=row_order,
                            show_heatmap_legend=isLast && show_heatmap_legend,
                            top_annotation=top_annotation, axis_name=axis_name,
-                           name=ifelse(isLast,scale_title,m) )
+                           name=ifelse(isLast,scale_title,m), row_split=row_split )
   }
   hl
 }

@@ -1,7 +1,7 @@
 Package: epiwraps
 Type: Package
 Title: epiwraps: Wrappers for plotting and dealing with epigenomics data
-Version: 0.99.25
+Version: 0.99.26
 Depends: R (>= 4.0)
 Date: 2022-04-29
 Authors@R: c(
@@ -34,7 +34,8 @@ Imports:
     UpSetR,
     ComplexHeatmap,
     dplyr,
-    Biostrings
+    Biostrings,
+    stats
 Suggests: 
     knitr,
     genomation,
