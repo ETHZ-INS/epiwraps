@@ -20,7 +20,10 @@ signal2Matrix(
 }
 \arguments{
 \item{filepaths}{A named vector of filepaths (e.g. to bigwig files; bam files
-are also supported, but with limited functionalities)}
+are also supported, but with limited functionalities). Can also be a named
+list including a combination of paths to such files and `GRanges` object.
+For `GRanges` objects, the `score` column will be used (absolute coverage
+mode).}
 
 \item{regions}{A `GRanges` of the regions/positions around which to plot, or
 the path to a bed file of such regions.}
