@@ -24,6 +24,8 @@
 }
 
 .cleanFileNames <- function(x){
+  if(!is.character(x))
+    stop("Cannot create names for non-character input. Please set names.")
   pat <- paste0("\\.bigwig$|\\.bw$|\\.bam$|\\.bed$|\\.narrowpeak$",
                 "|\\.broadpeak$|\\.gappedpeak$")
   gsub(pat, "", basename(x), ignore.case=TRUE)
