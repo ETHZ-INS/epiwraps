@@ -304,6 +304,7 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
 #' @param k The number of clusters to generate
 #' @param scaleRows Logical; whether to scale rows for clustering
 #' @param scaleCols Logical; whether to scale columns (i.e. signals/samples)
+#' @param assay Assay to use (ignored unless `ml` is an ESE object)
 #' @param use What values to use for clustering. By default, uses 
 #'   \code{\link[EnrichedHeatmap]{enriched_score}}. Other options are 'full' 
 #'   (uses the full signal for clustering), 'max' (uses the maximum value in 
@@ -321,7 +322,8 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
 #' @importFrom stats kmeans
 clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
                                   use=c("enrich","full","max","center"),
-                                  trim=c(0.05,0.95), nstart=3, ...){
+                                  assay=1L, trim=c(0.05,0.95), nstart=3, ...){
+  if(is(ml, "SummarizedExperiment")) ml <- .ese2ml(ml, assay=assay)
   ml <- .comparableMatrices(ml)
   k <- unique(as.integer(k))
   stopifnot(all(k>1 & k<nrow(ml[[1]])))

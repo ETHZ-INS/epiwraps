@@ -45,3 +45,23 @@
   stopifnot(all(unlist(lapply(x, class2="normalizedMatrix", is))))
   x
 }
+
+
+.parseEseVar <- function(se, x, type=c("row","col")){
+  if(is.null(x)) return(NULL)
+  type <- match.arg(type)
+  if(is.vector(x) & length(x)>1){
+    if(length(x)!=ifelse(type=="row",nrow(se),ncol(se)))
+      stop("The vector provided for '", deparse(substitute(x)), "' does not",
+           " have the right length.")
+    return(x)
+  }
+  stopifnot(is(se,"SummarizedExperiment"))
+  if(type=="row"){
+    x <- rowData(se)[[x]]
+  }else if(type=="col"){
+    x <- colData(se)[[x]]
+  }
+  if(is.null(x)) stop("'",deparse(substitute(x)), "' not found in ",type,"Data")
+  x
+}

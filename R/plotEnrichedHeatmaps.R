@@ -70,7 +70,10 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, colors=inferno
                                  scale_rows=FALSE, top_annotation=TRUE, 
                                  left_annotation=NULL,
                                  show_heatmap_legend=TRUE, mean_color="red", ...){
-  if(is(ml, "SummarizedExperiment")) ml <- .ese2ml(ml, assay=assay)
+  if(is(ml, "SummarizedExperiment")){
+    ml <- .ese2ml(ml, assay=assay)
+    # parse arguments
+  }
   ml <- .comparableMatrices(ml)
   stopifnot(length(trim) %in% 1:2 && all(trim>=0 & trim <=1))
   stopifnot(length(scale_rows)==1)
