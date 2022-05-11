@@ -106,8 +106,8 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     downstream <- flank(regions, extend[[2]], start=FALSE)
   }
   
-  ml <- lapply(setNames(names(filepaths),names(filepaths)), 
-                 #BPPARAM=.getBP(BPPARAM), 
+  ml <- bplapply(setNames(names(filepaths),names(filepaths)), 
+                 BPPARAM=.getBP(BPPARAM), 
            FUN=function(filename){
              
     filepath <- filepaths[[filename]]
@@ -124,11 +124,11 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
       ####### GRanges INPUT
       if(type=="scale"){
         target_ratio <- w*scaledBins/sum(extend)
-        mat <- normalizeToMatrix(me, regions, w=w, extend=extend, 
+        mat <- normalizeToMatrix(filepath, regions, w=w, extend=extend, 
                                  value_column="score", mean_mode="absolute", 
                                  target_ratio=target_ratio, ...)
       }else{
-        mat <- normalizeToMatrix(me, resize(regions,1L,fix="center"), w=w,
+        mat <- normalizeToMatrix(filepath, resize(regions,1L,fix="center"), w=w,
                                  extend=extend, value_column="score", ..., 
                                  mean_mode="absolute")        
       }
