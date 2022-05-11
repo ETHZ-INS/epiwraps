@@ -19,8 +19,7 @@ vignette: |
 ---
 
 ```{r, include=FALSE}
-#library(BiocStyle)
-devtools::load_all("~/bioinfo/plg/epiwraps/")
+library(BiocStyle)
 ```
 
 # Introduction

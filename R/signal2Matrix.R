@@ -3,7 +3,10 @@
 #' Reads the signals around (the centers of) a set of regions.
 #'
 #' @param filepaths A named vector of filepaths (e.g. to bigwig files; bam files
-#'   are also supported, but with limited functionalities)
+#'   are also supported, but with limited functionalities). Can also be a named
+#'   list including a combination of paths to such files and `GRanges` object.
+#'   For `GRanges` objects, the `score` column will be used (absolute coverage
+#'   mode).
 #' @param regions A `GRanges` of the regions/positions around which to plot, or
 #' the path to a bed file of such regions.
 #' @param extend Number of basepair to extend on either side of the regions. 
@@ -59,10 +62,14 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   type <- match.arg(type)
   ret <- match.arg(ret)
   binMethod <- match.arg(binMethod)
-  if(!all(unlist(lapply(filepaths, file.exists))))
+  
+  if(!all(unlist(lapply(filepaths, FUN=function(x){
+    is(x, "GRanges") || file.exists(x) }))))
     stop("Some of the files given do not exist, check the paths provided.")
-  if(type!="center" && any(grepl("\\.bam$",filepaths,ignore.case=TRUE)))
+  if(type!="center" && any(unlist(lapply(filepaths, FUN=function(x){
+    !is(x, "GRanges") && grepl("\\.bam$",x,ignore.case=TRUE)}))))
     stop("Only `type='center'` can be used for BAM files.")
+  
   if(is.null(w) || is.na(w)) w <- round(max(1,mean(extend)/100))
   w <- as.integer(w)
   stopifnot(w>0)
@@ -102,11 +109,32 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   ml <- lapply(setNames(names(filepaths),names(filepaths)), 
                  #BPPARAM=.getBP(BPPARAM), 
            FUN=function(filename){
+             
     filepath <- filepaths[[filename]]
+    if(is(filepath, "GRanges")){
+      if(verbose) message("Computing signal from GRanges '", filename, "'...")
+    }else{
+      if(verbose) message("Reading ", filepath)
+      if(grepl("\\.rds$",filepath,ignore.case=TRUE))
+        filepath <- readRDS(filepath)
+    }
     
-    if(verbose) message("Reading ", filepath)
-    
-    if(grepl("\\.bam$",filepath,ignore.case=TRUE)){
+    if(is(filepath, "GRanges")){
+      
+      ####### GRanges INPUT
+      if(type=="scale"){
+        target_ratio <- w*scaledBins/sum(extend)
+        mat <- normalizeToMatrix(me, regions, w=w, extend=extend, 
+                                 value_column="score", mean_mode="absolute", 
+                                 target_ratio=target_ratio, ...)
+      }else{
+        mat <- normalizeToMatrix(me, resize(regions,1L,fix="center"), w=w,
+                                 extend=extend, value_column="score", ..., 
+                                 mean_mode="absolute")        
+      }
+      ####### END GRanges INPUT
+      
+    }else if(grepl("\\.bam$",filepath,ignore.case=TRUE)){
       
       ####### BAM INPUT
       

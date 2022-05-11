@@ -15,7 +15,7 @@ estimateFragSize(
   maxSize = 2500L,
   priorLength = 200L,
   blacklist = NULL,
-  ret = c("mode", "median", "mean", "tables", "plots"),
+  ret = c("mode", "median", "mean", "tables", "plots", "distances"),
   BPPARAM = SerialParam()
 )
 }
