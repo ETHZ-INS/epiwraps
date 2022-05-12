@@ -289,7 +289,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
       }
     }))
   }))
-  wRev <- which(strands=="-")
+  wRev <- which(as.factor(strands)=="-")
   if(length(wRev)>0) mat[wRev,] <- mat[wRev,seq(from=ncol(mat), to=1L)]
   mat
 }
