@@ -25,7 +25,7 @@ Key topics:
 * [Bigwig file generation](#bigwig-file-generation)
 * [Peak calling](#peak-calling)
 
-<hr/>
+<br/><br/>
 
 ## Visualization
 
@@ -283,6 +283,7 @@ colorscale, resulting in a an 'over-exposed' heatmap. In practice, it is
 advisable to use minimal trimming (e.g. the default is `c(0.01,0.99)`,
 as in the corresponding DeepTools function).
 
+<br/><br/>
 
 #### Plotting aggregated signals
 
@@ -319,6 +320,7 @@ ggplot(d, aes(position, mean, colour=sample)) +
 
 ![](readme_files/figure-html/aggPlot-1.png)<!-- -->
 
+<br/><br/>
 
 ## Bigwig file generation
 
@@ -345,6 +347,8 @@ be generated as an enrichment over an input, allowing the use of local
 neighborhood backgrounds (MACS-like). For more detail, see the `bam2bw` 
 vignette.
 
+<br/><br/>
+
 ## Peak calling
 
 The `callPeaks` function offers a R-based implementation of the general strategy
@@ -370,6 +374,8 @@ on the empirical FDR.
 `callPeaks` takes about twice as long to run as MACS2, and uses more memory. If
 dealing with very large files (or a very low memory system), consider
 increasing the number of processing chunks, for instance with `nChunks=10`.
+
+<br/><br/>
 
 ## Misc
 
