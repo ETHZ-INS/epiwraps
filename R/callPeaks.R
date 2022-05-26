@@ -2,14 +2,20 @@
 #' 
 #' This is a R-based implementation of the general MACS2 strategy (Zhang et al.,
 #'  Genome Biology 2008), taking some freedom here and there in comparison to 
-#'  the original.
+#'  the original. The function is still under development, especially with 
+#'  respect to single-end reads, where some optimization might still be needed.
+#'  For paired-end reads, the results are nearly identical with those of MACS2, 
+#'  with two main differences: 1) the p-values are more conservative (and 
+#'  arguably better calibrated) and 2) because the implementation does not rely 
+#'  on sliding windows, with default settings the peaks are narrower.
 #'
 #' @param bam A signal bam file
 #' @param ctrl An optional (but highly recommended) control bam file
 #' @param paired Logical, whether the reads are paired
 #' @param binSize Binsize used to estimate peak shift
-#' @param fragLength Fragment length. Ignored if `paired=TRUE`. If not given,
-#'   will be estimated from the data.
+#' @param fragLength Fragment length. Ignored if `paired=TRUE`. This is only 
+#'   used for the initial candidate region identification, and sizes are 
+#'   adjusted after, so it doesn't need to be very precise.
 #' @param minPeakCount The minimum summit count for a region to be considered.
 #'   Decreasing this can substantially increase the running time.
 #' @param minFoldChange The minimum fold-change for a region to be considered.
@@ -18,165 +24,321 @@
 #'   to such a file). Since the blacklisted regions are removed from both the
 #'   signal and control peaks, this also has an important impact on the 
 #'   empirical FDR (when `ctrl` is given).
-#' @param priorFragLength Prior fragment length (ignored if `paired=TRUE`). This
-#'   is used for coverage computation to estimate peak shift.
 #' @param bgWindow The windows to consider (in addition to the peak itself) 
 #'   for local background.
 #' @param type The type of peaks to identify ('narrow' or 'broad').
 #' @param outFormat The output format ('custom' or 'narrowPeak')
 #' @param pthres The p-value threshold to use
 #' @param verbose Logical; whether to output progress messages
-#' @param ... Passed to `estimateFragSize`
+#' @param ... Passed to \code{\linke{bamChrChunkApply}}
 #'
 #' @return A `GRanges`
 #' 
-#' @importFrom IRanges Views viewMaxs viewMeans slice viewRangeMaxs
+#' @details 
+#' `callPeaks` takes about twice as long to run as MACS2, and uses more memory.
+#' If dealing with very large files (or a very low memory system), consider
+#' increasing the number of processing chunks, for instance with `nChunks=10`.
+#' 
+#' The function uses \code{\linke{bamChrChunkApply}} to obtain the coverages,
+#' and can accept any argument of that function. This means that the 
+#' `mapqFilter` and bam `flgs` arguments can be used to restrict the reads used.
+#' 
+#' @importFrom IRanges Views viewMaxs viewMeans slice viewRangeMaxs relist IntegerList
+#' @importFrom stats setNames pnorm ppois optim density
 #' @export
 callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"), 
-                      blacklist=NULL, binSize=5L, fragLength=NULL, 
-                      minPeakCount=5L, minFoldChange=1.3, pthres=10^-3, 
-                      priorFragLength=150L, bgWindow=c(1,5,10)*1000, pseudoCount=1L,
-                      outFormat=c("custom", "narrowPeak"), verbose=TRUE, ...){
+                      blacklist=NULL, binSize=10L, fragLength=200L, 
+                      minPeakCount=5L, minFoldChange=1.3, pthres=10^-3,
+                      maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=1L,
+                      useStrand=TRUE, outFormat=c("custom", "narrowPeak"),
+                      verbose=TRUE, ...){
   type <- match.arg(type)
+  if(is.null(maxSize)) maxSize <- ifelse(type=="narrow",1000L,5000L)
   outFormat <- match.arg(outFormat)
   binSize <- as.integer(binSize)
   minPeakCount <- as.integer(minPeakCount)
-  priorFragLength <- as.integer(priorFragLength)
-  if(!is.null(fragLength)){
-    fragLength <- as.integer(fragLength)
-    stopifnot(fragLength>1)
-    priorFragLength <- fragLength
-  }
+  fragLength <- as.integer(fragLength)
   if(!is.null(blacklist) && is.character(blacklist)){
+    if(verbose) message("Importing blacklist...")
     blacklist <- rtracklayer::import(blacklist)
   }
   
-  if(!is.null(ctrl) && !is(ctrl, "RleList")){
-    if(verbose) message("Reading control coverage...")
-    # control (full) coverage
-    if(paired){
-      ctrl <- bamChrChunkApply(ctrl, paired=TRUE, FUN=coverage)
-    }else{
-      ctrl <- Reduce("+", bamChrChunkApply(ctrl, paired=FALSE, FUN=function(x){
-        x <- suppressWarnings(resize(x, pmax(width(x), priorFragLength)))
-        coverage(trim(x))
-      }))
-    }
-  }
-  
-  # signal coverages
-  if(verbose) message("Reading signal coverage...")
-  if(paired){
-    # we don't need to estimate fragment size, so just read full coverage
-    co <- bamChrChunkApply(bam, paired=TRUE, FUN=function(x){
-      list(fl=median(width(x)), cov=coverage(x))
-    })
-    fragLength <- median(unlist(lapply(co, FUN=function(x) x$fl)), na.rm=TRUE)
-    co <- list(cov=Reduce("+", lapply(co, FUN=function(x) x$cov)))
+  if(is(bam, "RleList")){
+    useStrand <- FALSE
+    if(verbose) message("Identifying candidate regions...")
+    o <- .cpGetCandidates(bam, paired=paired, ctrl=ctrl,  verbose=verbose,
+                          binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
+                          minFoldChange=minFoldChange, minPeakCount=minPeakCount,
+                          pseudoCount=pseudoCount, useStrand=useStrand,
+                          maxSize=maxSize)
+    o <- list(o)
   }else{
-    # full + stranded coverages
-    co <- .getStrandedCoverages(bam, binSize=binSize, fragLength=priorFragLength)
-    if(is.null(fragLength)){
-      if(verbose) message("Estimating fragment size...")
-      fragLength <- estimateFragSize(co, ctrl, binSize=binSize, ...,
-                                     priorFragLength=priorFragLength,
-                                     blacklist=blacklist, ret="distances")
-      if(verbose) message("  mean: ", round(mean(fragLength)),"; 90% CI: ",
-                          paste(round(quantile(fragLength,c(0.05,0.95))),
-                                collapse="-"))
-    }
+    if(verbose) message("Reading signal and identifying candidate regions...")
+    o <- bamChrChunkApply(bam, ..., paired=paired, ctrl=ctrl, verbose=verbose,
+                          binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
+                          minFoldChange=minFoldChange, minPeakCount=minPeakCount,
+                          pseudoCount=pseudoCount, useStrand=useStrand,
+                          breakPeaks=type=="narrow", FUN=.cpGetCandidates)
   }
-  
-  if(verbose) message("Identifying candidate regions...")
-  bg <- .covTrimmedMean(co$cov)
   if(!is.null(ctrl)){
-    # normalize ctrl
-    nf <- bg/.covTrimmedMean(ctrl)
-    ctrl <- setNames(ctrl*nf, names(ctrl))
-    # calc foldchanges
-    co$fc <- .rleFC(co$cov, ctrl)
-    # identify regions of interest
-    r1 <- slice(co$fc, lower=round(100*minFoldChange), rangesOnly=TRUE)
-    r2 <- slice(co$cov, lower=minPeakCount, rangesOnly=TRUE)
-    r <- Views(co$cov, intersect(r1, r2))
-  }else{
-    minPeakCount <- floor(max(minPeakCount,
-                              .covTrimmedMean(co$cov)*minFoldChange))
-    r <- slice(co$cov, lower=as.integer(minPeakCount))
+    # adjust the per-block normalization factors
+    nf <- unlist(lapply(o, FUN=function(x) x$nf), use.names=FALSE)
+    mnf <- median(nf)
+    if((max((nf-mnf))/mnf)>0.3)
+      warning("There are large variations in the per-block normalization ",
+              "factor estimates. This can happen when the signal is heavily ",
+              "biased towards some chromosomes, and can lead to some peaks ",
+              "being lost. To be on the safe side, you could reduce the number",
+              " of blocks")
+    for(i in seq_along(nf)){
+      o[[i]]$regions$bg <- o[[i]]$regions$bg*nf[[i]]/mnf
+      o[[i]]$negR$bg <- o[[i]]$negR$bg*mnf/nf[[i]]
+    }
+    covtm <- median(unlist(lapply(o, FUN=function(x) x$covtm), use.names=FALSE))
+    negR <- unlist(GRangesList(lapply(o, FUN=function(x) x$negR)), use.names=FALSE)
+    if(!is.null(blacklist)) negR <- negR[!overlapsAny(negR, blacklist)]
+    
   }
-  
-  if(type=="broad"){
-    # merge nearby regions
-    r <- reduce(r, min.gapwidth=round(median(fragLength)))
-  }else{
-    #r <- .breakPeaks(r, size=median(fragLength))
-  }
-  
-  # GRanges of regions with stats
-  rmax <- as(viewRangeMaxs(r) ,"GRanges")
-  r <- .viewl2gr(r, summitCount=as.integer(unlist(viewMaxs(r))),
-                 peakMean=round(unlist(viewMeans(r)),2),
-                 summit=start(resize(rmax, 1L, fix="center")))
+  r <- unlist(GRangesList(lapply(o, FUN=function(x) x$r)), use.names=FALSE)
   if(!is.null(blacklist)) r <- r[!overlapsAny(r, blacklist)]
-
-  # enlarge regions that are smaller than the 5% frag size
-  q <- round(quantile(abs(fragLength),c(0.05,0.9)))
-  r <- resize(r, pmax(width(r), q[1]), fix="center")
-  if(verbose) message("  ", length(r), " candidate regions")
+  if(verbose) message("Identified ", length(r), " candidate regions")
+  rm(o)
+  gc(full=TRUE)
   
-  if(type=="narrow" && !paired){
-    # For regions that are too large, resize around the summit, keeping within
-    # the regions' original boundaries
-    if(length(w <- which(width(r)>q[2]))>0)
-      ranges(r[w]) <- .resizeWithin(ranges(rmax[w]), q[2], within=r[w])
-  }
-  
+  if(verbose) message("Computing significance...")
   if(!is.null(ctrl)){
-    message("Computing neighboring background and significance...")
-    # calculate neighborhood background
-    r$bgMax <- round(.getLocalBackground(ctrl, r, windows=bgWindow),2)
     # calculate new logFC
-    r$logFC <- round(log2((pseudoCount+r$summitCount)/(pseudoCount+r$bgMax)),2)
-    r <- r[r$logFC > log2(minFoldChange)]
+    r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/(pseudoCount+r$bg))))
+    r <- r[which(r$log10FE > as.integer(floor(100*log10(minFoldChange))))]
     # poisson deviation from background
-    r$log10p <- -log10(ppois(r$peakMean, r$bgMax, lower.tail=FALSE))
-    message("Computing false discovery rate using the control...")
+    r$log10p <- -log10(ppois(r$meanCount, r$bg, lower.tail=FALSE))
+    
+    if(verbose) message("Computing false discovery rate using negative peaks...")
     # call peaks in the control
-    fc2 <- .rleFC(ctrl, co$cov)
-    fc2 <- slice(fc2, lower=as.integer(100*minFoldChange), rangesOnly=TRUE)
-    if(sum(lengths(fc2))>1000)
-      fc2 <- intersect(fc2, slice(ctrl, lower=minPeakCount, rangesOnly=TRUE))
-    if(verbose) message("  ", length(fc2), " negative peaks")
-    fc2 <- .viewl2gr(fc2)
-    fc2 <- resize(fc2, pmax(width(fc2), mean(q)), fix="center")
-    fc2$bg <- .getLocalBackground(co$cov, fc2, windows=bgWindow)
-    fc2$cnt <- as.numeric(unlist(viewMeans(Views(ctrl, fc2)), use.names=FALSE))
-    if(!is.null(blacklist)) fc2 <- fc2[!overlapsAny(fc2, blacklist)]
-    p <- -log10(ppois(fc2$cnt, pmax(.covTrimmedMean(ctrl),pseudoCount,fc2$bg),
+    p <- -log10(ppois(negR$meanCount, pmax(covtm, pseudoCount, negR$bg),
                       lower.tail=FALSE))
     metadata(r)$ctrl.log10p <- p
     mcols(r) <- cbind(mcols(r), getEmpiricalFDR(r$log10p, p))
   }else{
-    message("Computing significance...")
+    if(verbose)
+      message("(In the absence of a control, FDR is unlikely to be calibrated)")
     if(type=="narrow"){
-      bg <- .getLocalBackground(co$cov, r, windows=max(bgWindow), incRegion=FALSE)
-      p <- ppois(r$peakMean, bg, lower.tail=FALSE)
-      r$logFC <- (pseudoCount+r$peakMean)/(pseudoCount+bg)
+      p <- pmax(ppois(r$meanCount, pmax(r$bg,pseudoCount), lower.tail=FALSE),
+                ppois(r$maxPos, pseudoCount, lower.tail=FALSE),
+                ppois(r$maxNeg, pseudoCount, lower.tail=FALSE))
+      fc <- (pseudoCount+r$meanCount)/(pseudoCount+r$bg)
     }else{
-      p <- ppois(r$peakMean, pseudoCount+.covTrimmedMean(co$cov), lower.tail=FALSE)
-      r$logFC <- (pseudoCount+r$peakMean)/(pseudoCount+bg)
+      p <- ppois(r$meanCount, pseudoCount, lower.tail=FALSE)
+      fc <- (pseudoCount+r$meanCount)/pseudoCount
     }
+    r$log10FE <- as.integer(round(100*log10(fc)))
     r$log10p <- -log10(p)
     r$log10FDR <- round(-log10(p.adjust(p, method="holm")),2)
   }
   r <- r[r$log10p >= -log10(pthres)]
+  if(verbose) message("Reporting ", length(r), " regions, ",
+                      sum(r$log10FDR>-log10(0.05))," with FDR<0.05")
   r$log10p <- round(r$log10p,2)
-  r$score <- as.integer(round(1000*(r$logFC/quantile(r$logFC, .99))))
+  
+  r$score <- as.integer(round(1000*(r$log10FE/quantile(r$log10FE, .99))))
   r$score[r$score>1000L] <- 1000L
   if(outFormat=="NarrowPeak") r <- .customPeaks2NarrowPeaks(r)
   r
 }
 
+
+
+.cpGetCandidates <- function(x, ctrl=NULL, paired=FALSE, blacklist=NULL, 
+                             binSize=5L, fragLength=300L, minPeakCount=5L, minSize=10L,
+                             maxSize=2000L, minFoldChange=1.3, bgWindow=c(1,5,10)*1000, 
+                             pseudoCount=1L, useStrand=TRUE,
+                             flgs=scanBamFlag(), breakPeaks=TRUE, verbose=TRUE, ...){
+  covtm <- nf <- negR <- fsq <- NULL
+  if(!is(x, "RleList")){
+    if(verbose) message("Reading signal coverage...")
+    if(paired){
+      fsq <- quantile(width(x), c(0,0.05,0.1,0.25,0.5,0.75,0.9,0.95,1))
+    }else{
+      x <- trim(suppressWarnings(resize(x, width=fragLength, fix="start")))
+    }
+    co <- coverage(x)
+    if(useStrand){
+      cop <- coverage(resize(x[which(as.factor(strand(x))=="+")], binSize, fix="start"))
+      con <- coverage(resize(x[which(as.factor(strand(x))=="-")], binSize, fix="start"))
+    }
+    rm(x)
+    gc(full=TRUE, verbose=FALSE)
+  }
+  r <- slice(co, lower=minPeakCount)
+  r <- r[width(r)>=minSize]
+  if(verbose) message(sum(lengths(r)), " initial candidate regions")
+  v <- Reduce("c", lapply(r[which(lengths(r)>0L)], FUN=RleList))
+  r <- .viewl2gr(r, maxCount=unlist(viewMaxs(r)),
+                 meanCount=unlist(viewMeans(r)), cov=v)
+  rm(v)
+  if(!is.null(ctrl)){
+    if(!is(ctrl, "RleList")){
+      if(verbose) message("Reading control coverage...")
+      lvls <- lengths(co)[lengths(runValue(co))>1L]
+      p <- ScanBamParam(flag=flgs,
+                        which=GRanges(names(lvls), IRanges(1L, width=lvls)))
+      if(paired){
+        ctrl <- coverage(GRanges(readGAlignmentPairs(ctrl, param=p)))
+      }else{
+        ctrl <- GRanges(readGAlignments(ctrl, param=p))
+        ctrl <- suppressWarnings(resize(ctrl, width=fragLength, fix="start"))
+        ctrl <- coverage(trim(ctrl))
+      }
+    }
+    covtm <- .covTrimmedMean(ctrl)
+    nf <- covtm/.covTrimmedMean(co)
+    fc <- nf*mean(r$cov)/unlist(viewMeans(Views(ctrl, r)))
+    r <- r[which(fc>minFoldChange)]
+  }
+  if(breakPeaks){
+    r2 <- r[width(r)>maxSize]
+    r2 <- suppressWarnings({
+      .breakRegions2(r2, v=r2$cov, minW=round(fragLength/2), maxW=maxSize)
+    })
+    v <- Views(co, r2)
+    r2$maxCount <- unlist(viewMaxs(v))
+    r2$meanCount <- unlist(viewMeans(v))
+    r2$cov <- Reduce("c", lapply(v, FUN=RleList))
+    r <- sort(c(r[which(width(r)<=maxSize)], r2))
+  }
+  if(!is.null(blacklist)) r <- r[!overlapsAny(r,blacklist)]
+  if(useStrand){
+    if(verbose) message("Getting strand information")
+    v <- Views(cop,r)
+    r$wPos <- unlist(start(resize(viewRangeMaxs(v), width=1L, fix="center")))
+    r$pos <- Reduce("c", lapply(v, FUN=RleList))
+    v <- Views(con,r)
+    r$wNeg <- unlist(start(resize(viewRangeMaxs(v), width=1L, fix="center")))
+    r$neg <- Reduce("c", lapply(v, FUN=RleList))
+    r$maxPos <- max(r$pos)
+    r$maxNeg <- max(r$neg)
+    r <- r[which(r$maxPos >= floor(minPeakCount/2) & 
+                   r$maxNeg >= floor(minPeakCount/2))]
+    rm(cop, con)
+    if(breakPeaks){
+      r <- .refinePeaks(r)
+      v <- Views(co, r)
+      r$maxCount <- unlist(viewMaxs(v))
+      r$meanCount <- unlist(viewMeans(v))
+    }
+    rm(v)
+    r$wNeg <- r$wPos <- r$pos <- r$neg <- NULL
+  }
+  r$cov <- NULL
+  if(!is.null(ctrl)){
+    if(verbose) message("Computing neighborhood background")
+    r$bg <- .getLocalBackground(ctrl, gr=r, windows=bgWindow)/nf
+    r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/(pseudoCount+r$bg))))
+    r <- r[which(r$log10FE > as.integer(floor(100*log10(minFoldChange))))]
+    if(verbose) message("Obtaining negative peaks")
+    # get negative regions
+    negR <- slice(ctrl, lower=max(minPeakCount, minPeakCount/nf))
+    negR <- .viewl2gr(negR, maxCount=unlist(viewMaxs(negR)),
+                      meanCount=unlist(viewMeans(negR)))
+    negR$bg <- nf*.getLocalBackground(co, gr=negR, windows=bgWindow)
+    negR$log10FE <- as.integer(round(100*log10((pseudoCount+negR$meanCount)/(pseudoCount+negR$bg))))
+    negR <- negR[which(negR$log10FE > as.integer(floor(100*log10(minFoldChange))))]
+  }else{
+    r$bg <- .getLocalBackground(co, r, windows=max(bgWindow), incRegion=FALSE)
+  }
+  if(verbose) message(length(r), " peaks after filtering")
+  rm(co,ctrl)
+  gc(verbose=FALSE)
+  list(regions=r, fsq=fsq, negR=negR, nf=nf, covtm=covtm)
+}
+
+# refines peaks based on stranded read starts
+.refinePeaks <- function(r, f=20, minC=3, minW=NULL, maxW=NULL){
+  if(is.null(r$wPos)){
+    r$wPos <- which.max()
+  }
+  if(is.null(maxW) || is.null(minW)){
+    x <- (r$wNeg-r$wPos)[which(r$maxPos>(2*minC) & r$maxNeg>(2*minC))]
+    x <- x[x>0]
+    if(is.null(maxW)) maxW <- as.integer(round(quantile(x, 0.95)))
+    if(is.null(minW)) minW <- as.integer(round(max(0.9*quantile(x, 0.05),20)))
+  }
+  medpo <- median(r$pos, na.rm=TRUE)
+  medneg <- median(r$neg, na.rm=TRUE)
+  w0 <- r$maxPos > minC & r$maxPos > f*medpo & !is.infinite(r$wPos) &
+         r$maxNeg > minC & r$maxNeg > f*medneg & !is.infinite(r$wNeg) &
+         (r$wNeg-r$wPos) >= minW
+  w <- which(w0)
+  start(r)[w] <- r$wPos[w]
+  end(r)[w] <- r$wNeg[w]
+  if(length(w <- which(!w0 & width(r)>maxW))>0){
+    wPos <- round(median(which(r$pos[w]>medpo[w])))
+    wNeg <- round(median(which(r$neg[w]>medneg[w])))
+    w2 <- which((wNeg-wPos)>=minW)
+    start(r)[w][w2] <- start(r)[w][w2]+wPos[w2]-1L
+    end(r)[w][w2] <- start(r)[w][w2]+wNeg[w2]-1L
+  }
+  trim(suppressWarnings(resize(r, pmax(minW,width(r)), fix="center")))
+}
+
+# very slow implementation, not used -- see .breakRegions2 instead
+.breakRegions <- function(x, v, maxW=250L, minW=50L){
+  x$V <- v
+  x$iC <- max(v)
+  toFrag <- width(x)>maxW
+  notFrag <- x[which(!toFrag)]
+  x <- x[toFrag]
+  i <- 0L
+  while(length(x)>0){
+    w <- which(x$V==x$iC)
+    l1 <- unlist(w)
+    l2 <- rep(width(x), lengths(w))-l1
+    w2 <- relist(l1>=minW & l2>=minW, w)
+    bp <- w[relist(l1>=minW & l2>=minW, w)]
+    fragged <- lengths(bp)>0
+    if(sum(fragged)>0){
+      bp <- bp[fragged]
+      bp <- unlist(bp[setNames(splitAsList(ceiling(lengths(bp)/2), seq_along(bp)),
+                        NULL)])
+      fr1 <- fr2 <- x[fragged]
+      fr1 <- trim(suppressWarnings(resize(x[fragged], bp-1L)))
+      fr1$V <- fr1$V[IntegerList(lapply(bp,seq_len))]
+      fr2 <- trim(suppressWarnings(resize(x[fragged], width(x[fragged])-bp-1L, fix="end")))
+      fr2$V <- fr2$V[IntegerList(mapply(from=bp,to=lengths(fr2$V),FUN=seq,SIMPLIFY=FALSE))]
+      notFrag <- c(notFrag, fr1[which(width(fr1)<=maxW)], fr2[which(width(fr2)<=maxW)])
+      x <- c(x[which(!fragged)], fr1[which(width(fr1)>maxW)], fr2[which(width(fr2)>maxW)])
+    }
+    i <- i + 1L
+    rv <- runValue(x$V)
+    x$iC <- max(rv[rv<x$iC])
+    if(any(wStop <- x$iC<1L)){
+      notFrag <- c(notFrag, x[which(wStop)])
+      x <- x[which(!wStop)]
+    }
+  }
+  sort(notFrag)
+}
+
+# x is a gr, v is a coverage RleList corresponding to elements of x
+.breakRegions2 <- function(x, v, minW=25L, maxW=1000L, denom=2){
+  w <- width(x)>maxW
+  xO <- granges(x[which(!w)])
+  x <- x[which(w)]
+  ll <- mapply(x=v, start=start(x), SIMPLIFY=FALSE, FUN=function(x, start){
+    x <- slice(x,lower=max(x)/denom, rangesOnly=TRUE)
+    shift(x, shift=start-1L)
+  })
+  ll <- IRangesList(ll)
+  gr <- GRanges(rep(seqnames(x), lengths(ll)),
+                ranges=unlist(ll, recursive=FALSE, use.names=FALSE))
+  gr <- reduce(gr, min.gapwidth=round(minW/2))
+  gr <- reduce(resize(gr, pmax(minW, width(gr)), fix="center"))
+  seqinfo(gr) <- seqinfo(xO)
+  gr <- trim(gr)
+  sort(c(xO, gr))
+}
+
+ 
 .customPeaks2NarrowPeak <- function(r){
   r$name <- Rle(rep(factor("."),length(r)))
   r$pointSource <- r$summit-start(r)
@@ -198,9 +360,10 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
 
 
 .getLocalBackground <- function(co, gr, windows=c(1,5)*1000, incRegion=TRUE){
-  v <- Views(co, resize(gr, max(windows), "center"))
+  v <- Views(co, trim(suppressWarnings(resize(gr, max(windows), "center"))))
   m <- do.call(cbind, lapply(sort(windows, decreasing=TRUE), FUN=function(w){
-    if(w!=unlist(width(v))[1]) v <- resize(v, w, fix="center")
+    if(w!=unlist(width(v))[1])
+      v <- resize(v, w, fix="center")
     unlist(viewMeans(v))
   }))
   if(incRegion) m <- cbind(unlist(viewMaxs(Views(co, gr))),m)
@@ -208,27 +371,41 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
 }
 
 # resize peaks using read starts
-.resizePeaks <- function(gr, fragLength, within, pos=NULL, neg=NULL, minC=4L){
+.resizePeaks <- function(gr, fragLength, within=NULL, pos=NULL, neg=NULL, minC=4L){
   fragLength <- quantile(abs(fragLength), c(0.05,0.95))
-  gr2 <- resize(gr, pmax(width(gr), fragLength[1]), fix="center")
-  v <- Views(pos, gr2)
-  posSummit <- resize(viewRangeMaxs(v), 1L, fix="center")
-  posSummitCount<- viewMaxs(v)
-  v <- Views(neg, gr2)
-  negSummit <- resize(viewRangeMaxs(v), 1L, fix="center")
-  negSummitCount<- viewMaxs(v)
+  if(!is.null(pos) && !is.null(neg)){
+    gr2 <- resize(gr, pmax(width(gr), fragLength[1]), fix="center")
+    v <- Views(pos, gr2)
+    posSummit <- resize(viewRangeMaxs(v), 1L, fix="center")
+    posSummitCount<- viewMaxs(v)
+    v <- Views(neg, gr2)
+    negSummit <- resize(viewRangeMaxs(v), 1L, fix="center")
+    negSummitCount<- viewMaxs(v)
+  }else{
+    il <- IntegerList(r$pos)
+    posSummit <- round(median(which(il==max(il))))
+    posSummitCount <- max(il)
+    il <- IntegerList(r$neg)
+    negSummit <- round(median(which(il==max(il))))
+    negSummitCount <- max(il)
+  }
   w <- which( posSummitCount>=minC & negSummitCount>=minC &
-                 abs(posSummitCount-negSummitCount)<
-                   rowMeans(cbind(posSummitCount,negSummitCount)) &
-                 abs(posSummit-negSummit) >= min(fragLength))
+                abs(posSummitCount-negSummitCount)<
+                rowMeans(cbind(posSummitCount,negSummitCount)) &
+                abs(posSummit-negSummit) >= min(fragLength))
   if(sum(w)>0){
     # use stranded peaks
     ss <- cbind(posSummit,negSummit)[w,]
-    end(gr)[w] <- rowMax(ss)
-    start(gr)[w] <- rowMins(ss)
+    if(!is.null(pos) && !is.null(neg)){
+      end(gr)[w] <- rowMaxs(ss)
+      start(gr)[w] <- rowMins(ss)
+    }else{
+      end(gr)[w] <- start(gr)[w]+rowMaxs(ss)-1L
+      start(gr)[w] <- start(gr)[w]+rowMins(ss)-1L
+    }
   }
   w <- setdiff(which(width(gr)>max(fragLength)), w)
-  if(length(w)>0){
+  if(length(w)>0 && !is.null(within)){
     # resize and try to keep within fc boundaries
     summits <- IRanges(gr$summit[w]-1L, gr$summit[w]+1L)
     ranges(gr)[w] <- .resizeWithin(summits, within=gr[w], size=min(fragLength))
@@ -264,7 +441,7 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
 
 .viewl2gr <- function(x, ...){
   GRanges(rep(factor(names(x), names(x)), lengths(x)),
-          unlist(as(x,"IRangesList")), ...)
+          unlist(as(x,"IRangesList"), use.names=FALSE), ...)
 }
 
 .rleFC <- function(num, den, pseudoCount=1L, fact=100L, toInt=TRUE){
@@ -289,7 +466,10 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
 #' @return A data.frame with the empirical FDR and a smoothed -log10(FDR)
 #' @importFrom stats ecdf loess predict p.adjust
 getEmpiricalFDR <- function(log10p, pneg, n=length(log10p)*10){
+  log10p[is.infinite(log10p)] <- max(log10p[!is.infinite(log10p)])
+  pneg[is.infinite(pneg)] <- max(pneg[!is.infinite(pneg)])
   holm <- -log10(p.adjust(10^-log10p, method="holm", n=n))
+  holm[is.infinite(holm)] <- max(holm[!is.infinite(holm)])
   # first, get the number >= extreme
   nInNeg <- (1-ecdf(pneg)(log10p))*length(pneg)
   nInPos <- (1-ecdf(log10p)(log10p))*length(log10p)
@@ -301,16 +481,15 @@ getEmpiricalFDR <- function(log10p, pneg, n=length(log10p)*10){
     logFDR[w] <- pmax(holm[w]-gap,2)
   }
   logFDR <- .makeMonotonic(logFDR, by=log10p)
-  # smoothen
-  logFDR <- predict(loess(logFDR~log10p, na.action="na.omit"), newdata=log10p)
   # ensure that the log10 FDR is not larger than Holm's
   logFDR <- pmin(logFDR, holm, na.rm=TRUE)
-  data.frame(empiricalFDR=eFDR, logFDR=round(logFDR,2))
+  data.frame(empiricalFDR=eFDR, log10FDR=round(logFDR,2))
 }
 
 .makeMonotonic <- function(x, by){
   d <- data.frame(id=seq_along(x), x=x, by=by)
   d <- d[order(d$by),]
   d$x <- cummax(d$x)
-  d[order(d$id),"x"]
+  d[order(d$id), "x"]
 }
+
