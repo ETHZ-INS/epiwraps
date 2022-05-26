@@ -152,6 +152,7 @@ plotCovStats <- function(qc, labels="AUTO", show.legend=TRUE){
 #' @export
 #' @import ComplexHeatmap
 #' @importFrom viridisLite viridis inferno
+#' @importFrom stats hclust dist as.dendrogram relevel
 plotCorFromCovStats <- function(qc, method=c("pearson","spearman"), col=NULL, 
                                 na_col="white", column_title=NULL, ...){
   if(is.null(qc$cor.pearson) || is.null(qc$cor.spearman))

@@ -10,14 +10,15 @@ callPeaks(
   paired = FALSE,
   type = c("narrow", "broad"),
   blacklist = NULL,
-  binSize = 5L,
-  fragLength = NULL,
+  binSize = 10L,
+  fragLength = 200L,
   minPeakCount = 5L,
   minFoldChange = 1.3,
   pthres = 10^-3,
-  priorFragLength = 150L,
+  maxSize = NULL,
   bgWindow = c(1, 5, 10) * 1000,
   pseudoCount = 1L,
+  useStrand = TRUE,
   outFormat = c("custom", "narrowPeak"),
   verbose = TRUE,
   ...
@@ -39,8 +40,9 @@ empirical FDR (when `ctrl` is given).}
 
 \item{binSize}{Binsize used to estimate peak shift}
 
-\item{fragLength}{Fragment length. Ignored if `paired=TRUE`. If not given,
-will be estimated from the data.}
+\item{fragLength}{Fragment length. Ignored if `paired=TRUE`. This is only 
+used for the initial candidate region identification, and sizes are 
+adjusted after, so it doesn't need to be very precise.}
 
 \item{minPeakCount}{The minimum summit count for a region to be considered.
 Decreasing this can substantially increase the running time.}
@@ -50,9 +52,6 @@ Decreasing this can substantially increase the running time.}
 
 \item{pthres}{The p-value threshold to use}
 
-\item{priorFragLength}{Prior fragment length (ignored if `paired=TRUE`). This
-is used for coverage computation to estimate peak shift.}
-
 \item{bgWindow}{The windows to consider (in addition to the peak itself) 
 for local background.}
 
@@ -60,7 +59,7 @@ for local background.}
 
 \item{verbose}{Logical; whether to output progress messages}
 
-\item{...}{Passed to `estimateFragSize`}
+\item{...}{Passed to \code{\linke{bamChrChunkApply}}}
 }
 \value{
 A `GRanges`
@@ -68,5 +67,19 @@ A `GRanges`
 \description{
 This is a R-based implementation of the general MACS2 strategy (Zhang et al.,
  Genome Biology 2008), taking some freedom here and there in comparison to 
- the original.
+ the original. The function is still under development, especially with 
+ respect to single-end reads, where some optimization might still be needed.
+ For paired-end reads, the results are nearly identical with those of MACS2, 
+ with two main differences: 1) the p-values are more conservative (and 
+ arguably better calibrated) and 2) because the implementation does not rely 
+ on sliding windows, with default settings the peaks are narrower.
+}
+\details{
+`callPeaks` takes about twice as long to run as MACS2, and uses more memory.
+If dealing with very large files (or a very low memory system), consider
+increasing the number of processing chunks, for instance with `nChunks=10`.
+
+The function uses \code{\linke{bamChrChunkApply}} to obtain the coverages,
+and can accept any argument of that function. This means that the 
+`mapqFilter` and bam `flgs` arguments can be used to restrict the reads used.
 }

@@ -31,11 +31,8 @@
   gsub(pat, "", basename(x), ignore.case=TRUE)
 }
 
-.align2cuts <- function(x){
-  bstart <- bend <- GRanges(x)
-  end(bstart) <- start(bstart)
-  start(bend) <- end(bend)
-  sort(c(bstart,bend))
+.align2cuts <- function(x, size=1L){
+  sort(c(resize(x,size,fix="start"), resize(x,size,fix="end")))
 }
 
 

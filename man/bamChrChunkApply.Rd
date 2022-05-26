@@ -9,6 +9,7 @@ bamChrChunkApply(
   FUN,
   paired = FALSE,
   keepSeqLvls = NULL,
+  strandMode = 2,
   flgs = scanBamFlag(),
   mapqFilter = NA_integer_,
   nChunks = 4,

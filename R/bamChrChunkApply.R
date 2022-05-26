@@ -22,7 +22,7 @@
 #'
 #' @return A list of whatever `FUN` returns
 #' @export
-bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, 
+bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, strandMode=2,
                              flgs=scanBamFlag(), mapqFilter=NA_integer_,
                              nChunks=4, BPPARAM=SerialParam(), ...){
   
@@ -30,11 +30,17 @@ bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL,
                               nChunks=nChunks)
   f2 <- function(p, ...){
     if(paired){
-      x <- readGAlignmentPairs(x, param=p)
+      x <- readGAlignmentPairs(x, param=p, strandMode=strandMode)
       x <- as(x[isProperPair(x)], "GRanges")
     }else{
       x <- GRanges(readGAlignments(x, param=p))
     }
+    if(paired && length(x)==0)
+      warning("Nothing found (in one of the chunks). If this is unexpected, it",
+              " could be because your read mates don't have matching names, or",
+              " have suffixes to their names. If this is the case, specify it ",
+              'by using an input like:
+  BamFile("aligned/test.bam", asMates=TRUE, qnameSuffixStart="/")')
     FUN(x, ...)
   }
   if(BiocParallel::bpnworkers(BPPARAM)==1){
@@ -45,7 +51,9 @@ bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL,
 
 .getBamChunkParams <- function(x, flgs=scanBamFlag(), keepSeqLvls=NULL, 
                                nChunks=4, ...){
-  seqs <- Rsamtools::scanBamHeader(x)[[1]]$targets
+  seqs <- Rsamtools::scanBamHeader(x)
+  if(is.null(seqs$targets)) seqs <- seqs[[1]]
+  seqs <- seqs$targets
   if(!is.null(keepSeqLvls)){
     if(length(missingLvls <- setdiff(keepSeqLvls, names(seqs))>0))
       stop(paste0(

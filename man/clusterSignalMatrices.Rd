@@ -10,6 +10,7 @@ clusterSignalMatrices(
   scaleRows = FALSE,
   scaleCols = FALSE,
   use = c("enrich", "full", "max", "center"),
+  assay = 1L,
   trim = c(0.05, 0.95),
   nstart = 3,
   ...
@@ -28,6 +29,8 @@ clusterSignalMatrices(
 \code{\link[EnrichedHeatmap]{enriched_score}}. Other options are 'full' 
 (uses the full signal for clustering), 'max' (uses the maximum value in 
 the region), or 'center' (use the value at the center of the region).}
+
+\item{assay}{Assay to use (ignored unless `ml` is an ESE object)}
 
 \item{trim}{Values to trim (applied individidually for each signal matrix)}
 
