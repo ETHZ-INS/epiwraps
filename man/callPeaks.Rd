@@ -59,7 +59,7 @@ for local background.}
 
 \item{verbose}{Logical; whether to output progress messages}
 
-\item{...}{Passed to \code{\linke{bamChrChunkApply}}}
+\item{...}{Passed to \code{\link{bamChrChunkApply}}}
 }
 \value{
 A `GRanges`
@@ -79,7 +79,7 @@ This is a R-based implementation of the general MACS2 strategy (Zhang et al.,
 If dealing with very large files (or a very low memory system), consider
 increasing the number of processing chunks, for instance with `nChunks=10`.
 
-The function uses \code{\linke{bamChrChunkApply}} to obtain the coverages,
+The function uses \code{\link{bamChrChunkApply}} to obtain the coverages,
 and can accept any argument of that function. This means that the 
 `mapqFilter` and bam `flgs` arguments can be used to restrict the reads used.
 }

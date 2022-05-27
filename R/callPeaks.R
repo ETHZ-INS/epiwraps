@@ -30,7 +30,7 @@
 #' @param outFormat The output format ('custom' or 'narrowPeak')
 #' @param pthres The p-value threshold to use
 #' @param verbose Logical; whether to output progress messages
-#' @param ... Passed to \code{\linke{bamChrChunkApply}}
+#' @param ... Passed to \code{\link{bamChrChunkApply}}
 #'
 #' @return A `GRanges`
 #' 
@@ -39,7 +39,7 @@
 #' If dealing with very large files (or a very low memory system), consider
 #' increasing the number of processing chunks, for instance with `nChunks=10`.
 #' 
-#' The function uses \code{\linke{bamChrChunkApply}} to obtain the coverages,
+#' The function uses \code{\link{bamChrChunkApply}} to obtain the coverages,
 #' and can accept any argument of that function. This means that the 
 #' `mapqFilter` and bam `flgs` arguments can be used to restrict the reads used.
 #' 
