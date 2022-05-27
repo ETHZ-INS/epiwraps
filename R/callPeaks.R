@@ -457,7 +457,7 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
 #' getEmpiricalFDR
 #' 
 #' Computes the FDR as the proportion of negative peaks with a more extreme 
-#'   p-value.
+#'   p-value, eventually extrapolating and preserving the ranking.
 #'
 #' @param log10p -log10 p-values of candidate peaks
 #' @param pneg -log10 p-values of negative peaks
