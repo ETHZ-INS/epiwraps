@@ -18,14 +18,17 @@
 #' @param BPPARAM A `BiocParallel` parameter object for multithreading. Note 
 #'   that if used, memory usage will be high; in this context we recommend a 
 #'   high `nChunks`.
+#' @param exclude An optional GRanges of regions for which overlapping reads 
+#'   should be excluded.
 #' @param ... Passed to `FUN`
 #'
 #' @return A list of whatever `FUN` returns
 #' @export
-bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, strandMode=2,
-                             flgs=scanBamFlag(), mapqFilter=NA_integer_,
-                             nChunks=4, BPPARAM=SerialParam(), ...){
-  
+bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, nChunks=4,
+                             strandMode=2, flgs=scanBamFlag(), exclude=NULL,
+                             mapqFilter=NA_integer_, BPPARAM=SerialParam(), 
+                             ...){
+  if(!is.null(exclude)) stopifnot(is(exclude, "GRanges"))
   param <- .getBamChunkParams(x, flgs=flgs, keepSeqLvls=keepSeqLvls, 
                               nChunks=nChunks)
   f2 <- function(p, ...){
@@ -35,6 +38,7 @@ bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, strandMode=
     }else{
       x <- GRanges(readGAlignments(x, param=p))
     }
+    if(!is.null(exclude)) x <- x[!overlapsAny(x,exclude)]
     if(paired && length(x)==0)
       warning("Nothing found (in one of the chunks). If this is unexpected, it",
               " could be because your read mates don't have matching names, or",

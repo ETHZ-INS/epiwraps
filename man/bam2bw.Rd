@@ -17,6 +17,7 @@ bam2bw(
   strand = c("*", "+", "-"),
   shift = 0L,
   log1p = FALSE,
+  exclude = NULL,
   includeDuplicates = TRUE,
   includeSecondary = FALSE,
   minMapq = 1L,
@@ -71,6 +72,9 @@ the shift for the positive strand, and the second for the negative strand.}
 
 \item{log1p}{Whether to log-transform (`log(x+1)`) the (scaled) signal.
 Ignored when the signal is relative to a background.}
+
+\item{exclude}{An optional GRanges of regions for which overlapping reads 
+should be excluded.}
 
 \item{includeDuplicates}{Logical, whether to include reads flagged as 
 duplicates.}

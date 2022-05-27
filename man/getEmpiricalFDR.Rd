@@ -18,5 +18,5 @@ A data.frame with the empirical FDR and a smoothed -log10(FDR)
 }
 \description{
 Computes the FDR as the proportion of negative peaks with a more extreme 
-  p-value.
+  p-value, eventually extrapolating and preserving the ranking.
 }

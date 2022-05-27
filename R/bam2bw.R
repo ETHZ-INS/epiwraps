@@ -54,6 +54,8 @@
 #' @param forceSeqlevelsStyle If specified, forces the use of the specified 
 #'   seqlevel style for the output bigwig. Can take any value accepted by
 #'   `seqlevelsStyle`.
+#' @param exclude An optional GRanges of regions for which overlapping reads 
+#'   should be excluded.
 #' @param verbose Logical; whether to print progress messages
 #' @param ... Passed to `ScanBamParam`
 #' 
@@ -92,13 +94,14 @@
 bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L, 
                    extend=0L, compType=c("ppois", "subtract", "logFE"),
                    scaling=TRUE, type=c("full","center","start","end","ends"),
-                   strand=c("*","+","-"), shift=0L, log1p=FALSE,
+                   strand=c("*","+","-"), shift=0L, log1p=FALSE, exclude=NULL,
                    includeDuplicates=TRUE, includeSecondary=FALSE, minMapq=1L, 
                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
                    splitByChr=3, pseudocount=1L, localBackground=c(1000L,5000L),
                    forceSeqlevelsStyle=NULL, verbose=TRUE, ...){
   # check inputs
   stopifnot(length(bamfile)==1 && file.exists(bamfile))
+  if(!is.null(exclude)) stopifnot(is(exclude,"GRanges"))
   if(!is.null(bgbam)){
     stopifnot(length(bgbam)==1 && file.exists(bgbam))
     stopifnot(is.logical(scaling) && length(scaling)==1)
@@ -112,8 +115,12 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
   stopifnot(length(shift) %in% 1:2)
   stopifnot(length(binWidth)==1 && binWidth>=1)
   if(is.null(paired)){
-    if(verbose) message("`paired` not specified, assuming single-end reads.")
+    if(verbose) message("`paired` not specified, assuming single-end reads. ",
+                        "Set to paired='auto' to automatically detect.")
     paired <- FALSE
+  }else if(paired=="auto"){
+    paired <- testPairedEndBam(bamfile)
+    if(verbose) message("Detected ", ifelse(paired,"paired","unpaired")," data")
   }
   if(paired) extend <- 0L
   if(type=="ends" && !paired && verbose)
@@ -138,7 +145,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
     .bam2bwReadChunk(bamfile, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
-                     forceStyle=forceSeqlevelsStyle,
+                     forceStyle=forceSeqlevelsStyle, exclude=exclude,
                      keepStrand=ifelse(paired && strand!="*",strand,"*"))
   })
 
@@ -158,7 +165,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
     .bam2bwReadChunk(bgbam, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
-                     forceStyle=forceSeqlevelsStyle,
+                     forceStyle=forceSeqlevelsStyle, exclude=exclude,
                      keepStrand=ifelse(paired && strand!="*",strand,"*"))
   })
 
@@ -214,8 +221,8 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
 
 
 # reads reads from bam file.
-.bam2bwGetReads <- function(bamfile, paired, param, type, extend,
-                            shift=0L, minFragL, maxFragL, si=NULL){
+.bam2bwGetReads <- function(bamfile, paired, param, type, extend, shift=0L,
+                            minFragL, maxFragL, si=NULL, exclude=NULL){
   if(paired){
     bam <- readGAlignmentPairs(bamfile, param=param)
     bam <- as(bam[isProperPair(bam)], "GRanges")
@@ -227,6 +234,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
     if(type %in% c("full","center") && extend!=0L)
       bam <- resize(bam, width(bam)+as.integer(extend), use.names=FALSE)
   }
+  if(!is.null(exclude)) bam <- bam[!overlapsAny(bam,exclude)]
   if(!all(shift==0)){
     if(length(shift)>1){
       bam[strand(bam)=="+"] <- shift(bam[strand(bam)=="+"], shift=shift[1], 

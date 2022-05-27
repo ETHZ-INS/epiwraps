@@ -9,10 +9,11 @@ bamChrChunkApply(
   FUN,
   paired = FALSE,
   keepSeqLvls = NULL,
+  nChunks = 4,
   strandMode = 2,
   flgs = scanBamFlag(),
+  exclude = NULL,
   mapqFilter = NA_integer_,
-  nChunks = 4,
   BPPARAM = SerialParam(),
   ...
 )
@@ -28,13 +29,16 @@ rather than reads, will be returned)}
 
 \item{keepSeqLvls}{An optional vector of seqLevels to keep}
 
+\item{nChunks}{The number of chunks to use (higher will use less memory but
+increase overhead)}
+
 \item{flgs}{`scanBamFlag` for filtering the reads}
+
+\item{exclude}{An optional GRanges of regions for which overlapping reads 
+should be excluded.}
 
 \item{mapqFilter}{Integer of the minimum mapping quality for reads to be 
 included.}
-
-\item{nChunks}{The number of chunks to use (higher will use less memory but
-increase overhead)}
 
 \item{BPPARAM}{A `BiocParallel` parameter object for multithreading. Note 
 that if used, memory usage will be high; in this context we recommend a 
