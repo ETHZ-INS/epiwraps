@@ -45,7 +45,9 @@ bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, nChunks=4,
               " have suffixes to their names. If this is the case, specify it ",
               'by using an input like:
   BamFile("aligned/test.bam", asMates=TRUE, qnameSuffixStart="/")')
-    FUN(x, ...)
+    x <- FUN(x, ...)
+    gc(full=TRUE, verbose=FALSE)
+    x
   }
   if(BiocParallel::bpnworkers(BPPARAM)==1){
     return(lapply(param,FUN=f2,...))
