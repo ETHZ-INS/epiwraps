@@ -215,7 +215,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
   # save library size for later normalization
   metadata(co)$reads <- metadata(bam)$reads
   rm(bam)
-  gc(verbose=FALSE)
+  gc(full=TRUE, verbose=FALSE)
   co
 }
 
