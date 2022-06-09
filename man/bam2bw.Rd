@@ -29,6 +29,7 @@ bam2bw(
   localBackground = c(1000L, 5000L),
   forceSeqlevelsStyle = NULL,
   verbose = TRUE,
+  binSummarization = c("max", "min", "mean"),
   ...
 )
 }
@@ -112,10 +113,14 @@ seqlevel style for the output bigwig. Can take any value accepted by
 
 \item{verbose}{Logical; whether to print progress messages}
 
+\item{binSummarization}{The method to summarize nucleotides into each bin,
+either "max" (default), "min" or "mean".}
+
 \item{...}{Passed to `ScanBamParam`}
 }
 \value{
-The bigwig filepath
+The bigwig filepath. Alternatively, if `output_bw=NA_character_`, 
+  the coverage data is not written to file but returned.
 }
 \description{
 Creates a coverage bigwig file from an alignment bam file.

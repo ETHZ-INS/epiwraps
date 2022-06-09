@@ -9,6 +9,8 @@
 #'   `GRanges`
 #' @param paired Logical; whether to consider the reads as paired (fragments, 
 #'   rather than reads, will be returned)
+#' @param strandMode Strandmode for paired data (see 
+#'   \code{\link[GenomicAlignments]{readGAlignmentPairs}}).
 #' @param keepSeqLvls An optional vector of seqLevels to keep
 #' @param flgs `scanBamFlag` for filtering the reads
 #' @param mapqFilter Integer of the minimum mapping quality for reads to be 
@@ -44,7 +46,8 @@ bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, nChunks=4,
               " could be because your read mates don't have matching names, or",
               " have suffixes to their names. If this is the case, specify it ",
               'by using an input like:
-  BamFile("aligned/test.bam", asMates=TRUE, qnameSuffixStart="/")')
+  BamFile("aligned/test.bam", asMates=TRUE, qnameSuffixStart="/")',
+              immediate.=TRUE)
     x <- FUN(x, ...)
     gc(full=TRUE, verbose=FALSE)
     x

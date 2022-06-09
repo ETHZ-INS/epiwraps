@@ -32,6 +32,9 @@ rather than reads, will be returned)}
 \item{nChunks}{The number of chunks to use (higher will use less memory but
 increase overhead)}
 
+\item{strandMode}{Strandmode for paired data (see 
+\code{\link[GenomicAlignments]{readGAlignmentPairs}}).}
+
 \item{flgs}{`scanBamFlag` for filtering the reads}
 
 \item{exclude}{An optional GRanges of regions for which overlapping reads 
