@@ -249,14 +249,21 @@ for each sample/matrix:
 d <- meltSignals(m)
 head(d)
 ```
-This can then be used for plotting, e.g.:
+This can then be used for plotting. For this example, since it consists of twice the same file, we'll first create a fake difference:
 
-```{r aggPlot, fig.width=4, fig.height=3}
-library(ggplot2)
-ggplot(d, aes(position, mean, colour=sample)) + 
-  geom_vline(xintercept=0, linetype="dashed") + geom_line(lwd=2)
+```{r}
+# create a fake difference so that there's something to visualize in this example:
+d$mean[d$sample=="atac2"] <- 0.06+(d$mean[d$sample=="atac2"]-0.06)*0.6
 ```
 
+Then we can plot normally with `ggplot`:
+
+```{r aggPlot, fig.width=4, fig.height=3}
+ggplot(d, aes(position, mean, colour=sample)) +
+  geom_vline(xintercept=0, linetype="dashed") +
+  geom_ribbon(aes(position, ymin=mean-SE, ymax=mean+SE, fill=sample), alpha=0.4, colour=NA) + 
+  geom_line(size=1.2) + labs(x="relative position", y="mean RPKM")
+```
 # Extra functionalities
 
 ## Generating bigwig files
