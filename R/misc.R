@@ -236,3 +236,47 @@ head(paste(missingLvls, collapse=", "), 3))
   warning(msg)
   invisible(x)
 }
+
+
+# checks that the regions are compatible with the bw/bam files
+.checkRegions <- function(tracks, regions, verbose=TRUE){
+  if( (is.list(tracks) || is.character(tracks)) && length(tracks)>1 ){
+    r2 <- lapply(tracks, regions=regions, verbose=FALSE, FUN=.checkRegions)
+    r2 <- Reduce(intersect, r2)
+    r2 <- regions[overlapsAny(regions, r2, type="equal")]
+  }else{
+    if(epiwraps:::.parseFiletypeFromName(tracks)=="bw"){
+      sl <- seqlengths(BigWigFile(tracks))
+    }else if(epiwraps:::.parseFiletypeFromName(tracks)=="bam"){
+      sl <- seqlengths(BamFile(tracks))
+    }else if(is(tracks, "GRanges")){
+      sl <- seqlengths(tracks)
+    }else{
+      return(regions)
+    }
+    r2 <- keepSeqlevels(regions, intersect(seqlevels(regions), names(sl)),
+                        pruning.mode="coarse")
+    if(any(is.na(seqlengths(regions))))
+      seqlengths(regions) <- sl[seqlevels(regions)]
+    r2b <- trim(r2)
+    if(verbose && (length(r2b)!=length(r2) || any(ranges(r2b)!=ranges(r2))))
+      message("Some of the regions were out of range and were trimmed.")
+    r2 <- r2b
+  }
+  lost <- length(regions)-length(r2)
+  lostp <- round(100*lost/length(regions))
+  if(lostp>5 || (verbose && lost>0)){
+    msg <- paste0(lost," region(s) (",lostp,"%) were excluded because they ",
+                  "were out of range of (some of) the file(s).
+This usually happens when the genome annotation used for the files ",
+"differs from that on which the regions were based.")
+    if(lostp<=5){
+      message(msg)
+    }else if(lostp<=95){
+      warning(msg)
+    }else{
+      stop(msg)
+    }
+  }
+  return(r2)
+}

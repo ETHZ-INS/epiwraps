@@ -86,6 +86,14 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     regions <- import(regions)
   }
   stopifnot(is(regions,"GRanges") || is(regions, "GRangesList"))
+  
+  if(is(regions, "GRanges")){
+    # ensure that the regions are withing bounds
+    regions <- .checkRegions(tracks, regions, verbose=verbose)
+    # give names to regions
+    if(is.null(names(regions)))
+      names(regions) <- paste0(as.character(granges(regions)))
+  }
   if(is.null(names(regions)))
     names(regions) <- paste0("region", seq_along(regions))
   
@@ -106,9 +114,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     downstream <- flank(regions, extend[[2]], start=FALSE)
   }
   
-  ml <- bplapply(setNames(names(filepaths),names(filepaths)), 
-                 BPPARAM=.getBP(BPPARAM), 
-           FUN=function(filename){
+  ff <- function(filename, ...){
              
     filepath <- filepaths[[filename]]
     if(is(filepath, "GRanges")){
@@ -189,7 +195,15 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
       })
     mat
   })
-  
+
+  BPPARAM <- .getBP(BPPARAM)
+  if(BiocParallel::bpnworkers(BPPARAM)==1){
+    ml <- lapply(setNames(names(filepaths),names(filepaths)), FUN=ff, ...)
+  }else{
+    ml <- bplapply(setNames(names(filepaths),names(filepaths)), FUN=ff, 
+                   BPPARAM=BPPARAM, ...)
+  }
+
   ml <- tryCatch(.comparableMatrices(ml), error=function(e){
     if(verbose) warning(e)
     ml
