@@ -17,7 +17,7 @@
 #'
 #' @return A list of whatever `FUN` returns
 #' @export
-#' @importFrom Rsamtools TabixFile seqnamesTabix import
+#' @importFrom Rsamtools TabixFile seqnamesTabix
 tabixChrApply <- function(x, FUN, keepSeqLvls=NULL, exclude=NULL,
                           BPPARAM=SerialParam(), ...){
   if(!is(x, "TabixFile")) x <- TabixFile(x)
