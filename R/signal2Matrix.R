@@ -87,16 +87,15 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   }
   stopifnot(is(regions,"GRanges") || is(regions, "GRangesList"))
   
-  if(is(regions, "GRanges")){
-    # ensure that the regions are withing bounds
-    regions <- .checkRegions(tracks, regions, verbose=verbose)
-    # give names to regions
-    if(is.null(names(regions)))
+  # give names to regions
+  if(is.null(names(regions))){
+    if(is(regions, "GRanges")){
       names(regions) <- paste0(as.character(granges(regions)))
+    }else{
+      names(regions) <- paste0("region", seq_along(regions))
+    }
   }
-  if(is.null(names(regions)))
-    names(regions) <- paste0("region", seq_along(regions))
-  
+
   if(is(regions, "GRangesList")){
     if(type=="center") stop("A GRangesList cannot be used with type='center'.")
     regions2 <- regions
@@ -108,10 +107,31 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     regions <- sort(regions)
     regions2 <- regions
   }
+  
+  if(is(regions2, "GRanges")){
+    # ensure that the regions are withing bounds
+    regions2 <- .checkRegions(filepaths, regions2, verbose=verbose)
+    regions <- regions[names(regions2)]
+  }
+
+  if(is(regions2, "GRanges")){
+    # ensure that the regions are within bounds
+    regions2 <- .checkRegions(filepaths, regions2, verbose=verbose)
+    
+    # give names to regions
+    if(is.null(names(regions)))
+      names(regions) <- paste0(as.character(granges(regions)))
+  }
+  if(is.null(names(regions)))
+    names(regions) <- paste0("region", seq_along(regions))
+  
+  
 
   if(type=="scale"){
     upstream <- flank(regions, extend[[1]], start=TRUE)
+    upstream <- .checkRegions(filepaths, upstream, verbose=verbose)
     downstream <- flank(regions, extend[[2]], start=FALSE)
+    downstream <- .checkRegions(filepaths, downstream, verbose=verbose)
   }
   
   ff <- function(filename, ...){
