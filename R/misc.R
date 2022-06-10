@@ -245,6 +245,7 @@ head(paste(missingLvls, collapse=", "), 3))
     r2 <- Reduce(intersect, r2)
     r2 <- regions[overlapsAny(regions, r2, type="equal")]
   }else{
+    if(is.list(tracks)) tracks <- tracks[[1]]
     if(epiwraps:::.parseFiletypeFromName(tracks)=="bw"){
       sl <- seqlengths(BigWigFile(tracks))
     }else if(epiwraps:::.parseFiletypeFromName(tracks)=="bam"){
