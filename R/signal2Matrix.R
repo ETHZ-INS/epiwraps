@@ -194,7 +194,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
         mat
       })
     mat
-  })
+  }
 
   BPPARAM <- .getBP(BPPARAM)
   if(BiocParallel::bpnworkers(BPPARAM)==1){
