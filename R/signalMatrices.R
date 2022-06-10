@@ -288,7 +288,7 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
   }
   windows <- sort(windows)
   y <- rep(NA_integer_, length(windows))
-  w <- which(seqnames(windows) %in% names(x))
+  w <- which(as.factor(seqnames(windows)) %in% names(x))
   if(length(w)==0) stop("No window found in coverage! Wrong seqlevel style?")
   windows <- windows[w]
   windows <- keepSeqlevels(windows, seqlevelsInUse(windows), pruning.mode="coarse")
