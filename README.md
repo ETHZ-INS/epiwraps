@@ -205,6 +205,7 @@ lapply(m,dim)
 ## $atac2
 ## [1] 264 200
 ```
+
 The result is a named list of matrices (more specifically, `normalizedMatrix`
 objects, see *[EnrichedHeatmap](https://bioconductor.org/packages/3.13/EnrichedHeatmap)*) with equal dimensions. 
 In this example, the matrix has 264 rows/regions, and 200 columns because we
@@ -258,6 +259,7 @@ plotEnrichedHeatmaps(m, col=c("white","darkred"), cluster_rows=TRUE,
 ```
 
 ![](readme_files/figure-html/heatmap1-2.png)<!-- -->
+
 By default, the colorscale is trimmed to prevent most of it being driven by rare
 extreme values. This can be controlled via the `trim` argument (which indicates
 up to which quantile of data points to keep to establish the colorscale). 
@@ -274,6 +276,7 @@ plotEnrichedHeatmaps(list("trim=1"=m[[1]]), trim=1, scale_title="trim=1",
 ```
 
 ![](readme_files/figure-html/heatmapTrim-1.png)<!-- -->
+
 The underlying data is exactly the same, only the color-mapping changes. In the 
 left one, which has no trimming, a single very high value at the top forces the
 colorscale to extend to high values, even though most of the data is in the 
@@ -309,6 +312,7 @@ head(d)
 ## 5     -960  atac1 0.05592874 0.04809529 0.002960061 0.03910840
 ## 6     -950  atac1 0.05677649 0.04775387 0.002939048 0.04741890
 ```
+
 This can then be used for plotting, e.g.:
 
 
@@ -336,7 +340,7 @@ fragments differently. For example, the heatmap of insertion sites of
 nucleosome-free fragments was based on a bigwig file generated using:
 
 ```r
-bam2bw("aligned.bam"", output_bw="NF_cuts.bw", paired=TRUE, binWidth=1L, 
+bam2bw("aligned.bam", output_bw="NF_cuts.bw", paired=TRUE, binWidth=1L, 
        minFragLength=30, maxFragLength=115, type="ends")
 ```
 
@@ -359,7 +363,7 @@ with those of MACS2, with two main differences: 1) the p-values are more
 conservative (and arguably more calibrated) and 2) because the implementation 
 does not rely on sliding windows, with default settings the peaks are narrower.
 
-The function can be used as follows:
+Although still experimental, the function can be used as follows:
 
 ```r
 peaks <- callPeaks("aligned.bam", "input.bam", paired=TRUE,
