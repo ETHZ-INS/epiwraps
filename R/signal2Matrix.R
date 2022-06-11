@@ -83,7 +83,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   if(is.character(regions)){
     stopifnot(is.character(regions) && length(regions)==1)
     if(!file.exists(regions)) stop("The `regions` file appears not to exist.")
-    regions <- import(regions)
+    regions <- rtracklayer::import(regions)
   }
   stopifnot(is(regions,"GRanges") || is(regions, "GRangesList"))
   
@@ -255,7 +255,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   desiredW <- ceiling(width(regions2)[1]/w)
   if(useRLE){
     mat <- do.call(rbind, lapply(co, FUN=function(x){
-      x <- .view2paddedIL(x, padVal=0L, forceRetIL=FALSE)
+      x <- .view2paddedAL(x, padVal=0L, forceRetAL=FALSE) # for out-of-bounds
       t(sapply(x, FUN=function(x){
         if(w==1L) return(as.numeric(x))
         if(useRLE) x <- tileRle(x, bs=as.integer(w), method=method)

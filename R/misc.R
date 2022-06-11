@@ -292,12 +292,12 @@ This usually happens when the genome annotation used for the files ",
   if(!is(v, "RleViewsList")) v <- RleViewsList(v)
   ws <- width(v)[[1]]
   stopifnot(all(all(width(v)==ws)))
-  x <- Reduce(c, lapply(v, padVal=padVal, FUN=.view2paddedIL))
+  x <- Reduce(c, lapply(v, padVal=padVal, FUN=.view2paddedAL))
   matrix(unlist(x), byrow=TRUE, ncol=ws)
 }
 
 # converts a RleViews to an AtomicList, setting out-of-bounds regions to padVal
-.view2paddedIL <- function(v, padVal=NA_integer_, forceRetAL=TRUE){
+.view2paddedAL <- function(v, padVal=NA_integer_, forceRetAL=TRUE){
   if(is.integer(runValue(v))){
     stopifnot(is.integer(padVal))
   }else{
