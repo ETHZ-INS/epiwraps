@@ -239,7 +239,7 @@ head(paste(missingLvls, collapse=", "), 3))
 
 
 # checks that the regions are compatible with the bw/bam files
-.checkRegions <- function(tracks, regions, verbose=TRUE){
+.checkRegions <- function(tracks, regions, verbose=TRUE, trimOOR=FALSE){
   if( (is.list(tracks) || is.character(tracks)) && length(tracks)>1 ){
     r2 <- lapply(tracks, regions=regions, verbose=FALSE, FUN=.checkRegions)
     r2 <- Reduce(intersect, r2)
@@ -259,10 +259,12 @@ head(paste(missingLvls, collapse=", "), 3))
                         pruning.mode="coarse")
     if(any(is.na(seqlengths(regions))))
       seqlengths(regions) <- sl[seqlevels(regions)]
-    r2b <- trim(r2)
-    if(verbose && (length(r2b)!=length(r2) || any(ranges(r2b)!=ranges(r2))))
-      message("Some of the regions were out of range and were trimmed.")
-    r2 <- r2b
+    if(trimOOR){
+      r2b <- trim(r2)
+      if(verbose && (length(r2b)!=length(r2) || any(ranges(r2b)!=ranges(r2))))
+        message("Some of the regions were out of range and were trimmed.")
+      r2 <- r2b
+    }
   }
   lost <- length(regions)-length(r2)
   lostp <- round(100*lost/length(regions))
@@ -280,4 +282,42 @@ This usually happens when the genome annotation used for the files ",
     }
   }
   return(r2)
+}
+
+
+
+# converts a RleViews or RleViewsList with views of the same width to a matrix,
+# setting out-of-bounds regions to `padVal`
+.views2Matrix <- function(v, padVal=NA_integer_){
+  if(!is(v, "RleViewsList")) v <- RleViewsList(v)
+  ws <- width(v)[[1]]
+  stopifnot(all(all(width(v)==ws)))
+  x <- Reduce(c, lapply(v, padVal=padVal, FUN=.view2paddedIL))
+  matrix(unlist(x), byrow=TRUE, ncol=ws)
+}
+
+# converts a RleViews to an IntegerList, setting out-of-bounds regions to padVal
+.view2paddedIL <- function(v, padVal=NA_integer_, forceRetIL=TRUE){
+  stopifnot(is.integer(padVal))
+  v2 <- trim(v)
+  if(identical(v2,v)){
+    if(forceRetIL) v <- IntegerList(v)
+    return(v)
+  }
+  if(any(w <- width(v2)==0)){
+    v <- v[which(!w)]
+    v2 <- v2[which(!w)]
+    warning(sum(w), " views were excluded as completely out of range.")
+  }
+  # figure out how much is trimmed on either side
+  pleft <- start(v2)-start(v)
+  pright <- end(v)-end(v2)
+  # concatenate the list elements with their padding
+  n <- seq_along(v2)
+  v <- splitAsList(c( rep(padVal, sum(pleft)),
+                      unlist(IntegerList(v2), use.names=FALSE),
+                      rep(padVal, sum(pright))),
+                   c(rep(n, pleft), rep(n, width(v2)), rep(n, pright)))
+  names(v) <- names(v2)
+  v
 }

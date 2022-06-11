@@ -109,29 +109,15 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   }
   
   if(is(regions2, "GRanges")){
-    # ensure that the regions are withing bounds
-    regions2 <- .checkRegions(filepaths, regions2, verbose=verbose)
-    regions <- regions[names(regions2)]
+    # ensure that the regions are on represented seqnames
+    regions <- .checkRegions(filepaths, regions, verbose=verbose,
+                              trimOOR=FALSE)
+    regions2 <- regions2[names(regions2)]
   }
-
-  if(is(regions2, "GRanges")){
-    # ensure that the regions are within bounds
-    regions2 <- .checkRegions(filepaths, regions2, verbose=verbose)
-    
-    # give names to regions
-    if(is.null(names(regions)))
-      names(regions) <- paste0(as.character(granges(regions)))
-  }
-  if(is.null(names(regions)))
-    names(regions) <- paste0("region", seq_along(regions))
-  
-  
 
   if(type=="scale"){
     upstream <- flank(regions, extend[[1]], start=TRUE)
-    upstream <- .checkRegions(filepaths, upstream, verbose=verbose)
     downstream <- flank(regions, extend[[2]], start=FALSE)
-    downstream <- .checkRegions(filepaths, downstream, verbose=verbose)
   }
   
   ff <- function(filename, ...){
@@ -251,31 +237,44 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
                 pruning.mode="coarse")
 }
 
-.getBinSignalFromBW <- function(filepath, regions2, w=1L, useRLE=TRUE, 
+.getBinSignalFromBW <- function(filepath, regions2, w=1L, useRLE=NULL, 
                                 method=c("max","min","mean"), verbose=TRUE){
   method <- match.arg(method)
   stopifnot(length(unique(width(regions2)))==1)
   regions2 <- .filterRegions(regions2, seqlevels(BigWigFile(filepath)),
                              verbose=verbose)
+  if(is.null(useRLE)){
+    # use the RLE approach if any chunk is too big (e.g. >150mb in memory)
+    useRLE <- w>1 && (width(regions2)[1]*max(table(seqnames(regions2))))>11^7
+  }
   co <- rtracklayer::import(filepath, format="BigWig", 
                             selection=BigWigSelection(regions2))
   co <- coverage(co, weight=co$score)
   co <- Views(co[seqlevels(regions2)], 
               split(ranges(regions2), seqnames(regions2), drop=TRUE))
   desiredW <- ceiling(width(regions2)[1]/w)
-  mat <- do.call(rbind, lapply(co, FUN=function(x){
-    t(sapply(x, FUN=function(x){
-      if(w==1L) return(as.numeric(x))
-      if(useRLE) x <- tileRle(x, bs=as.integer(w), method=method)
-      x <- as.numeric(x)
-      if(length(x)!=desiredW){
-        x <- rep(x,each=max(1L,ceiling(desiredW/length(x))))
-        x <- splitAsList(x, cut(seq_along(x), breaks=desiredW, labels=FALSE))
-        x <- switch(method, max=max(x), min=min(x), mean=mean(x))
-      }
+  if(useRLE){
+    mat <- do.call(rbind, lapply(co, FUN=function(x){
+      x <- .view2paddedIL(x, padVal=0L, forceRetIL=FALSE)
+      t(sapply(x, FUN=function(x){
+        if(w==1L) return(as.numeric(x))
+        if(useRLE) x <- tileRle(x, bs=as.integer(w), method=method)
+        x <- as.numeric(x)
+        if(length(x)!=desiredW){
+          x <- rep(x,each=max(1L,ceiling(desiredW/length(x))))
+          x <- splitAsList(x, cut(seq_along(x), breaks=desiredW, labels=FALSE))
+          x <- switch(method, max=max(x), min=min(x), mean=mean(x))
+        }
+        x
+      }))
+    }))
+  }else{
+    mat <- do.call(rbind, lapply(co, FUN=function(x){
+      x <- .views2Matrix(x, padVal=0L)
+      if(w>1) x <- resizeMatrix(x, c(nrow(x), round(ncol(x)/w)), method=method)
       x
     }))
-  }))
+  }
   wRev <- which(as.factor(strand(regions2))=="-")
   if(length(wRev)>0) 
     mat[wRev,] <- mat[wRev,seq(from=ncol(mat), to=1L),drop=FALSE]
@@ -308,19 +307,18 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   }
   mat <- do.call(rbind, lapply(v, FUN=function(x){
     t(sapply(x, FUN=function(x){
-      if(useRle && length(x)>(10*nBins)){
-        # when the region is much larger than the number of bins, use the Rle
-        # disabled because it can lead to +/- 1 bin
-        w <- floor(length(x)/nBins)
-        x <- tileRle(x, bs=w, method=method)
-        x <- Rle(values=runValue(x), lengths=pmax(round(runLength(x)/w),0L))
-        as.numeric(x)
-      }else{
+      # if(useRle && length(x)>(10*nBins)){
+      #   # disabled because it can lead to +/- 1 bin
+      #   w <- floor(length(x)/nBins)
+      #   x <- tileRle(x, bs=w, method=method)
+      #   x <- Rle(values=runValue(x), lengths=pmax(round(runLength(x)/w),0L))
+      #   as.numeric(x)
+      # }else{
         x <- as.numeric(x)
         x <- rep(x,each=max(1L,ceiling(nBins/length(x))))
         x <- splitAsList(x, cut(seq_along(x), breaks=nBins, labels=FALSE))
         switch(method, max=max(x), min=min(x), mean=mean(x))
-      }
+      # }
     }))
   }))
   wRev <- which(as.factor(strands)=="-")
