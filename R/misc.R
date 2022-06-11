@@ -296,12 +296,20 @@ This usually happens when the genome annotation used for the files ",
   matrix(unlist(x), byrow=TRUE, ncol=ws)
 }
 
-# converts a RleViews to an IntegerList, setting out-of-bounds regions to padVal
-.view2paddedIL <- function(v, padVal=NA_integer_, forceRetIL=TRUE){
-  stopifnot(is.integer(padVal))
+# converts a RleViews to an AtomicList, setting out-of-bounds regions to padVal
+.view2paddedIL <- function(v, padVal=NA_integer_, forceRetAL=TRUE){
+  if(is.integer(runValue(v))){
+    stopifnot(is.integer(padVal))
+  }else{
+    stopifnot(is.numeric(padVal))
+  }
   v2 <- trim(v)
+  toAL <- function(v){
+    if(is.integer(runValue(v))) return(IntegerList(v))
+    NumericList(v)
+  }
   if(identical(v2,v)){
-    if(forceRetIL) v <- IntegerList(v)
+    if(forceRetAL) return(toAL(v))
     return(v)
   }
   if(any(w <- width(v2)==0)){
@@ -315,7 +323,7 @@ This usually happens when the genome annotation used for the files ",
   # concatenate the list elements with their padding
   n <- seq_along(v2)
   v <- splitAsList(c( rep(padVal, sum(pleft)),
-                      unlist(IntegerList(v2), use.names=FALSE),
+                      unlist(toAL(v2), use.names=FALSE),
                       rep(padVal, sum(pright))),
                    c(rep(n, pleft), rep(n, width(v2)), rep(n, pright)))
   names(v) <- names(v2)
