@@ -259,6 +259,7 @@ d$mean[d$sample=="atac2"] <- 0.06+(d$mean[d$sample=="atac2"]-0.06)*0.6
 Then we can plot normally with `ggplot`:
 
 ```{r aggPlot, fig.width=4, fig.height=3}
+library(ggplot2)
 ggplot(d, aes(position, mean, colour=sample)) +
   geom_vline(xintercept=0, linetype="dashed") +
   geom_ribbon(aes(position, ymin=mean-SE, ymax=mean+SE, fill=sample), alpha=0.4, colour=NA) + 
@@ -282,10 +283,11 @@ of the function (see also `?bam2bw` for more detail).
 
 A peak calling function can be used, either against an input control or against local or global backgrounds:
 
-```{r}
+```{r, eval=FALSE}
 p <- callPeaks(bam, fragLength=50)
 ```
 
+Note that this function is still under heavy development!
 
 ## Quality control
 
