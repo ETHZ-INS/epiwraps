@@ -9,14 +9,17 @@
 #' beyond which to trim.
 #' @param colors The heatmap colors to use.
 #' @param scale_title The title of the scale.
-#' @param title_size The size of the heatmap titles.
+#' @param column_title_gp Graphic parameters of the column titles (see 
+#'   \code{\link[grid]{gpar}})
 #' @param row_order Optional order of the rows.
 #' @param row_split Splitting of rows.
 #' @param cluster_rows Whether to cluster rows.
 #' @param ... Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}
 #' @param top_annotation Either a logical indicating whether or not to plot the
-#' summary profile at the top of each heatmap, or any other value passed to
-#' \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
+#' summary profile at the top of each heatmap, a named list of parameters to be 
+#'   passed to `anno_enrich`, or a 
+#'   \code{\link[ComplexHeatmap]{HeatmapAnnotation-class}} object that will be 
+#'   passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 #' @param axis_name A vector of length 3 giving the labels to put respectively
 #' on the left, center and right of the x axis of each heatmap.
 #' @param assay Assay to use (ignored unless `ml` is an ESE object)
@@ -28,6 +31,8 @@
 #' @param mean_color Color of the mean signal line in the top annotation. If
 #'   `row_split` is used, `mean_color` can be a named vector indicating the 
 #'   colors for each cluster. Can also be a `gpar` object.
+#' @param mean_scale_side The side on which to show the y-axis scale of the mean
+#'   plots. Either "both" (default), "left", "right", or "none".
 #' 
 #' @details 
 #' When plotting large matrices, the heatmap body will be rasterized to keep its
@@ -63,13 +68,15 @@
 #' # any argument accepted by `EnrichedHeatmap` (and hence by 
 #' # `ComplexHeatmap::Heatmap`) can be used, e.g.: 
 #' plotEnrichedHeatmaps(m, row_title="My regions of interest")
-plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, colors=inferno(100),
-                                 scale_title="density", title_size=11, 
+plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, 
+                                 colors=inferno(100), scale_title="density",
+                                 column_title_gp=gpar(fontsize=11), 
                                  row_order=NULL, cluster_rows=FALSE, 
                                  row_split=NULL, axis_name=NULL, minRowVal=0, 
                                  scale_rows=FALSE, top_annotation=TRUE, 
-                                 left_annotation=NULL,
-                                 show_heatmap_legend=TRUE, mean_color="red", ...){
+                                 left_annotation=NULL, mean_color="red", 
+                                 mean_scale_side="both", 
+                                 show_heatmap_legend=TRUE, ...){
   if(is(ml, "SummarizedExperiment")){
     ml <- .ese2ml(ml, assay=assay)
     # parse arguments
@@ -148,26 +155,43 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, colors=inferno
   }
   hl <- NULL
   for(m in names(ml)){
-    isLast <- m==rev(names(ml))[1]
-    if(isFALSE(top_annotation)){
-      top_annotation <- NULL
-    }else if(isTRUE(top_annotation)){
-      top_annotation <- HeatmapAnnotation(
-        enriched=anno_enriched(ylim=c(ymin,ymax), show_error=TRUE, axis=isLast,
-                               gp=mean_gp))
-    }
+    coltype <- ifelse(m==names(ml)[1], "first", "middle")
+    if(m==rev(names(ml))[1]) coltype <- "last"
+    TA <- .prepAnnoEnrich(top_annotation, col=coltype, ylim=c(ymin, ymax),
+                          gp=mean_gp, mean_scale_side=mean_scale_side)
     if(is.null(la <- left_annotation) && m==names(ml)[1] &&
        !is.null(row_split) && !is(mean_color, "gpar") && length(mean_color)>1){
       la <- rowAnnotation(cluster=row_split, annotation_name_side="top",
                           col=list(cluster=mean_color), show_legend=FALSE)
     }
-    hl <- hl + EnrichedHeatmap(ml[[m]], column_title=m, col=col_fun, ...,
-                           column_title_gp=gpar(fontsize=title_size),
-                           left_annotation=la, 
-                           cluster_rows = cluster_rows, row_order=row_order,
-                           show_heatmap_legend=isLast && show_heatmap_legend,
-                           top_annotation=top_annotation, axis_name=axis_name,
-                           name=ifelse(isLast,scale_title,m), row_split=row_split )
+    hl <- hl + EnrichedHeatmap( ml[[m]],
+     col=col_fun, ..., column_title=m, column_title_gp=column_title_gp,
+     cluster_rows=cluster_rows, row_order=row_order, row_split=row_split,
+     show_heatmap_legend=coltype=="last" && show_heatmap_legend,
+     left_annotation=la, top_annotation=TA, axis_name=axis_name, 
+     name=ifelse(coltype=="last",scale_title,paste(scale_title,m)) )
   }
   hl
+}
+
+.prepAnnoEnrich <- function(par, col=c("middle","first","last"), ...,
+                            mean_scale_side=c("both","left","right","none")){
+  if(is.null(par) || isFALSE(par)) return(NULL)
+  if(is(par, "HeatmapAnnotation")) return(par)
+  if(isTRUE(par)) par <- list()
+  stopifnot(is.list(par))
+  col <- match.arg(col)
+  col <- match.arg(col)
+  mean_scale_side <- match.arg(mean_scale_side)
+  side <- "right"
+  if(col=="middle" || mean_scale_side=="none"){
+    axis <- FALSE
+  }else{
+    axis <- (mean_scale_side!="left" && col=="last") ||
+              (mean_scale_side!="right" && col=="first")
+    if(col=="first") side <- "left"
+  }
+  defPars <- list(show_error=TRUE, axis=axis, axis_param=list(side=side), ...)
+  par <- c(defPars[setdiff(names(defPars), names(par))], par)
+  HeatmapAnnotation(enriched=do.call(anno_enriched, par))
 }

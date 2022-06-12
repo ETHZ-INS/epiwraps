@@ -10,7 +10,7 @@ plotEnrichedHeatmaps(
   assay = 1L,
   colors = inferno(100),
   scale_title = "density",
-  title_size = 11,
+  column_title_gp = gpar(fontsize = 11),
   row_order = NULL,
   cluster_rows = FALSE,
   row_split = NULL,
@@ -19,8 +19,9 @@ plotEnrichedHeatmaps(
   scale_rows = FALSE,
   top_annotation = TRUE,
   left_annotation = NULL,
-  show_heatmap_legend = TRUE,
   mean_color = "red",
+  mean_scale_side = "both",
+  show_heatmap_legend = TRUE,
   ...
 )
 }
@@ -37,7 +38,8 @@ beyond which to trim.}
 
 \item{scale_title}{The title of the scale.}
 
-\item{title_size}{The size of the heatmap titles.}
+\item{column_title_gp}{Graphic parameters of the column titles (see 
+\code{\link[grid]{gpar}})}
 
 \item{row_order}{Optional order of the rows.}
 
@@ -54,16 +56,21 @@ on the left, center and right of the x axis of each heatmap.}
 (scales each matrix separately) or 'global'.}
 
 \item{top_annotation}{Either a logical indicating whether or not to plot the
-summary profile at the top of each heatmap, or any other value passed to
-\code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.}
+summary profile at the top of each heatmap, a named list of parameters to be 
+  passed to `anno_enrich`, or a 
+  \code{\link[ComplexHeatmap]{HeatmapAnnotation-class}} object that will be 
+  passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.}
 
 \item{left_annotation}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}}
-
-\item{show_heatmap_legend}{Logical, whether to show the heatmap legend}
 
 \item{mean_color}{Color of the mean signal line in the top annotation. If
 `row_split` is used, `mean_color` can be a named vector indicating the 
 colors for each cluster. Can also be a `gpar` object.}
+
+\item{mean_scale_side}{The side on which to show the y-axis scale of the mean
+plots. Either "both" (default), "left", "right", or "none".}
+
+\item{show_heatmap_legend}{Logical, whether to show the heatmap legend}
 
 \item{...}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}}
 }
