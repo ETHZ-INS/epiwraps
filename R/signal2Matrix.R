@@ -21,7 +21,10 @@
 #' @param binMethod Whether to compute the 'max' (default), 'mean' or 'min' per
 #'   bin.
 #' @param BPPARAM A \code{\link[BiocParallel]{BiocParallelParam}} object, or 
-#' the number of threads to use to read and prepare the data.
+#' the number of threads to use to read and prepare the data. Note that the 
+#'   rate-limiting process is reading from disk, so unless you have an unusually
+#'   fast disk, using multi-threading is actually likely to slow down rather 
+#'   than speed up the process.
 #' @param verbose Logical; whether to print processing information
 #' @param ... Passed to \code{\link[EnrichedHeatmap]{as.normalizedMatrix}} when
 #'   reading bigwig files, or to \code{\link{getBinSignalFromBam}} when reading
@@ -169,11 +172,14 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
       ####### BIGWIG INPUT
       
       if(type=="scale"){
-        upstream <- .getBinSignalFromBW(filepath, upstream, w=w, 
+        co <- rtracklayer::import(filepath, format="BigWig", 
+                                  selection=BigWigSelection(reduce(regions)))
+        co <- coverage(co, weight=co$score)
+        upstream <- .getBinSignalFromBW(co, upstream, w=w, 
                                         method=binMethod, verbose=verbose)
-        downstream <- .getBinSignalFromBW(filepath, downstream, w=w, 
+        downstream <- .getBinSignalFromBW(co, downstream, w=w, 
                                           method=binMethod, verbose=verbose)
-        mat <- .getScaledSignalFromBW(filepath, regions, nBins=scaledBins, 
+        mat <- .getScaledSignalFromBW(co, regions, nBins=scaledBins, 
                                       method=binMethod, verbose=verbose)
         mat <- cbind(upstream, mat, downstream)
         mat <- EnrichedHeatmap::as.normalizedMatrix(unclass(mat), extend=extend,
@@ -237,43 +243,19 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
                 pruning.mode="coarse")
 }
 
-.getBinSignalFromBW <- function(filepath, regions2, w=1L, useRLE=NULL, 
+.getBinSignalFromBW <- function(filepath, regions2, w=1L, 
                                 method=c("max","min","mean"), verbose=TRUE){
   method <- match.arg(method)
   stopifnot(length(unique(width(regions2)))==1)
   regions2 <- .filterRegions(regions2, seqlevels(BigWigFile(filepath)),
                              verbose=verbose)
-  if(is.null(useRLE)){
-    # use the RLE approach if any chunk is too big (e.g. >150mb in memory)
-    useRLE <- w>1 && (width(regions2)[1]*max(table(seqnames(regions2))))>11^7
-  }
   co <- rtracklayer::import(filepath, format="BigWig", 
-                            selection=BigWigSelection(regions2))
+                            selection=BigWigSelection(reduce(regions2)))
   co <- coverage(co, weight=co$score)
-  co <- Views(co[seqlevels(regions2)], 
-              split(ranges(regions2), seqnames(regions2), drop=TRUE))
-  desiredW <- ceiling(width(regions2)[1]/w)
-  if(useRLE){
-    mat <- do.call(rbind, lapply(co, FUN=function(x){
-      x <- .view2paddedAL(x, padVal=0L, forceRetAL=FALSE) # for out-of-bounds
-      t(sapply(x, FUN=function(x){
-        if(w==1L) return(as.numeric(x))
-        if(useRLE) x <- tileRle(x, bs=as.integer(w), method=method)
-        x <- as.numeric(x)
-        if(length(x)!=desiredW){
-          x <- rep(x,each=max(1L,ceiling(desiredW/length(x))))
-          x <- splitAsList(x, cut(seq_along(x), breaks=desiredW, labels=FALSE))
-          x <- switch(method, max=max(x), min=min(x), mean=mean(x))
-        }
-        x
-      }))
-    }))
+  if(w==1L){
+    mat <- .views2Matrix(Views(co[seqlevels(regions2)], regions2), padVal=0L)
   }else{
-    mat <- do.call(rbind, lapply(co, FUN=function(x){
-      x <- .views2Matrix(x, padVal=0L)
-      if(w>1) x <- resizeMatrix(x, c(nrow(x), round(ncol(x)/w)), method=method)
-      x
-    }))
+    mat <- .getBinSignal(co[seqlevels(regions2)], regions2, w=w, method=method)
   }
   wRev <- which(as.factor(strand(regions2))=="-")
   if(length(wRev)>0) 
@@ -284,43 +266,43 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
 .getScaledSignalFromBW <- function(filepath, regions2, nBins=50L, verbose=TRUE,
                                    method=c("max","min","mean"), useRle=FALSE){
   method <- match.arg(method)
-  regions2 <- .filterRegions(regions2, seqlevels(BigWigFile(filepath)),
-                             verbose=verbose)
+  if(is(filepath, "RleList")){
+    sqlvls <- names(filepath)
+    co <- filepath
+  }else{
+    sqlvls <- seqlevels(BigWigFile(filepath))
+    if(is(regions2, "GRangesList")){
+      co <- rtracklayer::import(filepath, format="BigWig", 
+                        selection=BigWigSelection(reduce(unlist(regions2))))
+    }else{
+      co <- rtracklayer::import(filepath, format="BigWig", 
+                                selection=BigWigSelection(reduce(regions2)))
+    }
+    co <- coverage(co, weight=co$score)
+  }
+  regions2 <- .filterRegions(regions2, sqlvls, verbose=verbose)
   if(is(regions2, "GRangesList")){
     strands <- unique(strand(regions2))
     # join exons coverages
-    co <- rtracklayer::import(filepath, format="BigWig", 
-                              selection=BigWigSelection(unlist(regions2)))
-    co <- coverage(co, weight=co$score)
     v <- lapply(split(granges(regions2), runValue(seqnames(regions)), drop=TRUE),
            FUN=function(r){
       v <- Views(co[[as.character(seqnames(r[[1]])[1])]], ranges(unlist(r)))
       .mergeRleListItems(RleList(v), rep(factor(names(r)), lengths(r)))
     })
     v <- unlist(v, recursive=FALSE, use.names=FALSE)
-  }else{
-    strands <- strand(regions2)
-    co <- rtracklayer::import(filepath, format="BigWig", 
-                              selection=BigWigSelection(regions2))
-    co <- coverage(co, weight=co$score)
-    v <- Views(co[seqlevels(regions2)], regions2)
-  }
-  mat <- do.call(rbind, lapply(v, FUN=function(x){
-    t(sapply(x, FUN=function(x){
-      # if(useRle && length(x)>(10*nBins)){
-      #   # disabled because it can lead to +/- 1 bin
-      #   w <- floor(length(x)/nBins)
-      #   x <- tileRle(x, bs=w, method=method)
-      #   x <- Rle(values=runValue(x), lengths=pmax(round(runLength(x)/w),0L))
-      #   as.numeric(x)
-      # }else{
+    mat <- do.call(rbind, lapply(v, FUN=function(x){
+      t(sapply(x, FUN=function(x){
         x <- as.numeric(x)
         x <- rep(x,each=max(1L,ceiling(nBins/length(x))))
         x <- splitAsList(x, cut(seq_along(x), breaks=nBins, labels=FALSE))
         switch(method, max=max(x), min=min(x), mean=mean(x))
-      # }
+      }))
     }))
-  }))
+  }else{
+    strands <- strand(regions2)
+    mat <- .getBinSignal(co[seqlevels(regions2)], regions2, k=nBins,
+                         method=method)
+  }
   wRev <- which(as.factor(strands)=="-")
   if(length(wRev)>0) mat[wRev,] <- mat[wRev,seq(from=ncol(mat), to=1L)]
   mat
@@ -367,6 +349,15 @@ getBinSignalFromBam <- function(filepath, regions, cuts=FALSE, RPM=TRUE,
     if(is.null(RPM) || RPM) mat <- mat*1000000/libsize
   }
   mat
+}
+
+#' @importFrom EnrichedHeatmap makeWindows
+.getBinSignal <- function(co, regions, w=NULL, k=NULL, short.keep=TRUE,
+                          method=c("max","mean","min")){
+  method <- match.arg(method) 
+  v <- Views(co, makeWindows(regions, w=w, k=k, short.keep=short.keep)) 
+  v <- switch(method, min=viewMins(v), max=viewMaxs(v), mean=viewMeans(v))
+  matrix(v, nrow=length(regions), byrow=TRUE) 
 }
 
 # boundaries of each element of a GRangesList (e.g. transcript coords)
