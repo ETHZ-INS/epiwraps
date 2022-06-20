@@ -9,6 +9,8 @@
 #'   `GRanges`
 #' @param paired Logical; whether to consider the reads as paired (fragments, 
 #'   rather than reads, will be returned)
+#' @param strandMode Strandmode for paired data (see 
+#'   \code{\link[GenomicAlignments]{readGAlignmentPairs}}).
 #' @param keepSeqLvls An optional vector of seqLevels to keep
 #' @param flgs `scanBamFlag` for filtering the reads
 #' @param mapqFilter Integer of the minimum mapping quality for reads to be 
@@ -18,24 +20,37 @@
 #' @param BPPARAM A `BiocParallel` parameter object for multithreading. Note 
 #'   that if used, memory usage will be high; in this context we recommend a 
 #'   high `nChunks`.
+#' @param exclude An optional GRanges of regions for which overlapping reads 
+#'   should be excluded.
 #' @param ... Passed to `FUN`
 #'
 #' @return A list of whatever `FUN` returns
 #' @export
-bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, 
-                             flgs=scanBamFlag(), mapqFilter=NA_integer_,
-                             nChunks=4, BPPARAM=SerialParam(), ...){
-  
+bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, nChunks=4,
+                             strandMode=2, flgs=scanBamFlag(), exclude=NULL,
+                             mapqFilter=NA_integer_, BPPARAM=SerialParam(), 
+                             ...){
+  if(!is.null(exclude)) stopifnot(is(exclude, "GRanges"))
   param <- .getBamChunkParams(x, flgs=flgs, keepSeqLvls=keepSeqLvls, 
                               nChunks=nChunks)
   f2 <- function(p, ...){
     if(paired){
-      x <- readGAlignmentPairs(x, param=p)
+      x <- readGAlignmentPairs(x, param=p, strandMode=strandMode)
       x <- as(x[isProperPair(x)], "GRanges")
     }else{
       x <- GRanges(readGAlignments(x, param=p))
     }
-    FUN(x, ...)
+    if(!is.null(exclude)) x <- x[!overlapsAny(x,exclude)]
+    if(paired && length(x)==0)
+      warning("Nothing found (in one of the chunks). If this is unexpected, it",
+              " could be because your read mates don't have matching names, or",
+              " have suffixes to their names. If this is the case, specify it ",
+              'by using an input like:
+  BamFile("aligned/test.bam", asMates=TRUE, qnameSuffixStart="/")',
+              immediate.=TRUE)
+    x <- FUN(x, ...)
+    gc(full=TRUE, verbose=FALSE)
+    x
   }
   if(BiocParallel::bpnworkers(BPPARAM)==1){
     return(lapply(param,FUN=f2,...))
@@ -45,7 +60,9 @@ bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL,
 
 .getBamChunkParams <- function(x, flgs=scanBamFlag(), keepSeqLvls=NULL, 
                                nChunks=4, ...){
-  seqs <- Rsamtools::scanBamHeader(x)[[1]]$targets
+  seqs <- Rsamtools::scanBamHeader(x)
+  if(is.null(seqs$targets)) seqs <- seqs[[1]]
+  seqs <- seqs$targets
   if(!is.null(keepSeqLvls)){
     if(length(missingLvls <- setdiff(keepSeqLvls, names(seqs))>0))
       stop(paste0(

@@ -174,7 +174,9 @@ rescaleSignalMatrices <- function(ml, scaleFactors, applyLinearly=NULL){
 #' (Diaz et al., Stat Appl Gen et Mol Biol, 2012) assumes that the background
 #' noise should on average be the same across experiments, an assumption that 
 #' works well in practice when there are not very large differences in 
-#' signal-to-noise ratio. The 'MAnorm' approach (Shao et al., Genome Biology 
+#' signal-to-noise ratio. The implementation uses the trimmed mean number of 
+#' reads in random windows with non-zero counts.
+#' The 'MAnorm' approach (Shao et al., Genome Biology 
 #' 2012) assumes that regions that are commonly enriched in two experiments
 #' should on average have the same signal in the two experiments. These methods
 #' then use linear scaling.
@@ -288,7 +290,7 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
   }
   windows <- sort(windows)
   y <- rep(NA_integer_, length(windows))
-  w <- which(seqnames(windows) %in% names(x))
+  w <- which(as.factor(seqnames(windows)) %in% names(x))
   if(length(w)==0) stop("No window found in coverage! Wrong seqlevel style?")
   windows <- windows[w]
   windows <- keepSeqlevels(windows, seqlevelsInUse(windows), pruning.mode="coarse")
@@ -348,7 +350,9 @@ clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
   m <- do.call(cbind, ml)
   if(scaleRows){
     m <- m - rowMeans(m)
-    m <- m/sqrt(matrixStats::rowVars(m, na.rm=TRUE))
+    sd <- sqrt(matrixStats::rowVars(m, na.rm=TRUE))
+    sd[which(sd==0)] <- 1
+    m <- m/sd
   }
   res <- lapply(setNames(k,k), FUN=function(x){
     cl <- kmeans(dist(m), centers=k)

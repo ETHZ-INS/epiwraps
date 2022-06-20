@@ -17,6 +17,7 @@ bam2bw(
   strand = c("*", "+", "-"),
   shift = 0L,
   log1p = FALSE,
+  exclude = NULL,
   includeDuplicates = TRUE,
   includeSecondary = FALSE,
   minMapq = 1L,
@@ -28,6 +29,7 @@ bam2bw(
   localBackground = c(1000L, 5000L),
   forceSeqlevelsStyle = NULL,
   verbose = TRUE,
+  binSummarization = c("max", "min", "mean"),
   ...
 )
 }
@@ -72,6 +74,9 @@ the shift for the positive strand, and the second for the negative strand.}
 \item{log1p}{Whether to log-transform (`log(x+1)`) the (scaled) signal.
 Ignored when the signal is relative to a background.}
 
+\item{exclude}{An optional GRanges of regions for which overlapping reads 
+should be excluded.}
+
 \item{includeDuplicates}{Logical, whether to include reads flagged as 
 duplicates.}
 
@@ -108,10 +113,14 @@ seqlevel style for the output bigwig. Can take any value accepted by
 
 \item{verbose}{Logical; whether to print progress messages}
 
+\item{binSummarization}{The method to summarize nucleotides into each bin,
+either "max" (default), "min" or "mean".}
+
 \item{...}{Passed to `ScanBamParam`}
 }
 \value{
-The bigwig filepath
+The bigwig filepath. Alternatively, if `output_bw=NA_character_`, 
+  the coverage data is not written to file but returned.
 }
 \description{
 Creates a coverage bigwig file from an alignment bam file.

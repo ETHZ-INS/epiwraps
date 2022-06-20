@@ -44,8 +44,10 @@ string). The function then automatically determines the relevant track type and
 setting from the file types.
 
 ```{r signal1, fig.width=6, fig.height=2.5, message=FALSE}
-library(GenomicRanges)
-library(epiwraps)
+suppressPackageStartupMessages({
+  library(GenomicRanges)
+  library(epiwraps)
+})
 # get the path to an example bigwig file:
 bwf1 <- system.file("extdata/example_rna.bw", package="epiwraps")
 plotSignalTracks(list(RNA=bwf1), region="8:22165140-22212326", genomeAxis=TRUE)
@@ -168,9 +170,10 @@ bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
 regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
 # we obtain the matrix of the signal around the regions. For the purpose of this
 # example, we'll read twice from the same:
-m <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L)
+m <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L, binMethod = "mean")
 lapply(m,dim)
 ```
+
 The result is a named list of matrices (more specifically, `normalizedMatrix`
 objects, see `r BiocStyle::Biocpkg("EnrichedHeatmap")`) with equal dimensions. 
 In this example, the matrix has 264 rows/regions, and 200 columns because we
@@ -210,7 +213,7 @@ follows:
 ```{r heatmap1, fig.height=4, fig.width=4}
 plotEnrichedHeatmaps(m)
 # we  can use most arguments that are supported by EnrichedHeatmap, e.g.:
-plotEnrichedHeatmaps(m, col=c("white","darkred"), cluster_rows=TRUE,
+plotEnrichedHeatmaps(m, colors=c("white","darkred"), cluster_rows=TRUE,
                      show_row_dend=TRUE, top_annotation=FALSE, 
                      row_title="My list of cool regions")
 ```
@@ -249,14 +252,22 @@ for each sample/matrix:
 d <- meltSignals(m)
 head(d)
 ```
-This can then be used for plotting, e.g.:
+This can then be used for plotting. For this example, since it consists of twice the same file, we'll first create a fake difference:
+
+```{r}
+# create a fake difference so that there's something to visualize in this example:
+d$mean[d$sample=="atac2"] <- 0.06+(d$mean[d$sample=="atac2"]-0.06)*0.6
+```
+
+Then we can plot normally with `ggplot`:
 
 ```{r aggPlot, fig.width=4, fig.height=3}
 library(ggplot2)
-ggplot(d, aes(position, mean, colour=sample)) + 
-  geom_vline(xintercept=0, linetype="dashed") + geom_line(lwd=2)
+ggplot(d, aes(position, mean, colour=sample)) +
+  geom_vline(xintercept=0, linetype="dashed") +
+  geom_ribbon(aes(position, ymin=mean-SE, ymax=mean+SE, fill=sample), alpha=0.4, colour=NA) + 
+  geom_line(size=1.2) + labs(x="relative position", y="mean RPKM")
 ```
-
 # Extra functionalities
 
 ## Generating bigwig files
@@ -267,16 +278,19 @@ The `bam2bw` function can be used to create a bigwig file from a bam file:
 bam2bw(bamfile=bam, output_bw="test.bw", binWidth=10, scaling=TRUE)
 ```
 
-See `?bam2bw` for more detail.
+The <a href="bam2bw.html">bam2bw vignette</a> explains some of the basic concepts
+being the different ways to compute enrichment along the genome and main options
+of the function (see also `?bam2bw` for more detail).
 
 ## Peak calling
 
 A peak calling function can be used, either against an input control or against local or global backgrounds:
 
-```{r}
+```{r, eval=FALSE}
 p <- callPeaks(bam, fragLength=50)
 ```
 
+Note that this function is still under heavy development!
 
 ## Quality control
 

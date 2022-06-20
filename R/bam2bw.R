@@ -54,10 +54,15 @@
 #' @param forceSeqlevelsStyle If specified, forces the use of the specified 
 #'   seqlevel style for the output bigwig. Can take any value accepted by
 #'   `seqlevelsStyle`.
+#' @param exclude An optional GRanges of regions for which overlapping reads 
+#'   should be excluded.
+#' @param binSummarization The method to summarize nucleotides into each bin,
+#'   either "max" (default), "min" or "mean".
 #' @param verbose Logical; whether to print progress messages
 #' @param ... Passed to `ScanBamParam`
 #' 
-#' @return The bigwig filepath
+#' @return The bigwig filepath. Alternatively, if `output_bw=NA_character_`, 
+#'   the coverage data is not written to file but returned.
 #' 
 #' @details 
 #' * For single-end ChIPseq data, extend reads to the expected fragment size 
@@ -92,13 +97,15 @@
 bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L, 
                    extend=0L, compType=c("ppois", "subtract", "logFE"),
                    scaling=TRUE, type=c("full","center","start","end","ends"),
-                   strand=c("*","+","-"), shift=0L, log1p=FALSE,
+                   strand=c("*","+","-"), shift=0L, log1p=FALSE, exclude=NULL,
                    includeDuplicates=TRUE, includeSecondary=FALSE, minMapq=1L, 
                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
                    splitByChr=3, pseudocount=1L, localBackground=c(1000L,5000L),
-                   forceSeqlevelsStyle=NULL, verbose=TRUE, ...){
+                   forceSeqlevelsStyle=NULL, verbose=TRUE, 
+                   binSummarization=c("max","min","mean"), ...){
   # check inputs
   stopifnot(length(bamfile)==1 && file.exists(bamfile))
+  if(!is.null(exclude)) stopifnot(is(exclude,"GRanges"))
   if(!is.null(bgbam)){
     stopifnot(length(bgbam)==1 && file.exists(bgbam))
     stopifnot(is.logical(scaling) && length(scaling)==1)
@@ -112,8 +119,12 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
   stopifnot(length(shift) %in% 1:2)
   stopifnot(length(binWidth)==1 && binWidth>=1)
   if(is.null(paired)){
-    if(verbose) message("`paired` not specified, assuming single-end reads.")
+    if(verbose) message("`paired` not specified, assuming single-end reads. ",
+                        "Set to paired='auto' to automatically detect.")
     paired <- FALSE
+  }else if(paired=="auto"){
+    paired <- testPairedEndBam(bamfile)
+    if(verbose) message("Detected ", ifelse(paired,"paired","unpaired")," data")
   }
   if(paired) extend <- 0L
   if(type=="ends" && !paired && verbose)
@@ -138,13 +149,15 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
     .bam2bwReadChunk(bamfile, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
-                     forceStyle=forceSeqlevelsStyle,
-                     keepStrand=ifelse(paired && strand!="*",strand,"*"))
+                     forceStyle=forceSeqlevelsStyle, exclude=exclude,
+                     keepStrand=ifelse(paired && strand!="*",strand,"*"),
+                     binSummarization=binSummarization)
   })
 
   if(is.null(bgbam)){
     if(verbose) message("Writing bigwig...")
     res <- .bam2bwScaleCovList(res, scaling=scaling, log1p=log1p)
+    if(is.na(output_bw)) return(res)
     rtracklayer::export.bw(res, output_bw)
     return(invisible(output_bw))
   }
@@ -158,8 +171,9 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
     .bam2bwReadChunk(bgbam, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
-                     forceStyle=forceSeqlevelsStyle,
-                     keepStrand=ifelse(paired && strand!="*",strand,"*"))
+                     forceStyle=forceSeqlevelsStyle, exclude=exclude,
+                     keepStrand=ifelse(paired && strand!="*",strand,"*"),
+                     binSummarization=binSummarization)
   })
 
   if(verbose) message("Computing relative signal...")
@@ -190,32 +204,117 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
         )
   rm(bg)
   
+  if(is.na(output_bw)) return(res)
+  
   if(verbose) message("Writing bigwig...")
-
   rtracklayer::export.bw(res, output_bw)
   return(invisible(output_bw))
 }
 
+
+#' frag2bw
+#' 
+#' Creates a coverage bigwig file from a Tabix-indexed fragment file.
+#'
+#' @param tabixFile The path to a tabix-indexed bam file, or a TabixFile object.
+#' @param output_bw The path to the output bigwig file
+#' @param barcodes An optional list of barcodes to use (assuming that the file
+#'   contains the column)
+#' @param binWidth The window size. A lower value (min 1) means a higher 
+#'  resolution, but larger file size.
+#' @param scaling Either TRUE (performs Count Per Million scaling), FALSE (no 
+#'   scaling), or a numeric value by which the signal will be divided. If 
+#'   `bgbam` is given and `scaling=TRUE`, the background will be scaled to the
+#'   main signal.
+#' @param type Type of the coverage to compile. Either full (full read/fragment),
+#'   start (count read/fragment start locations), end, center, or 'ends' (both
+#'   ends of the read/fragment).
+#' @param strand Strand(s) to capture (any by default).
+#' @param shift Shift (from 3' to 5') by which reads/fragments will be shifted.
+#'   If `shift` is an integer vector of length 2, the first value will represent
+#'   the shift for the positive strand, and the second for the negative strand.
+#' @param useScore Whether to use the score column (if any) as coverage weights.
+#' @param minFragLength Minimum fragment length (ignored if `paired=FALSE`)
+#' @param maxFragLength Maximum fragment length (ignored if `paired=FALSE`)
+#' @param keepSeqLvls An optional vector of seqLevels (i.e. chromosomes) to 
+#'   include.
+#' @param forceSeqlevelsStyle If specified, forces the use of the specified 
+#'   seqlevel style for the output bigwig. Can take any value accepted by
+#'   `seqlevelsStyle`.
+#' @param exclude An optional GRanges of regions for which overlapping reads 
+#'   should be excluded.
+#' @param binSummarization The method to summarize nucleotides into each bin,
+#'   either "max" (default), "min" or "mean".
+#' @param verbose Logical; whether to print progress messages
+#' 
+#' @return The bigwig filepath. Alternatively, if `output_bw=NA_character_`, 
+#'   the coverage data is not written to file but returned.
+#' 
+#' @export
+frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
+                    type=c("full","center","start","end","ends"), barcodes=NULL,
+                    strand=c("*","+","-"), shift=0L, log1p=FALSE, exclude=NULL,
+                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
+                    useScore=FALSE, forceSeqlevelsStyle=NULL, 
+                    binSummarization=c("max","min","mean"), verbose=TRUE, ...){
+  binSummarization <- match.arg(binSummarization)
+  if(!is(tabixFile, "TabixFile")) tabixFile <- TabixFile(tabixFile)
+  
+  if(verbose) message("Reading in signal...")
+  res <- tabixChrApply(tabixFile, keepSeqLvls=keepSeqLvls, exclude=exclude,
+                       FUN=function(x){
+    if(!is.null(barcodes) && !is.null(x$name))
+      x <- x[which(x$name %in% barcodes)]
+    .frag2co(x, strand=strand, type=type, minFragLength=minFragLength,
+             maxFragLength=maxFragLength, shift=shift, useScore=useScore,
+             binSummarization=binSummarization)
+  })
+  if(verbose) message("Writing bigwig...")
+  res <- .bam2bwScaleCovList(res, scaling=scaling)
+  if(is.na(output_bw)) return(res)
+  rtracklayer::export.bw(res, output_bw)
+  return(invisible(output_bw))
+}
+
+.frag2co <- function(x, strand, minFragLength, maxFragLength, type, shift,
+                     binSummarization="max", useScore=FALSE){
+  nr <- length(x)
+  if(strand!="*") x <- x[strand(x)==strand]
+  x <- x[width(x)>=minFragLength & width(x)<=maxFragLength]
+  x <- .doShift(x, shift)
+  if(type=="ends"){
+    x <- .align2cuts(x)
+  }else if(type!="full"){
+    x <- resize(x, width=1L, fix=type, use.names=FALSE)
+  }
+  x <- coverage(x, weight=ifelse(useScore && !is.null(x$score),"score",1L))
+  co <- tileRle(x, bs=binWidth, method=binSummarization)
+  metadata(co)$reads <- nr
+  rm(x)
+  gc(full=TRUE, verbose=FALSE)
+  co
+}
+
 #' @importFrom GenomeInfoDb seqlevelsStyle<- seqlevelsInUse
 .bam2bwReadChunk <- function(bamfile, param, binWidth, forceStyle=NULL, 
-                             keepStrand="*", ...){
+                             keepStrand="*", binSummarization="max", ...){
   # get reads/fragments from chunk
   bam <- .bam2bwGetReads(bamfile, param=param, ...)
   if(keepStrand != "*") bam <- bam[which(strand(bam)==keepStrand)]
   if(!is.null(forceStyle)) seqlevelsStyle(bam) <- forceStyle
   # compute coverages
-  co <- tileRle(coverage(bam), bs=binWidth)
+  co <- tileRle(coverage(bam), bs=binWidth, method=binSummarization)
   # save library size for later normalization
   metadata(co)$reads <- metadata(bam)$reads
   rm(bam)
-  gc(verbose=FALSE)
+  gc(full=TRUE, verbose=FALSE)
   co
 }
 
 
 # reads reads from bam file.
-.bam2bwGetReads <- function(bamfile, paired, param, type, extend,
-                            shift=0L, minFragL, maxFragL, si=NULL){
+.bam2bwGetReads <- function(bamfile, paired, param, type, extend, shift=0L,
+                            minFragL, maxFragL, si=NULL, exclude=NULL){
   if(paired){
     bam <- readGAlignmentPairs(bamfile, param=param)
     bam <- as(bam[isProperPair(bam)], "GRanges")
@@ -227,16 +326,8 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
     if(type %in% c("full","center") && extend!=0L)
       bam <- resize(bam, width(bam)+as.integer(extend), use.names=FALSE)
   }
-  if(!all(shift==0)){
-    if(length(shift)>1){
-      bam[strand(bam)=="+"] <- shift(bam[strand(bam)=="+"], shift=shift[1], 
-                                     use.names=FALSE)
-      bam[strand(bam)=="-"] <- shift(bam[strand(bam)=="-"], shift=shift[2], 
-                                     use.names=FALSE)
-    }else{
-      bam <- shift(bam, shift=shift, use.names=FALSE)
-    }
-  }
+  if(!is.null(exclude)) bam <- bam[!overlapsAny(bam,exclude)]
+  bam <- .doShift(bam, shift)
   if(type=="ends"){
     bam <- .align2cuts(bam)
   }else if(type!="full"){
@@ -253,6 +344,21 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
   bam
 }
 
+.doShift <- function(x, shift){
+  stopifnot(is(x, "GRanges"))
+  shift <- as.integer(shift)
+  stopifnot(length(shift) %in% 1:2)
+  if(all(shift==0)) return(x)
+  if(length(shift)>1){
+    bam[strand(x)=="+"] <- shift(x[strand(x)=="+"], shift=shift[1], 
+                                   use.names=FALSE)
+    bam[strand(x)=="-"] <- shift(x[strand(x)=="-"], shift=shift[2], 
+                                   use.names=FALSE)
+  }else{
+    x <- shift(x, shift=shift, use.names=FALSE)
+  }
+  x
+}
 
 #' tileRle
 #' 

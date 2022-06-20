@@ -1,10 +1,16 @@
-# epiwraps: wrappers for easy epigenomic data visualization
+# epiwraps: smooth epigenomics data analysis and visualization with Bioconductor
 
-Bioconductor offers power packages for the analysis and visualization of 
-(epi)genomic data, however they are often not always easy to approach for users 
-without an extensive bioinformatics background. The `epiwraps` package was 
-therefore developed as a simpler entry-point to such tasks, providing a simple
-interface to the more powerful capabilities of other packages.
+## Introduction
+
+The `epiwraps` package started off as a set of wrappers for the visualization of
+epigenomics data (in particular ATAC/ChIP-seq), meant to facilitate the teaching
+of regulatory genomics through hands-on exploration of such data. It has now 
+evolved into a set of tools around this task, including missing R-based 
+alternatives for some important steps.
+
+**Note that the package and documentation are both still under heavy development!**
+
+### Installation
 
 Install with:
 
@@ -12,18 +18,37 @@ Install with:
 BiocManager::install("ETHZ-INS/epiwraps")
 ```
 
-# Plotting signals in a region
+Key topics:
+
+* [Plotting signals in a region](#plotting-signals-in-a-region)
+* [Plotting signals in many regions](#plotting-signals-in-many-regions)
+* [Bigwig file generation](#bigwig-file-generation)
+* [Peak calling](#peak-calling)
+
+<br/><br/>
+
+## Visualization
+
+Bioconductor offers power packages for the analysis and visualization of 
+(epi)genomic data, however they are often not always easy to approach for users 
+without an extensive bioinformatics background. The `epiwraps` provide simpler 
+entry-points to such tasks via a simple and unified interface to the more 
+powerful capabilities of other packages.
+
+
+### Plotting signals in a region
 
 The `plotSignalTracks` function is a wrapper around the 
-*[Gviz](https://bioconductor.org/packages/3.13/Gviz)* package, which plots one or more signals along 
-genomic coordinates (in a genome-browser like fashion). 
+*[Gviz](https://bioconductor.org/packages/3.13/Gviz)* package, which plots one 
+or more signals along genomic coordinates (in a genome-browser like fashion). 
 The function lacks the full flexibility of the *[Gviz](https://bioconductor.org/packages/3.13/Gviz)* 
-package, but presents a considerable simpler interface, with automatic default 
-parameters, etc. It has two essential arguments: a (named) list of files whose 
-signal to display (can be a mixture of bigwig, bam, or bed-like files), and the 
-region in which to display the signals (can be given as a GRanges or as a 
-string). The function then automatically determines the relevant track type and 
-setting from the file types.
+package (although considerable customization is possible), but presents a 
+considerable simpler interface, with automatic default parameters, etc. It has 
+two essential arguments: a (named) list of files (or objects) whose 
+signal to display (can be a mixture of bigwig, bam, or bed-like files, or 
+GRanges), and the region in which to display the signals (can be given as a 
+GRanges or as a string). The function then automatically determines the 
+relevant track type and setting from the file types.
 
 
 ```r
@@ -76,7 +101,7 @@ plotSignalTracks(c("my bam file"=bam), "seq1:1-1500", type="alignments")
 
 ![](readme_files/figure-html/signalAlignments-1.png)<!-- -->
 
-## Merging signal from different tracks
+#### Merging signal from different tracks
 
 In addition to being displayed one below the other, data tracks can be combined
 in different ways. To do this, the tracks can simply be given in a nested 
@@ -95,7 +120,7 @@ the `aggregation` argument. In addition to usual operations, the tracks can be
 overlayed on top of one another (`aggregation='overlay'`), or shown as a 
 heatmap (`aggregation='heatmap'`).
 
-## Using an EnsDb object
+#### Using an EnsDb object
 
 If an `EnsDb` object is available (see the *[ensembldb](https://bioconductor.org/packages/3.13/ensembldb)* 
 package for a description of the class and its methods, and the 
@@ -125,7 +150,7 @@ default).
 
 To display only the gene track, the first argument can simply be omitted.
 
-## Further track customization
+#### Further track customization
 
 In addition to the `colors` and `type` argument (and a number of others), which 
 can customize the appearance of tracks, any additional parameters supported by 
@@ -140,7 +165,7 @@ full track customization when needed.
 
 <br/><br/>
 
-# Plotting signals in many regions
+### Plotting signals in many regions
 
 Most of the functions described in this section are wrappers around the 
 *[EnrichedHeatmap](https://bioconductor.org/packages/3.13/EnrichedHeatmap)* package, which plots genomic signal 
@@ -151,12 +176,12 @@ the *[EnrichedHeatmap](https://bioconductor.org/packages/3.13/EnrichedHeatmap)* 
 Since reading signal across many regions can take some time, the interface has
 been split into two step: reading the data matrix, and plotting.
 
-## Reading signal around a set of regions
+#### Reading signal around a set of regions
 
 The `signal2Matrix` function reads genomic signals around the centers of a set
-of regions. It can read from bam and BigWig files, although reading from bam 
-files is considerably slower. We can showcase it using the previous toy ATAC 
-bigwig file:
+of regions (or alternatively scaling a set of regions to the same size). It can 
+read from bam and BigWig files, although reading from bam files is considerably 
+slower. We can showcase it using the previous toy ATAC bigwig file:
 
 
 ```r
@@ -180,6 +205,7 @@ lapply(m,dim)
 ## $atac2
 ## [1] 264 200
 ```
+
 The result is a named list of matrices (more specifically, `normalizedMatrix`
 objects, see *[EnrichedHeatmap](https://bioconductor.org/packages/3.13/EnrichedHeatmap)*) with equal dimensions. 
 In this example, the matrix has 264 rows/regions, and 200 columns because we
@@ -192,7 +218,7 @@ function (e.g. `smooth=TRUE`).
 When reading multiple files, the `BPPARAM` argument can be used to set 
 multi-threading and increase speed.
 
-### Manipulating signal matrices
+#### Manipulating signal matrices
 
 The list of signal matrices can be manipulated as any list of matrices, for 
 instance using subsetting (e.g. `m[1:2]`), but even using transformations, e.g.:
@@ -213,7 +239,7 @@ merged <- mergeSignalMatrices(m, aggregation="mean")
 ```
 
 
-## Plotting heatmaps
+#### Plotting heatmaps
 
 Once the matrices have been created, we can plot heatmaps based on them as 
 follows:
@@ -227,12 +253,13 @@ plotEnrichedHeatmaps(m)
 
 ```r
 # we  can use most arguments that are supported by EnrichedHeatmap, e.g.:
-plotEnrichedHeatmaps(m, col=c("white","darkred"), cluster_rows=TRUE,
+plotEnrichedHeatmaps(m, colors=c("white","darkred"), cluster_rows=TRUE,
                      show_row_dend=TRUE, top_annotation=FALSE, 
                      row_title="My list of cool regions")
 ```
 
 ![](readme_files/figure-html/heatmap1-2.png)<!-- -->
+
 By default, the colorscale is trimmed to prevent most of it being driven by rare
 extreme values. This can be controlled via the `trim` argument (which indicates
 up to which quantile of data points to keep to establish the colorscale). 
@@ -249,6 +276,7 @@ plotEnrichedHeatmaps(list("trim=1"=m[[1]]), trim=1, scale_title="trim=1",
 ```
 
 ![](readme_files/figure-html/heatmapTrim-1.png)<!-- -->
+
 The underlying data is exactly the same, only the color-mapping changes. In the 
 left one, which has no trimming, a single very high value at the top forces the
 colorscale to extend to high values, even though most of the data is in the 
@@ -258,11 +286,13 @@ colorscale, resulting in a an 'over-exposed' heatmap. In practice, it is
 advisable to use minimal trimming (e.g. the default is `c(0.01,0.99)`,
 as in the corresponding DeepTools function).
 
+<br/><br/>
 
-## Plotting aggregated signals
+#### Plotting aggregated signals
 
 It is also possible to plot only the average signals across regions. To do this,
-we first melt the signal matrices and then use *[ggplot2](https://CRAN.R-project.org/package=ggplot2)*. The
+we first melt the signal matrices and then use 
+*[ggplot2](https://CRAN.R-project.org/package=ggplot2)*. The
 `meltSignals` function will return a data.frame showing the mean, standard 
 deviation, standard error and median at each position relative to the center,
 for each sample/matrix:
@@ -282,6 +312,7 @@ head(d)
 ## 5     -960  atac1 0.05592874 0.04809529 0.002960061 0.03910840
 ## 6     -950  atac1 0.05677649 0.04775387 0.002939048 0.04741890
 ```
+
 This can then be used for plotting, e.g.:
 
 
@@ -293,14 +324,66 @@ ggplot(d, aes(position, mean, colour=sample)) +
 
 ![](readme_files/figure-html/aggPlot-1.png)<!-- -->
 
+<br/><br/>
 
-# Extra functions
+## Bigwig file generation
 
-The package furthermore includes functions to perform the following tasks:
+The `bam2bw` function enables the creation of coverage bigwig files from `.bam`
+files, with a variety of options. It uses efficient Rle-based tiling for lower
+than single-bp resolution, and offers a wide variety of options, exemplified in
+the following figure:
 
-* Bigwig file generation (see `?bam2bw`)
-* Basic peak calling (see `?callPeaks`)
-* Some quality controls, in particular coverage statistics (see `?getCovStats`)
-  and fragment length distributions (see `?fragSizesDist`).
+<img src="inst/docs/example_bigwigs_hm.png" width="700" />
+
+All columns are based on the same bam file, but select and/or summarize 
+fragments differently. For example, the heatmap of insertion sites of 
+nucleosome-free fragments was based on a bigwig file generated using:
+
+```r
+bam2bw("aligned.bam", output_bw="NF_cuts.bw", paired=TRUE, binWidth=1L, 
+       minFragLength=30, maxFragLength=115, type="ends")
+```
+
+The arguments specify that only the beginning and end of the 
+fragments (`type="ends"`) of length 30-115 (`minFragLength` and `maxFragLength`)
+should be used to compute per-bp (`binWidth=1`) coverage. Bigwig files can also 
+be generated as an enrichment over an input, allowing the use of local 
+neighborhood backgrounds (MACS-like). For more detail, see the `bam2bw` 
+vignette.
+
+<br/><br/>
+
+## Peak calling
+
+The `callPeaks` function offers a R-based implementation of the general strategy
+used by MACS2 (Zhang et al., Genome Biology 2008). The function is still under
+development, especially with respect to single-end reads, where some optimization
+might still be needed. For paired-end reads, the results are nearly identical 
+with those of MACS2, with two main differences: 1) the p-values are more 
+conservative (and arguably more calibrated) and 2) because the implementation 
+does not rely on sliding windows, with default settings the peaks are narrower.
+
+Although still experimental, the function can be used as follows:
+
+```r
+peaks <- callPeaks("aligned.bam", "input.bam", paired=TRUE,
+                   blacklist="/path/to/blacklist.bed", outFormat="narrowPeak")
+```
+
+Using the blacklist during peak calling (if the regions have not already been 
+filtered out of the bam files) is recommended because it will have a major 
+impact on the negative peaks identified in the input/control, and as a result
+on the empirical FDR.
+
+`callPeaks` takes about twice as long to run as MACS2, and uses more memory. If
+dealing with very large files (or a very low memory system), consider
+increasing the number of processing chunks, for instance with `nChunks=10`.
+
+<br/><br/>
+
+## Misc
+
+The package furthermore includes a variety of utility functions, for instance 
+providing quality controls and the likes.
   
-See the package's vignette for more information.
+See the package's vignettes for more information.

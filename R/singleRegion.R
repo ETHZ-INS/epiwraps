@@ -70,7 +70,7 @@
 #' # show all transcript variants:
 #' # plotSignalTracks(list(tracks=bw), region="BMP1", ensdb=ensdb,
 #' #                  transcripts="full")
-plotSignalTracks <- function(files=c(), region, ensdb=NULL, colors="darkblue",
+plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue",
                              type="histogram",  genomeAxis=0.3, extend=0.15,
                              aggregation=c("mean","median", "sum", "max", 
                                            "min", "heatmap", "overlay"),

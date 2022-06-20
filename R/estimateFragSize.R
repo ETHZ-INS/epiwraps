@@ -143,10 +143,9 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
 .strandedCovTable <- function(regions, co){
   regions <- regions[start(regions)>=1]
   vp <- Views(co$cop, regions)
-  vp <- Reduce("+",as(vp[lengths(vp)>0], "IntegerList"))
+  vp <- Reduce("+",Reduce("c", lapply(vp[which(lengths(vp)>0L)], FUN=IntegerList)))
   vn <- Views(co$con, regions)
-  vn <- lapply(vn, FUN=function(x) Reduce("+",as(x, "IntegerList")))
-  vn <- Reduce("+",as(vn[lengths(vn)>0], "IntegerList"))
+  vn <- Reduce("+",Reduce("c", lapply(vn[which(lengths(vn)>0L)], FUN=IntegerList)))
   size <- length(vp)
   data.frame(rel_pos=seq(from=-floor(size/2), to=ceiling(size/2), length.out=length(vp)),
              count=c(vp,vn), strand=rep(c("+","-"),each=length(vp)))

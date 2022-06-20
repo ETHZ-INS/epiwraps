@@ -5,7 +5,7 @@
 \title{plotSignalTracks}
 \usage{
 plotSignalTracks(
-  files = c(),
+  files = list(),
   region,
   ensdb = NULL,
   colors = "darkblue",

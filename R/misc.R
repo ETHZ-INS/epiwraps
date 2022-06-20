@@ -31,11 +31,8 @@
   gsub(pat, "", basename(x), ignore.case=TRUE)
 }
 
-.align2cuts <- function(x){
-  bstart <- bend <- GRanges(x)
-  end(bstart) <- start(bstart)
-  start(bend) <- end(bend)
-  sort(c(bstart,bend))
+.align2cuts <- function(x, size=1L){
+  sort(c(resize(x,size,fix="start"), resize(x,size,fix="end")))
 }
 
 
@@ -238,4 +235,97 @@ head(paste(missingLvls, collapse=", "), 3))
   if(fatal) stop(msg)
   warning(msg)
   invisible(x)
+}
+
+
+# checks that the regions are compatible with the bw/bam files
+.checkRegions <- function(tracks, regions, verbose=TRUE, trimOOR=FALSE){
+  if( (is.list(tracks) || is.character(tracks)) && length(tracks)>1 ){
+    r2 <- lapply(tracks, regions=regions, verbose=FALSE, FUN=.checkRegions)
+    r2 <- Reduce(intersect, r2)
+    r2 <- regions[overlapsAny(regions, r2, type="equal")]
+  }else{
+    if(is.list(tracks)) tracks <- tracks[[1]]
+    if(epiwraps:::.parseFiletypeFromName(tracks)=="bw"){
+      sl <- seqlengths(BigWigFile(tracks))
+    }else if(epiwraps:::.parseFiletypeFromName(tracks)=="bam"){
+      sl <- seqlengths(BamFile(tracks))
+    }else if(is(tracks, "GRanges")){
+      sl <- seqlengths(tracks)
+    }else{
+      return(regions)
+    }
+    r2 <- keepSeqlevels(regions, intersect(seqlevels(regions), names(sl)),
+                        pruning.mode="coarse")
+    if(any(is.na(seqlengths(regions))))
+      seqlengths(regions) <- sl[seqlevels(regions)]
+    if(trimOOR){
+      r2b <- trim(r2)
+      if(verbose && (length(r2b)!=length(r2) || any(ranges(r2b)!=ranges(r2))))
+        message("Some of the regions were out of range and were trimmed.")
+      r2 <- r2b
+    }
+  }
+  lost <- length(regions)-length(r2)
+  lostp <- round(100*lost/length(regions))
+  if(lostp>5 || (verbose && lost>0)){
+    msg <- paste0(lost," region(s) (",lostp,"%) were excluded because they ",
+                  "were out of range of (some of) the file(s).
+This usually happens when the genome annotation used for the files ",
+"differs from that on which the regions were based.")
+    if(lostp<=5){
+      message(msg)
+    }else if(lostp<=95){
+      warning(msg)
+    }else{
+      stop(msg)
+    }
+  }
+  return(r2)
+}
+
+
+
+# converts a RleViews or RleViewsList with views of the same width to a matrix,
+# setting out-of-bounds regions to `padVal`
+.views2Matrix <- function(v, padVal=NA_integer_){
+  if(!is(v, "RleViewsList")) v <- RleViewsList(v)
+  ws <- width(v)[[1]]
+  stopifnot(all(all(width(v)==ws)))
+  x <- Reduce(c, lapply(v[lengths(v)>0], padVal=padVal, FUN=.view2paddedAL))
+  matrix(unlist(x), byrow=TRUE, ncol=ws)
+}
+
+# converts a RleViews to an AtomicList, setting out-of-bounds regions to padVal
+.view2paddedAL <- function(v, padVal=NA_integer_, forceRetAL=TRUE){
+  v2 <- trim(v)
+  if(isInt <- is.integer(runValue(v2))){
+    stopifnot(is.integer(padVal))
+  }else{
+    stopifnot(is.numeric(padVal))
+  }
+  toAL <- function(v){
+    if(isInt) return(IntegerList(v))
+    NumericList(v)
+  }
+  if(identical(v2,v)){
+    if(forceRetAL) return(toAL(v))
+    return(v)
+  }
+  if(any(w <- width(v2)==0)){
+    v <- v[which(!w)]
+    v2 <- v2[which(!w)]
+    warning(sum(w), " views were excluded as completely out of range.")
+  }
+  # figure out how much is trimmed on either side
+  pleft <- start(v2)-start(v)
+  pright <- end(v)-end(v2)
+  # concatenate the list elements with their padding
+  n <- seq_along(v2)
+  v <- splitAsList(c( rep(padVal, sum(pleft)),
+                      unlist(toAL(v2), use.names=FALSE),
+                      rep(padVal, sum(pright))),
+                   c(rep(n, pleft), rep(n, width(v2)), rep(n, pright)))
+  names(v) <- names(v2)
+  v
 }
