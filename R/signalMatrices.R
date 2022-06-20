@@ -350,9 +350,7 @@ clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
   m <- do.call(cbind, ml)
   if(scaleRows){
     m <- m - rowMeans(m)
-    sd <- sqrt(matrixStats::rowVars(m, na.rm=TRUE))
-    sd[which(sd==0)] <- 1
-    m <- m/sd
+    m <- m/sqrt(matrixStats::rowVars(m, na.rm=TRUE))
   }
   res <- lapply(setNames(k,k), FUN=function(x){
     cl <- kmeans(dist(m), centers=k)

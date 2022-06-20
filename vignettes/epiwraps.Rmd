@@ -44,10 +44,8 @@ string). The function then automatically determines the relevant track type and
 setting from the file types.
 
 ```{r signal1, fig.width=6, fig.height=2.5, message=FALSE}
-suppressPackageStartupMessages({
-  library(GenomicRanges)
-  library(epiwraps)
-})
+library(GenomicRanges)
+library(epiwraps)
 # get the path to an example bigwig file:
 bwf1 <- system.file("extdata/example_rna.bw", package="epiwraps")
 plotSignalTracks(list(RNA=bwf1), region="8:22165140-22212326", genomeAxis=TRUE)
@@ -170,10 +168,9 @@ bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
 regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
 # we obtain the matrix of the signal around the regions. For the purpose of this
 # example, we'll read twice from the same:
-m <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L, binMethod = "mean")
+m <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L)
 lapply(m,dim)
 ```
-
 The result is a named list of matrices (more specifically, `normalizedMatrix`
 objects, see `r BiocStyle::Biocpkg("EnrichedHeatmap")`) with equal dimensions. 
 In this example, the matrix has 264 rows/regions, and 200 columns because we
@@ -213,7 +210,7 @@ follows:
 ```{r heatmap1, fig.height=4, fig.width=4}
 plotEnrichedHeatmaps(m)
 # we  can use most arguments that are supported by EnrichedHeatmap, e.g.:
-plotEnrichedHeatmaps(m, colors=c("white","darkred"), cluster_rows=TRUE,
+plotEnrichedHeatmaps(m, col=c("white","darkred"), cluster_rows=TRUE,
                      show_row_dend=TRUE, top_annotation=FALSE, 
                      row_title="My list of cool regions")
 ```
