@@ -253,7 +253,7 @@ plotEnrichedHeatmaps(m)
 
 ```r
 # we  can use most arguments that are supported by EnrichedHeatmap, e.g.:
-plotEnrichedHeatmaps(m, col=c("white","darkred"), cluster_rows=TRUE,
+plotEnrichedHeatmaps(m, colors=c("white","darkred"), cluster_rows=TRUE,
                      show_row_dend=TRUE, top_annotation=FALSE, 
                      row_title="My list of cool regions")
 ```
