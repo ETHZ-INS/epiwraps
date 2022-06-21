@@ -98,6 +98,8 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
       names(regions) <- paste0("region", seq_along(regions))
     }
   }
+  rnames <- names(regions)
+  regions <- sort(regions)
 
   if(is(regions, "GRangesList")){
     if(type=="center") stop("A GRangesList cannot be used with type='center'.")
@@ -107,7 +109,6 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     regions2 <- resize(regions, fix="center", width=sum(extend))
     regions2 <- shift(regions2, round((extend[2]-extend[1])/2))
   }else{
-    regions <- sort(regions)
     regions2 <- regions
   }
   
@@ -198,9 +199,9 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     }else{
       stop("Unknown file format")
     }
-    if(is.null(names(regions))) mat <- tryCatch({
-        names(mat) <- names(regions)
-        mat
+    mat <- tryCatch({
+        if(is.null(names(mat))) names(mat) <- names(regions)
+        mat[rnames,]
       }, error=function(e){
         if(verbose) warning(e)
         mat
@@ -249,9 +250,8 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   stopifnot(length(unique(width(regions2)))==1)
   regions2 <- .filterRegions(regions2, seqlevels(BigWigFile(filepath)),
                              verbose=verbose)
-  co <- rtracklayer::import(filepath, format="BigWig", 
+  co <- rtracklayer::import(filepath, format="BigWig", as="RleList",
                             selection=BigWigSelection(reduce(regions2)))
-  co <- coverage(co, weight=co$score)
   if(w==1L){
     mat <- .views2Matrix(Views(co[seqlevels(regions2)], regions2), padVal=0L)
   }else{
@@ -272,13 +272,12 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   }else{
     sqlvls <- seqlevels(BigWigFile(filepath))
     if(is(regions2, "GRangesList")){
-      co <- rtracklayer::import(filepath, format="BigWig", 
+      co <- rtracklayer::import(filepath, format="BigWig", as="RleList", 
                         selection=BigWigSelection(reduce(unlist(regions2))))
     }else{
-      co <- rtracklayer::import(filepath, format="BigWig", 
+      co <- rtracklayer::import(filepath, format="BigWig", as="RleList",
                                 selection=BigWigSelection(reduce(regions2)))
     }
-    co <- coverage(co, weight=co$score)
   }
   regions2 <- .filterRegions(regions2, sqlvls, verbose=verbose)
   if(is(regions2, "GRangesList")){
@@ -355,9 +354,14 @@ getBinSignalFromBam <- function(filepath, regions, cuts=FALSE, RPM=TRUE,
 .getBinSignal <- function(co, regions, w=NULL, k=NULL, short.keep=TRUE,
                           method=c("max","mean","min")){
   method <- match.arg(method) 
-  v <- Views(co, makeWindows(regions, w=w, k=k, short.keep=short.keep)) 
+  if(is.null(names(regions))) names(regions) <- as.character(granges(regions))
+  norder <- names(regions)
+  regions <- sort(regions)
+  v <- Views(co, makeWindows(regions, w=w, k=k, short.keep=short.keep))
   v <- switch(method, min=viewMins(v), max=viewMaxs(v), mean=viewMeans(v))
-  matrix(v, nrow=length(regions), byrow=TRUE) 
+  mat <- matrix(unlist(v), nrow=length(regions), byrow=TRUE,
+                dimnames=list(names(regions),NULL))
+  mat[norder,]
 }
 
 # boundaries of each element of a GRangesList (e.g. transcript coords)
