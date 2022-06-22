@@ -327,7 +327,7 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
 #' @importFrom stats kmeans
 clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
                                   use=c("enrich","full","max","center"),
-                                  by=rep(1L,seq_along(ml)),
+                                  by=rep(1L,length(ml)),
                                   assay=1L, trim=c(0.05,0.95), nstart=3, ...){
   if(is(ml, "SummarizedExperiment")) ml <- .ese2ml(ml, assay=assay)
   ml <- .comparableMatrices(ml)
