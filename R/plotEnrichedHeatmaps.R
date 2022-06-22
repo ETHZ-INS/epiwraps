@@ -120,7 +120,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   ymin <- min(c(0,unlist(lapply(ml,FUN=min))))
   ymax <- max(unlist(lapply(ml, FUN=function(x){
     max(unlist(lapply(split(seq_along(rs), rs), FUN=function(i){
-      x2 <- x[i,]
+      x2 <- unclass(x)[i,,drop=FALSE]
       max(colMeans(x2)+matrixStats::colSds(x2)/sqrt(nrow(x2)))
     })))
   })))
