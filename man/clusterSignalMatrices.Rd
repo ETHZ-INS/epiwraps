@@ -10,6 +10,7 @@ clusterSignalMatrices(
   scaleRows = FALSE,
   scaleCols = FALSE,
   use = c("enrich", "full", "max", "center"),
+  by=rep(1L,seq_along(ml)),
   assay = 1L,
   trim = c(0.05, 0.95),
   nstart = 3,
@@ -29,6 +30,10 @@ clusterSignalMatrices(
 \code{\link[EnrichedHeatmap]{enriched_score}}. Other options are 'full' 
 (uses the full signal for clustering), 'max' (uses the maximum value in 
 the region), or 'center' (use the value at the center of the region).}
+
+\item{by}{Optional factor/character/integer vector of the same length as 
+`ml`. When scaling rows, this can be used to indicate which rows should be
+ scaled together.}
 
 \item{assay}{Assay to use (ignored unless `ml` is an ESE object)}
 

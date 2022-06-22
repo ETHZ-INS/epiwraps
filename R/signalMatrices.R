@@ -311,6 +311,9 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
 #'   \code{\link[EnrichedHeatmap]{enriched_score}}. Other options are 'full' 
 #'   (uses the full signal for clustering), 'max' (uses the maximum value in 
 #'   the region), or 'center' (use the value at the center of the region).
+#' @param by Optional factor/character/integer vector of the same length as 
+#'   `ml`. When scaling rows, this can be used to indicate which rows should be
+#'   scaled together.
 #' @param trim Values to trim (applied individidually for each signal matrix)
 #' @param nstart Number of starts for k-means clustering
 #' @param ... Passed to `kmeans`
@@ -324,6 +327,7 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
 #' @importFrom stats kmeans
 clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
                                   use=c("enrich","full","max","center"),
+                                  by=rep(1L,seq_along(ml)),
                                   assay=1L, trim=c(0.05,0.95), nstart=3, ...){
   if(is(ml, "SummarizedExperiment")) ml <- .ese2ml(ml, assay=assay)
   ml <- .comparableMatrices(ml)
@@ -343,15 +347,21 @@ clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
                center=lapply(ml, FUN=function(x){
                  a <- attributes(x)
                  if(length(ti <- a$target_index)==0)
-                  ti <- c(max(a$upstream_index),min(a$downstream_index))
+                   ti <- c(max(a$upstream_index),min(a$downstream_index))
                  rowMeans(x[,ti,drop=FALSE])
                }),
                enrich=lapply(ml, enriched_score))
-  m <- do.call(cbind, ml)
   if(scaleRows){
-    m <- m - rowMeans(m)
-    m <- m/sqrt(matrixStats::rowVars(m, na.rm=TRUE))
+    stopifnot(length(ml)==length(by))
+    ml <- lapply(split(ml, by), FUN=function(x){
+      m <- do.call(cbind, x)
+      m <- m - rowMeans(m)
+      sd <- sqrt(matrixStats::rowVars(m, na.rm=TRUE))
+      sd[which(sd==0)] <- 1
+      m <- m/sd
+    })
   }
+  m <- do.call(cbind, ml)
   res <- lapply(setNames(k,k), FUN=function(x){
     cl <- kmeans(dist(m), centers=k)
     ve <- round(100*sum(cl$betweenss)/sum(c(cl$withinss,cl$betweenss)))
