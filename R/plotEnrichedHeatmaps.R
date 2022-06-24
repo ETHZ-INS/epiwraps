@@ -124,12 +124,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
       max(colMeans(x2)+matrixStats::colSds(x2)/sqrt(nrow(x2)))
     })))
   })))
-  if(length(trim)==1) trim <- c(0,trim)
-  trim <- sort(trim)
-  common_min <- min(unlist(lapply(ml,prob=trim[1],na.rm=TRUE,FUN=quantile)))
-  common_max <- max(unlist(lapply(ml,prob=trim[2],na.rm=TRUE,FUN=quantile)))
-  breaks <- seq(from=common_min, to=common_max, length.out=length(colors))
-  col_fun <- circlize::colorRamp2(breaks, colors)
+  col_fun <- .getColFun(ml, trim, colors=colors)
   if(isTRUE(cluster_rows)){
     cluster_rows <- hclust(dist(do.call(cbind, ml)))
   }else if(is.null(row_order)){
@@ -172,6 +167,22 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
      name=ifelse(coltype=="last",scale_title,paste(scale_title,m)) )
   }
   hl
+}
+
+.getColFun <- function(ml, trim, colors){
+  stopifnot(is.numeric(trim) & all(trim>=0) & all(trim<=1))
+  stopifnot(length(colors)>1)
+  if(length(trim)==1) trim <- c(0,trim)
+  trim <- sort(trim)
+  r <- c( min(unlist(lapply(ml,prob=trim[1],na.rm=TRUE,FUN=quantile))),
+          max(unlist(lapply(ml,prob=trim[2],na.rm=TRUE,FUN=quantile))) )
+  if(r[[1]]==r[[2]]) r <- range(unlist(lapply(ml,range)))
+  if(r[[1]]==r[[2]]){
+    warning("There appears to be no signal in the data!")
+    r[[2]] <- r[[1]]+1
+  }
+  breaks <- seq(from=r[[1]], to=r[[2]], length.out=length(colors))
+  circlize::colorRamp2(breaks, colors)
 }
 
 .prepAnnoEnrich <- function(par, col=c("middle","first","last"), ...,
