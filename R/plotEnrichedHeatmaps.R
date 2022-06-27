@@ -19,7 +19,9 @@
 #' summary profile at the top of each heatmap, a named list of parameters to be 
 #'   passed to `anno_enrich`, or a 
 #'   \code{\link[ComplexHeatmap]{HeatmapAnnotation-class}} object that will be 
-#'   passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
+#'   passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}. Additionally, if
+#'   `ml` is a `ESE` object, `top_annotation` can be a vector of colData column
+#'   names.
 #' @param axis_name A vector of length 3 giving the labels to put respectively
 #' on the left, center and right of the x axis of each heatmap.
 #' @param assay Assay to use (ignored unless `ml` is an ESE object)
@@ -27,12 +29,16 @@
 #' @param scale_rows Whether to scale rows, either FALSE (default), 'local' 
 #'   (scales each matrix separately) or 'global'.
 #' @param left_annotation Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}
+#' @param right_annotation Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}
 #' @param show_heatmap_legend Logical, whether to show the heatmap legend
 #' @param mean_color Color of the mean signal line in the top annotation. If
 #'   `row_split` is used, `mean_color` can be a named vector indicating the 
 #'   colors for each cluster. Can also be a `gpar` object.
 #' @param mean_scale_side The side on which to show the y-axis scale of the mean
 #'   plots. Either "both" (default), "left", "right", or "none".
+#' @param use_raster Logical; whether to render the heatmap body as a raster 
+#'   image. Turned on by default if any of the matrix dimensions is greater than
+#'   2000.
 #' 
 #' @details 
 #' When plotting large matrices, the heatmap body will be rasterized to keep its
@@ -49,6 +55,7 @@
 #' @importFrom circlize colorRamp2
 #' @importFrom matrixStats colSds
 #' @importFrom grid gpar
+#' @importFrom SummarizedExperiment rowRanges
 #' @export
 #' @examples 
 #' # we first fetch the path to the example bigwig file:
@@ -74,14 +81,25 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
                                  row_order=NULL, cluster_rows=FALSE, 
                                  row_split=NULL, axis_name=NULL, minRowVal=0, 
                                  scale_rows=FALSE, top_annotation=TRUE, 
-                                 left_annotation=NULL, mean_color="red", 
-                                 mean_scale_side="both", 
-                                 show_heatmap_legend=TRUE, ...){
+                                 left_annotation=NULL, right_annotation=NULL,
+                                 mean_color="red", mean_scale_side=NULL, 
+                                 show_heatmap_legend=TRUE, use_raster=NULL, ...){
+  hasMean <- isTRUE(top_annotation) || is(top_annotation, "list") || 
+    (is.character(top_annotation) && "mean" %in% top_annotation)
+  meanPars <- list()
+  if(hasMean && is(top_annotation, "list")){
+    meanPars <- top_annotation
+    top_annotation <- NULL
+  }
   if(is(ml, "SummarizedExperiment")){
+    left_annotation <- .parseRowAnn(ml, left_annotation)
+    right_annotation <- .parseRowAnn(ml, right_annotation)
+    top_annotation <- .parseTopAnn(ml, top_annotation)
     ml <- .ese2ml(ml, assay=assay)
-    # parse arguments
   }
   ml <- .comparableMatrices(ml)
+  if(is.null(use_raster))
+    use_raster <- any(unlist(lapply(ml, dim))>2000)
   stopifnot(length(trim) %in% 1:2 && all(trim>=0 & trim <=1))
   stopifnot(length(scale_rows)==1)
   if(!is.null(row_split)) stopifnot(length(row_split)==nrow(ml[[1]]))
@@ -148,23 +166,57 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
     }
     axis_name <- c(e[1], axis_name, e[2])
   }
+  
+  hasAnno <- !(is.null(top_annotation) && is.null(left_annotation) &&
+                 is.null(right_annotation) && is.null(row_split))
+  if(is.null(mean_scale_side)) mean_scale_side <- ifelse(hasAnno,"left","both")
   hl <- NULL
-  for(m in names(ml)){
-    coltype <- ifelse(m==names(ml)[1], "first", "middle")
-    if(m==rev(names(ml))[1]) coltype <- "last"
-    TA <- .prepAnnoEnrich(top_annotation, col=coltype, ylim=c(ymin, ymax),
-                          gp=mean_gp, mean_scale_side=mean_scale_side)
-    if(is.null(la <- left_annotation) && m==names(ml)[1] &&
+  for(i in seq_along(ml)){
+    m <- names(ml)[i]
+    isFirst <- i==1
+    isLast <- m==rev(names(ml))[1]
+    TA <- NULL
+    if(hasMean){
+      TA <- .prepAnnoEnrich(meanPars, isFirst=isFirst, isLast, gp=mean_gp,
+                            ylim=c(ymin, ymax), mean_scale_side=mean_scale_side)
+      if(is.null(top_annotation)){
+        TA <- HeatmapAnnotation(enriched=do.call(anno_enriched, TA))
+      }else{
+        pars <- c( as.list(.prepTopAnn(top_annotation,i,ml)),
+                   list(
+                     enriched=do.call(anno_enriched, TA),
+                     show_annotation_name=(isFirst || isLast),
+                     annotation_name_side=ifelse(isLast,"right","left")
+                   ))
+        TA <- do.call(HeatmapAnnotation, pars)
+      }
+    }else if(!is.null(top_annotation)){
+      TA <- HeatmapAnnotation(df=.prepTopAnn(top_annotation,i,ml),
+                              show_annotation_name=(isFirst || isLast),
+                              annotation_name_side=ifelse(isLast,"right","left"))
+    }
+    la <- NULL
+    if(isFirst){
+      if(is.null(la <- left_annotation) &&
        !is.null(row_split) && !is(mean_color, "gpar") && length(mean_color)>1){
-      la <- rowAnnotation(cluster=row_split, annotation_name_side="top",
-                          col=list(cluster=mean_color), show_legend=FALSE)
+        la <- rowAnnotation(cluster=row_split, annotation_name_side="bottom",
+                            col=list(cluster=mean_color), show_legend=FALSE)
+      }else if(is.data.frame(la)){
+        la <- rowAnnotation(df=la, annotation_name_side="bottom")
+      }
+    }
+    ra <- NULL
+    if(isLast && !is.null(ra <- right_annotation)){
+      if(is.data.frame(ra))
+        ra <- rowAnnotation(df=ra, annotation_name_side="bottom")
     }
     hl <- hl + EnrichedHeatmap( ml[[m]],
      col=col_fun, ..., column_title=m, column_title_gp=column_title_gp,
      cluster_rows=cluster_rows, row_order=row_order, row_split=row_split,
-     show_heatmap_legend=coltype=="last" && show_heatmap_legend,
-     left_annotation=la, top_annotation=TA, axis_name=axis_name, 
-     name=ifelse(coltype=="last",scale_title,paste(scale_title,m)) )
+     show_heatmap_legend=isLast && show_heatmap_legend,
+     left_annotation=la, right_annotation=ra,
+     top_annotation=TA, axis_name=axis_name, use_raste=use_raster,
+     name=ifelse(isLast,scale_title,paste(scale_title,m)) )
   }
   hl
 }
@@ -185,24 +237,54 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   circlize::colorRamp2(breaks, colors)
 }
 
-.prepAnnoEnrich <- function(par, col=c("middle","first","last"), ...,
+.prepAnnoEnrich <- function(par, isFirst, isLast, ...,
                             mean_scale_side=c("both","left","right","none")){
   if(is.null(par) || isFALSE(par)) return(NULL)
   if(is(par, "HeatmapAnnotation")) return(par)
   if(isTRUE(par)) par <- list()
   stopifnot(is.list(par))
-  col <- match.arg(col)
-  col <- match.arg(col)
   mean_scale_side <- match.arg(mean_scale_side)
   side <- "right"
-  if(col=="middle" || mean_scale_side=="none"){
+  if( (!isFirst && !isLast) || mean_scale_side=="none"){
     axis <- FALSE
   }else{
-    axis <- (mean_scale_side!="left" && col=="last") ||
-              (mean_scale_side!="right" && col=="first")
-    if(col=="first") side <- "left"
+    axis <- (mean_scale_side!="left" && isLast) ||
+              (mean_scale_side!="right" && isFirst)
+    if(isFirst) side <- "left"
   }
   defPars <- list(show_error=TRUE, axis=axis, axis_param=list(side=side), ...)
-  par <- c(defPars[setdiff(names(defPars), names(par))], par)
-  HeatmapAnnotation(enriched=do.call(anno_enriched, par))
+  c(defPars[setdiff(names(defPars), names(par))], par)
+}
+
+.parseRowAnn <- function(RD, fields){
+  if(is(RD, "RangedSummarizedExperiment")){
+    RD <- as.data.frame(rowRanges(RD))
+  }else if(is(RD, "SummarizedExperiment")){
+    RD <- rowData(RD)
+  }
+  if(!is.character(fields) || length(fields)==nrow(RD)) return(fields)
+  if(length(fields)==0) return(NULL)
+  fields <- intersect(fields, colnames(RD))
+  if(length(fields)==0){
+    warning("Unknown fields in row annotation!")
+    return(NULL)
+  }
+  as.data.frame(RD[,fields,drop=FALSE])
+}
+
+.parseTopAnn <- function(CD, fields){
+  if(isFALSE(fields) || isTRUE(fields)) return(NULL)
+  if(is.list(CD)) return(NULL)
+  if(is(CD, "SummarizedExperiment")) CD <- colData(CD)
+  fields <- intersect(fields, colnames(CD))
+  if(length(fields)==0) return(NULL)
+  as.data.frame(CD[,fields,drop=FALSE])
+}
+
+.prepTopAnn <- function(df, i, ml){
+  print(df)
+  if(is.null(df)) return(NULL)
+  df <- df[rep(i,ncol(ml[[i]])),,drop=FALSE]
+  row.names(df) <- NULL
+  df
 }
