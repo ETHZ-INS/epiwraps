@@ -359,6 +359,14 @@ getBinSignalFromBam <- function(filepath, regions, cuts=FALSE, RPM=TRUE,
   regions <- sort(regions)
   v <- Views(co, makeWindows(regions, w=w, k=k, short.keep=short.keep))
   v <- switch(method, min=viewMins(v), max=viewMaxs(v), mean=viewMeans(v))
+  v <- v[lengths(v)>0]
+  v <- unlist(v)
+  if(all(w <- is.infinite(v))){
+    finiteMin <- 0L
+  }else{
+    finiteMin <- min(min(v[!w]),0L)
+  }
+  v[w] <- finiteMin
   mat <- matrix(unlist(v), nrow=length(regions), byrow=TRUE,
                 dimnames=list(names(regions),NULL))
   mat[norder,]
