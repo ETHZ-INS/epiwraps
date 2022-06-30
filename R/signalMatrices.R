@@ -161,7 +161,8 @@ rescaleSignalMatrices <- function(ml, scaleFactors, applyLinearly=NULL){
 #'  windows.
 #' @param nwind The number of random windows
 #' @param peaks A list of peaks (GRanges) for each experiment in `x`, or a
-#'   vector of paths to such files
+#'   vector of paths to such files, or a single GRanges of peaks to use for 
+#'   MAnorm
 #' @param trim Amount of trimming when calculating means
 #' @param method Normalization method (see details)
 #' 
@@ -213,26 +214,29 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
   if(!(method %in% c("background","SES")) && is.null(peaks))
     stop("The selected normalization method requires peaks.")
 
-  if(method!="MAnorm"){
-    windows <- .randomTiles(chrsizes, nwind, wsize)
-    wc <- do.call(cbind, lapply(x, windows=windows, FUN=.getCovVals))
-    wc <- wc[which(rowSums(is.na(wc))==0 & rowSums(wc)>0),]
-    if(any(colSums(wc)<50))
-      warning("Some samples have less than 50 non-zero windows. Consider ",
-              "increasing the window size or (better) the number of windows.")
-    if(method %in% c("background","SES")){
-      nf <- apply(wc, 2, trim=trim, na.rm=TRUE, FUN=mean)
-      return(setNames(median(nf, na.rm=TRUE)/nf, names(x)))
-    }
+  if(method=="MAnorm"){
+    return(.MAnorm(x, peaks, trim=trim, useSeqLevels=useSeqLevels))
+  }
+  
+  windows <- .randomTiles(chrsizes, nwind, wsize)
+  wc <- do.call(cbind, lapply(x, windows=windows, FUN=.getCovVals))
+  wc <- wc[which(rowSums(is.na(wc))==0 & rowSums(wc)>0),]
+  if(any(colSums(wc)<50))
+    warning("Some samples have less than 50 non-zero windows. Consider ",
+            "increasing the window size or (better) the number of windows.")
+  if(method %in% c("background","SES")){
+    nf <- apply(wc, 2, trim=trim, na.rm=TRUE, FUN=mean)
+    return(setNames(median(nf, na.rm=TRUE)/nf, names(x)))
   }
 
-  stopifnot(length(peaks)==length(x))
-  peaks <- lapply(peaks, FUN=function(x){
-    if(is.character(x)) x <- rtracklayer::import(x)
-    x
-  })
   wc <- wc[!overlapsAny(windows, 
                         reduce(unlist(GRangesList(peaks), use.names=FALSE))),]
+  
+  peaks <- lapply(peaks, FUN=function(x){
+    if(is.character(x)) x <- rtracklayer::import(x)
+    if(!is.null(useSeqLevels)) x <- x[seqnames(x) %in% useSeqLevels]
+    x
+  })
   
   cost <- function(p){
     a <- p["a"]
@@ -265,6 +269,43 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
   colnames(nf) <- letters[1:2]
   attributes(nf)$applyLinearly <- method=="2cLinear"
   nf
+}
+
+.MAnorm <- function(x, peaks, trim=0.05, useSeqLevels=NULL){
+  stopifnot(is(peaks, "GRanges") || length(peaks)==length(x))
+  if(is(peaks, "GRanges")){
+    peaks <- c(list(NULL), lapply(seq_len(length(x)-1), FUN=function(x) peaks))
+  }else{
+    po <- sapply(seq_along(peaks), FUN=function(i){
+      sapply(seq_along(peaks), FUN=function(j){
+        if(i==j) return(NA)
+        sum(overlapsAny(peaks[[i]], peaks[[j]]))
+      })
+    })
+    ref <- which.max(matrixStats::rowMaxs(po,na.rm=TRUE))
+    if(min(po[ref,],na.rm=TRUE)<100){
+      if(min(po[ref,],na.rm=TRUE)<1){
+        stop("Some of the experiments have no peak in common!")
+      }
+      warning("Some of the experiments have few (<100) peaks in common.",
+              "The calculated factors might be inaccurate.")
+    }
+    refP <- sort(peaks[[ref]])
+    refP$ID <- seq_along(refP)
+    peaks <- lapply(peaks, FUN=function(x){
+      if(identical(refP,x)) return(NULL)
+      refP[overlapsAny(refP, x)]$ID
+    })
+  }
+  refC <- .getCovVals(x[[ref]], refP)
+  nf <- mapply(p=peaks, x=x, FUN=function(p,x){
+    co <- .getCovVals(x, refP[p])
+    if(any(refC<0))
+      return(mean(refC[p],trim=trim)/mean(co, trim=trim))
+    nf <- edgeR::calcNormFactors(cbind(refC[p], co))
+    nf[2]/nf[1]
+  })
+  setNames(nf, names(x))
 }
 
 
