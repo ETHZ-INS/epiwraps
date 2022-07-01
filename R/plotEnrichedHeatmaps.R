@@ -90,6 +90,8 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   if(hasMean && is(top_annotation, "list")){
     meanPars <- top_annotation
     top_annotation <- NULL
+  }else if(is.logical(top_annotation)){
+    top_annotation <- NULL
   }
   if(is(ml, "SummarizedExperiment")){
     left_annotation <- .parseRowAnn(ml, left_annotation)
@@ -282,7 +284,6 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 }
 
 .prepTopAnn <- function(df, i, ml){
-  print(df)
   if(is.null(df)) return(NULL)
   df <- df[rep(i,ncol(ml[[i]])),,drop=FALSE]
   row.names(df) <- NULL
