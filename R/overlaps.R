@@ -112,7 +112,8 @@ regionOverlaps <- function(listOfRegions, ignore.strand=TRUE,
     })
   })
   h <- NULL
-  if(cluster) h <- hclust(dist(co))
+  if(isTRUE(cluster)) h <- hclust(dist(co))
+  if(is(cluster,"hclust") || is(cluster,"dendrogram")) h <- cluster
   if(length(unique(as.numeric(co)))<3) co[is.na(co)] <- 1
   dimnames(co) <- dimnames(o)
   ComplexHeatmap::pheatmap(co, display_numbers=o, number_color=number_color,
