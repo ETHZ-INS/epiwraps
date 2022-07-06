@@ -274,7 +274,9 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
 .MAnorm <- function(x, peaks, trim=0.05, useSeqLevels=NULL){
   stopifnot(is(peaks, "GRanges") || length(peaks)==length(x))
   if(is(peaks, "GRanges")){
-    peaks <- c(list(NULL), lapply(seq_len(length(x)-1), FUN=function(x) peaks))
+    refP <- sort(peaks)
+    peaks <- lapply(seq_len(length(x)), FUN=function(x) peaks)
+    ref <- 1
   }else{
     po <- sapply(seq_along(peaks), FUN=function(i){
       sapply(seq_along(peaks), FUN=function(j){
@@ -291,19 +293,20 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
               "The calculated factors might be inaccurate.")
     }
     refP <- sort(peaks[[ref]])
-    refP$ID <- seq_along(refP)
-    peaks <- lapply(peaks, FUN=function(x){
-      if(identical(refP,x)) return(NULL)
-      refP[overlapsAny(refP, x)]$ID
-    })
   }
+  refP$ID <- seq_along(refP)
+  peaks <- lapply(peaks, FUN=function(x){
+    if(identical(refP,x)) return(NULL)
+    refP[overlapsAny(refP, x)]$ID
+  })
   refC <- .getCovVals(x[[ref]], refP)
   nf <- mapply(p=peaks, x=x, FUN=function(p,x){
+    if(is.null(p)) return(1)
     co <- .getCovVals(x, refP[p])
     if(any(refC<0))
       return(mean(refC[p],trim=trim)/mean(co, trim=trim))
     nf <- edgeR::calcNormFactors(cbind(refC[p], co))
-    nf[2]/nf[1]
+    nf[1]/nf[2]
   })
   setNames(nf, names(x))
 }
