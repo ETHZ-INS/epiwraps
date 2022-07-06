@@ -87,7 +87,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   hasMean <- isTRUE(top_annotation) || is(top_annotation, "list") || 
     (is.character(top_annotation) && "mean" %in% top_annotation)
   meanPars <- list()
-  if(hasMean && is(top_annotation, "list")){
+  if(is(top_annotation, "list")){
     meanPars <- top_annotation
     top_annotation <- NULL
   }else if(is.logical(top_annotation)){
@@ -275,7 +275,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 }
 
 .parseTopAnn <- function(CD, fields){
-  if(isFALSE(fields) || isTRUE(fields)) return(NULL)
+  if(is.null(fields) || isFALSE(fields) || isTRUE(fields)) return(NULL)
   if(is.list(CD)) return(NULL)
   if(is(CD, "SummarizedExperiment")) CD <- colData(CD)
   fields <- intersect(fields, colnames(CD))
@@ -284,8 +284,9 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 }
 
 .prepTopAnn <- function(df, i, ml){
-  if(is.null(df)) return(NULL)
-  df <- df[rep(i,ncol(ml[[i]])),,drop=FALSE]
-  row.names(df) <- NULL
+  if(is.data.frame(df) || is(df,"DFrame")){
+    df <- df[rep(i,ncol(ml[[i]])),,drop=FALSE]
+    row.names(df) <- NULL
+  }
   df
 }
