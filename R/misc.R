@@ -290,8 +290,8 @@ This usually happens when the genome annotation used for the files ",
 # setting out-of-bounds regions to `padVal`
 .views2Matrix <- function(v, padVal=NA_integer_){
   if(!is(v, "RleViewsList")) v <- RleViewsList(v)
-  ws <- width(v)[[1]]
-  stopifnot(all(all(width(v)==ws)))
+  ws <- width(v)[[1]][[1]]
+  stopifnot(all(unlist(width(v))==ws))
   x <- Reduce(c, lapply(v[lengths(v)>0], padVal=padVal, FUN=.view2paddedAL))
   matrix(unlist(x), byrow=TRUE, ncol=ws)
 }
@@ -299,7 +299,7 @@ This usually happens when the genome annotation used for the files ",
 # converts a RleViews to an AtomicList, setting out-of-bounds regions to padVal
 .view2paddedAL <- function(v, padVal=NA_integer_, forceRetAL=TRUE){
   v2 <- trim(v)
-  if(isInt <- is.integer(runValue(v2))){
+  if(isInt <- is.integer(runValue(v2[[1]]))){
     stopifnot(is.integer(padVal))
   }else{
     stopifnot(is.numeric(padVal))
@@ -308,7 +308,7 @@ This usually happens when the genome annotation used for the files ",
     if(isInt) return(IntegerList(v))
     NumericList(v)
   }
-  if(identical(v2,v)){
+  if(length(table(width(v2)))==1){
     if(forceRetAL) return(toAL(v))
     return(v)
   }
