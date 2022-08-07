@@ -47,6 +47,7 @@
 #' @importFrom stats setNames pnorm ppois optim density
 #' @export
 callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"), 
+                      nullH=c("local","global.nb","global.bin"), ### TO IMPLEMENT
                       blacklist=NULL, binSize=10L, fragLength=200L, 
                       minPeakCount=5L, minFoldChange=1.3, pthres=10^-3,
                       maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=1L,
@@ -272,13 +273,17 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
   start(r)[w] <- r$wPos[w]
   end(r)[w] <- r$wNeg[w]
   if(length(w <- which(!w0 & width(r)>maxW))>0){
-    wPos <- round(median(which(r$pos[w]>medpo[w])))
-    wNeg <- round(median(which(r$neg[w]>medneg[w])))
+    wPos <- round(.rleMedWhich(r$pos[w]>medpo[w]))
+    wNeg <- round(.rleMedWhich(r$neg[w]>medneg[w]))
     w2 <- which((wNeg-wPos)>=minW)
     start(r)[w][w2] <- start(r)[w][w2]+wPos[w2]-1L
     end(r)[w][w2] <- start(r)[w][w2]+wNeg[w2]-1L
   }
   trim(suppressWarnings(resize(r, pmax(minW,width(r)), fix="center")))
+}
+
+.rleMedWhich <- function(rle){
+  median(cumsum(runLength(rle))[IRanges::which(runValue(rle))])
 }
 
 # very slow implementation, not used -- see .breakRegions2 instead
