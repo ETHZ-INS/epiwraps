@@ -10,7 +10,7 @@ clusterSignalMatrices(
   scaleRows = FALSE,
   scaleCols = FALSE,
   use = c("enrich", "full", "max", "center"),
-  by=rep(1L,seq_along(ml)),
+  by = rep(1L, length(ml)),
   assay = 1L,
   trim = c(0.05, 0.95),
   nstart = 3,
@@ -33,7 +33,7 @@ the region), or 'center' (use the value at the center of the region).}
 
 \item{by}{Optional factor/character/integer vector of the same length as 
 `ml`. When scaling rows, this can be used to indicate which rows should be
- scaled together.}
+scaled together.}
 
 \item{assay}{Assay to use (ignored unless `ml` is an ESE object)}
 

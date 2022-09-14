@@ -27,7 +27,8 @@ windows.}
 \item{nwind}{The number of random windows}
 
 \item{peaks}{A list of peaks (GRanges) for each experiment in `x`, or a
-vector of paths to such files}
+vector of paths to such files, or a single GRanges of peaks to use for 
+MAnorm}
 
 \item{trim}{Amount of trimming when calculating means}
 
@@ -37,8 +38,6 @@ vector of paths to such files}
 A vector of normalization factors, or for the 'S3norm' and '2cLinear'
   methods, a numeric matrix with a number of rows equal to the length 
   of `x`, and two columns indicating the alpha and beta terms.
-
-
 }
 \description{
 Estimates normalization factors for a set of bigwig files.

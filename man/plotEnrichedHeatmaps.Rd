@@ -19,9 +19,11 @@ plotEnrichedHeatmaps(
   scale_rows = FALSE,
   top_annotation = TRUE,
   left_annotation = NULL,
+  right_annotation = NULL,
   mean_color = "red",
-  mean_scale_side = "both",
+  mean_scale_side = NULL,
   show_heatmap_legend = TRUE,
+  use_raster = NULL,
   ...
 )
 }
@@ -59,9 +61,13 @@ on the left, center and right of the x axis of each heatmap.}
 summary profile at the top of each heatmap, a named list of parameters to be 
   passed to `anno_enrich`, or a 
   \code{\link[ComplexHeatmap]{HeatmapAnnotation-class}} object that will be 
-  passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.}
+  passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}. Additionally, if
+  `ml` is a `ESE` object, `top_annotation` can be a vector of colData column
+  names.}
 
 \item{left_annotation}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}}
+
+\item{right_annotation}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}}
 
 \item{mean_color}{Color of the mean signal line in the top annotation. If
 `row_split` is used, `mean_color` can be a named vector indicating the 
@@ -71,6 +77,10 @@ colors for each cluster. Can also be a `gpar` object.}
 plots. Either "both" (default), "left", "right", or "none".}
 
 \item{show_heatmap_legend}{Logical, whether to show the heatmap legend}
+
+\item{use_raster}{Logical; whether to render the heatmap body as a raster 
+image. Turned on by default if any of the matrix dimensions is greater than
+2000.}
 
 \item{...}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}}
 }
