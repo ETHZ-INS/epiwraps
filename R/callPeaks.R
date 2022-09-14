@@ -354,10 +354,10 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
 
 # get trimmed non-zero mean of a Rle/RleList
 .covTrimmedMean <- function(x, q=0.98, th=NULL){
-  if(is.null(th)) th <- as.integer(quantile(unlist(runValue(x)), q))
+  if(is.null(th)) th <- quantile(unlist(runValue(x)), q)
   if(is(x,"RleList"))
-    return(median(unlist(lapply(x, th=th, FUN=.covTrimmedMean), "RleList"),
-                  na.rm=TRUE))
+    return(weighted.mean(unlist(lapply(x, th=th, FUN=.covTrimmedMean)),
+                         lengths(x), na.rm=TRUE))
   w <- which(runValue(x)<=th & runValue(x)>0) 
   x <- Rle(runValue(x)[w], lengths=runLength(x)[w])
   mean(x)
