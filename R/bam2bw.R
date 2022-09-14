@@ -40,17 +40,19 @@
 #'   chromosome is processed separately), but we instead recommend giving a 
 #'   positive integer indicating the number of chunks.
 #' @param compType The type of relative signal to compute (ignored if `bgbam` 
-#'   isn't given). Can either be `ppois` (-log10 Poisson p-value), `logFE` 
-#'   (log10 fold-enrichment), or `subtract`. If `logFE`, the `pseudocount` 
-#'   will be added before computing the ratio.
+#'   isn't given). Can either be 'log2ratio' (log2-foldchange between signals),
+#'   'subtract' (difference), 'log10ppois' (rounded -log10 poisson p-value),
+#'   'log10FE' (log10 fold-enrichment). For fold-based signals, `pseudocount` 
+#'   will be added before computing the ratio. By default negative values are
+#'   capped (see `zeroCap`).
+#' @param zeroCap Logical; whether to cap values below zero to zero when 
+#'   producing relative signals.
 #' @param pseudocount The count to be added before fold-enrichment calculation 
-#'   between signals. Only used for `compType="logFE"`.
-#' @param localBackground Whether to use the local background instead of the 
-#'   count at the specific position/window when computing relative signal 
-#'   (analogous to MACS). Can either be a logical value, or an integer vector of
-#'   multiple sizes at which to compute a local background (as average signal).
-#'   The maximum of the average background signal across the window sizes will 
-#'   be used. If TRUE, will use 1kb and 5kb.
+#'   between signals. Ignored if `compType="subtract"`.
+#' @param localBackground A (vector of) number of windows around each 
+#'   tile/position for which a local background will be calculated. The 
+#'   background used will be the maximum of the one at the given position or of
+#'   the mean of each of the local backgrounds.
 #' @param forceSeqlevelsStyle If specified, forces the use of the specified 
 #'   seqlevel style for the output bigwig. Can take any value accepted by
 #'   `seqlevelsStyle`.
@@ -94,14 +96,15 @@
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 #' # create bigwig
 #' bam2bw(bam, "output.bw")
-bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L, 
-                   extend=0L, compType=c("ppois", "subtract", "logFE"),
-                   scaling=TRUE, type=c("full","center","start","end","ends"),
+bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
+                   binWidth=20L, extend=0L, scaling=TRUE, 
+                   type=c("full","center","start","end","ends"),
+                   compType=c("log2ratio", "subtract", "log10ppois", "log10FE"),
                    strand=c("*","+","-"), shift=0L, log1p=FALSE, exclude=NULL,
                    includeDuplicates=TRUE, includeSecondary=FALSE, minMapq=1L, 
                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
-                   splitByChr=3, pseudocount=1L, localBackground=c(1000L,5000L),
-                   forceSeqlevelsStyle=NULL, verbose=TRUE, 
+                   splitByChr=3, pseudocount=1L, localBackground=1L,
+                   zeroCap=TRUE, forceSeqlevelsStyle=NULL, verbose=TRUE, 
                    binSummarization=c("max","min","mean"), ...){
   # check inputs
   stopifnot(length(bamfile)==1 && file.exists(bamfile))
@@ -178,30 +181,14 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
 
   if(verbose) message("Computing relative signal...")
   
-  if(isTRUE(scaling)){
-    scaling <- sum(unlist(lapply(res, FUN=function(x) metadata(x)$reads )),
-                   na.rm=TRUE)/
-                sum(unlist(lapply(bg, FUN=function(x) metadata(x)$reads )),
-                   na.rm=TRUE)
-  }
   res <- .bam2bwScaleCovList(res, scaling=FALSE)
-  bg <- .bam2bwScaleCovList(bg, scaling=scaling)
-  
-  if(!isFALSE(localBackground)){
-    if(isTRUE(localBackground)) localBackground <- 1000L*c(1L,5L)
-    bg <- .bam2bwLocalBackground(bg, binWidth=binWidth, windows=localBackground)
+  bg <- .bam2bwScaleCovList(bg, scaling=FALSE)
+  if(isTRUE(scaling)){
+    bg <- bg * .covTrimmedMean(res)/.covTrimmedMean(bg)
   }
   
-  res <- switch(compType,
-          subtract=RleList(lapply(setNames(names(res), names(res)), 
-                                  FUN=function(x) pmax(res[[x]]-bg[[x]],0))),
-          logFE=log10((res+pseudocount)/(bg+pseudocount)),
-          ppois=RleList(lapply(setNames(names(res), names(res)), 
-                               FUN=function(x){
-            Rle(-log10(ppois(as.integer(res[[x]]), as.numeric(bg[[x]]), 
-                      lower.tail=FALSE)))
-          }))
-        )
+  res <- .bwRelativeSignal(res, bg, compType=compType, pseudocount=pseudocount,
+                           localBackground=localBackground, zeroCap=zeroCap)
   rm(bg)
   
   if(is.na(output_bw)) return(res)
@@ -209,6 +196,32 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
   if(verbose) message("Writing bigwig...")
   rtracklayer::export.bw(res, output_bw)
   return(invisible(output_bw))
+}
+
+# expects a single Rle, not RleList
+.bwRelativeSignal <- function(res, bg, pseudocount=1L, localBackground=1L,
+                              compType=c("log2ratio", "subtract", 
+                                         "log10ppois", "log10FE"),
+                              zeroCap=TRUE){
+  compType <- match.arg(compType)
+  res <- lapply(setNames(names(res), names(res)), FUN=function(x){
+    bg <- .bam2bwLocalBackground(bg[[x]], windows=localBackground)
+    res <- res[[x]]
+    if(compType=="log10ppois"){
+      res[res<=pseudocount] <- 0L
+      y <- Rle(as.integer(round(-log10(ppois(
+            as.integer(res), as.numeric(bg)+pseudocount, lower.tail=FALSE)))))
+    }else{
+      y <- switch(compType,
+                  log2ratio=log10((res+pseudocount)/(bg+pseudocount)),
+                  subtract=res-bg,
+                  logFE=log10((res+pseudocount)/(bg+pseudocount)),
+            )
+      if(zeroCap) y[y<0L] <- 0L
+    }
+    y
+  })
+  as(res, "RleList")
 }
 
 
@@ -423,7 +436,6 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
 # eventually applies a scaling
 .bam2bwScaleCovList <- function(res, scaling, log1p=FALSE){
   if(isTRUE(scaling)){
-    saveRDS(res, file="~/TMP.rds")
     # get scaling from chunks read counts
     scaling <- sum(unlist(lapply(res, FUN=function(x) metadata(x)$reads )),
                    na.rm=TRUE)/10^6
@@ -456,19 +468,17 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
 
 # calculates local background at positions, analogous to MACS
 # TO DO: handle chr that are smaller than windows !!!
-.bam2bwLocalBackground <- function(x, binWidth=1L, windows=1000L*c(1L,5L)){
+.bam2bwLocalBackground <- function(x, windows=10L){
+  if(length(windows)==0 || sum(windows)<=1L) return(x)
   if(is(x,"GRanges")){
     x <- x[order(seqnames(x))]
     score(x) <- Rle(score(x))
     score(x) <- unlist(.bam2bwLocalBackground(
-      split(Rle(score(x)), seqnames(x)), binWidth=binWidth, windows=windows))
+      split(Rle(score(x)), seqnames(x)), windows=windows))
     return(x)
   }
   if(is.numeric(x)) x <- Rle(x)
   stopifnot(is(x,"RleList") || is(x,"Rle"))
-  windows <- windows[windows>=binWidth]
-  if(length(windows)==0) return(x)
-  windows <- as.integer(windows/binWidth)
   if(length(windows)==1) return(runmean(x, k=windows, endrule = "constant"))
   do.call(pmax, lapply(windows, FUN=function(w){
     if(w==1) return(x)
@@ -480,4 +490,17 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
   x <- granges(GRanges(x))
   sort(c(resize(x, width=1L, fix="start", use.names=FALSE),
          resize(x, width=1L, fix="end", use.names=FALSE)))
+}
+
+# returns the bin size of a fixed-width RleList
+.getBinWidth <- function(x){
+  if(is(x,"RleList")){
+    x <- unlist(lapply(x, .getBinWidth))
+    return(as.integer(round(median(x, na.rm=TRUE))))
+  }else if(is(x,"Rle")){
+    x <- runLength(x)
+    if(length(x)==1) return(NA_integer_)
+    return(min(x[-length(x)]))
+  }
+  stop("x is not a Rle/RleList")
 }
