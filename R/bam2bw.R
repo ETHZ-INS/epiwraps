@@ -154,7 +154,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
                      minFragL=minFragLength, maxFragL=maxFragLength, 
                      forceStyle=forceSeqlevelsStyle, exclude=exclude,
                      keepStrand=ifelse(paired && strand!="*",strand,"*"),
-                     binSummarization=binSummarization)
+                     binSummarization=binSummarization, si=seqs)
   })
 
   if(is.null(bgbam)){
@@ -176,7 +176,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
                      minFragL=minFragLength, maxFragL=maxFragLength, 
                      forceStyle=forceSeqlevelsStyle, exclude=exclude,
                      keepStrand=ifelse(paired && strand!="*",strand,"*"),
-                     binSummarization=binSummarization)
+                     binSummarization=binSummarization, si=seqs)
   })
 
   if(verbose) message("Computing relative signal...")
@@ -309,13 +309,14 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
 }
 
 #' @importFrom GenomeInfoDb seqlevelsStyle<- seqlevelsInUse
-.bam2bwReadChunk <- function(bamfile, param, binWidth, forceStyle=NULL, 
+.bam2bwReadChunk <- function(bamfile, param, binWidth, forceStyle=NULL, si=NULL,
                              keepStrand="*", binSummarization="max", ...){
   # get reads/fragments from chunk
-  bam <- .bam2bwGetReads(bamfile, param=param, ...)
+  bam <- .bam2bwGetReads(bamfile, param=param, si=si, ...)
   if(keepStrand != "*") bam <- bam[which(strand(bam)==keepStrand)]
   if(!is.null(forceStyle)) seqlevelsStyle(bam) <- forceStyle
   # compute coverages
+  return(coverage(bam))
   co <- tileRle(coverage(bam), bs=binWidth, method=binSummarization)
   # save library size for later normalization
   metadata(co)$reads <- metadata(bam)$reads
@@ -353,6 +354,7 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
     seqinfo(bam) <- si
   }
   bam <- trim(bam)
+  bam <- bam[width(bam)>0]
   metadata(bam)$reads <- ls
   bam
 }
