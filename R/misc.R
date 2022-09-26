@@ -241,9 +241,10 @@ head(paste(missingLvls, collapse=", "), 3))
 # checks that the regions are compatible with the bw/bam files
 .checkRegions <- function(tracks, regions, verbose=TRUE, trimOOR=FALSE){
   if( (is.list(tracks) || is.character(tracks)) && length(tracks)>1 ){
-    r2 <- lapply(tracks, regions=regions, verbose=FALSE, FUN=.checkRegions)
-    r2 <- Reduce(intersect, r2)
-    r2 <- regions[overlapsAny(regions, r2, type="equal")]
+    isIn <- do.call(cbind, lapply(r2, FUN=function(x){
+      overlapsAny(e,x,type="equal")
+    }))
+    r2 <- regions[which(rowSums(isIn)==ncol(isIn))]
   }else{
     if(is.list(tracks)) tracks <- tracks[[1]]
     if(epiwraps:::.parseFiletypeFromName(tracks)=="bw"){
@@ -255,6 +256,7 @@ head(paste(missingLvls, collapse=", "), 3))
     }else{
       return(regions)
     }
+    if(all(is.na(sl))) return(regions)
     r2 <- keepSeqlevels(regions, intersect(seqlevels(regions), names(sl)),
                         pruning.mode="coarse")
     if(any(is.na(seqlengths(regions))))
