@@ -241,7 +241,7 @@ head(paste(missingLvls, collapse=", "), 3))
 # checks that the regions are compatible with the bw/bam files
 .checkRegions <- function(tracks, regions, verbose=TRUE, trimOOR=FALSE){
   if( (is.list(tracks) || is.character(tracks)) && length(tracks)>1 ){
-    isIn <- do.call(cbind, lapply(r2, FUN=function(x){
+    isIn <- do.call(cbind, lapply(regions, FUN=function(x){
       overlapsAny(e,x,type="equal")
     }))
     r2 <- regions[which(rowSums(isIn)==ncol(isIn))]
