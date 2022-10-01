@@ -316,7 +316,6 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
   if(keepStrand != "*") bam <- bam[which(strand(bam)==keepStrand)]
   if(!is.null(forceStyle)) seqlevelsStyle(bam) <- forceStyle
   # compute coverages
-  return(coverage(bam))
   co <- tileRle(coverage(bam), bs=binWidth, method=binSummarization)
   # save library size for later normalization
   metadata(co)$reads <- metadata(bam)$reads
