@@ -14,8 +14,6 @@
 #' @return A list of processed fragment `GRanges`, including nucleosome-free,
 #'   mono-nucleosome, and ambiguous fragments.
 #' @export
-#'
-#' @examples
 refragment <- function(bam, minSize=20L, nfr=120L, nuc=c(145,190), binSize=10L,
                        verbose=TRUE, BPPARAM=BiocParallel::SerialParam()){
   if(is(bam, "GRanges")){
