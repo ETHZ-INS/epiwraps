@@ -15,7 +15,7 @@
 #'  \code{\link[GenomicRanges]{findOverlaps-methods}}).
 #' @param ... Further plotting arguments passed to \code{\link[UpSetR]{upset}}.
 #'
-#' @return
+#' @return A plot
 #' @export
 #' @importFrom UpSetR upset fromList
 #' @importFrom GenomicRanges reduce disjoin 

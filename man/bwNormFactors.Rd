@@ -38,6 +38,8 @@ MAnorm}
 A vector of normalization factors, or for the 'S3norm' and '2cLinear'
   methods, a numeric matrix with a number of rows equal to the length 
   of `x`, and two columns indicating the alpha and beta terms.
+
+A vector of normalization factors
 }
 \description{
 Estimates normalization factors for a set of bigwig files.

@@ -185,7 +185,7 @@ rescaleSignalMatrices <- function(ml, scaleFactors, applyLinearly=NULL){
 #' normalize both simultaneously. S3norm does this in a log-linear fashion (as 
 #' in the publication), while '2cLinear' does it on the original scale.
 #'
-#' @return
+#' @return A vector of normalization factors
 #' @export
 bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
                           useSeqLevels=NULL, 

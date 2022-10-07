@@ -34,6 +34,9 @@ compared sets of regions is unstranded.}
 
 \item{...}{Further plotting arguments passed to \code{\link[UpSetR]{upset}}.}
 }
+\value{
+A plot
+}
 \description{
 A wrapper around \code{\link[UpSetR]{upset}} for GRanges.
 }
