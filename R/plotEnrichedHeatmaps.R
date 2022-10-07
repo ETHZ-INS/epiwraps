@@ -36,6 +36,7 @@
 #'   colors for each cluster. Can also be a `gpar` object.
 #' @param mean_scale_side The side on which to show the y-axis scale of the mean
 #'   plots. Either "both" (default), "left", "right", or "none".
+#' @param  Logical; whether to apply the trimming also to the mean plot.
 #' @param use_raster Logical; whether to render the heatmap body as a raster 
 #'   image. Turned on by default if any of the matrix dimensions is greater than
 #'   2000.
@@ -83,7 +84,8 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
                                  scale_rows=FALSE, top_annotation=TRUE, 
                                  left_annotation=NULL, right_annotation=NULL,
                                  mean_color="red", mean_scale_side=NULL, 
-                                 show_heatmap_legend=TRUE, use_raster=NULL, ...){
+                                 mean_trim=TRUE, show_heatmap_legend=TRUE,
+                                 use_raster=NULL, ...){
   hasMean <- isTRUE(top_annotation) || is(top_annotation, "list") || 
     (is.character(top_annotation) && "mean" %in% top_annotation)
   meanPars <- list()
@@ -137,6 +139,12 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
       mean_gp <- gpar(col=mean_color[levels(row_split)])
     }
   }
+  
+  col_fun <- .getColFun(ml, trim, colors=colors)
+  if(isTRUE(mean_trim)){
+    # apply the trimming directly to the data, rather than the scale
+    ml <- .applyTrimming(ml, trim)
+  }
   ymin <- min(c(0,unlist(lapply(ml,FUN=min))))
   ymax <- max(unlist(lapply(ml, FUN=function(x){
     max(unlist(lapply(split(seq_along(rs), rs), FUN=function(i){
@@ -144,7 +152,6 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
       max(colMeans(x2)+matrixStats::colSds(x2)/sqrt(nrow(x2)))
     })))
   })))
-  col_fun <- .getColFun(ml, trim, colors=colors)
   if(isTRUE(cluster_rows)){
     cluster_rows <- hclust(dist(do.call(cbind, ml)))
   }else if(is.null(row_order)){
@@ -224,8 +231,15 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 }
 
 .getColFun <- function(ml, trim, colors){
-  stopifnot(is.numeric(trim) & all(trim>=0) & all(trim<=1))
   stopifnot(length(colors)>1)
+  r <- .getTrimPoints(ml, trim)
+  breaks <- seq(from=r[[1]], to=r[[2]], length.out=length(colors))
+  circlize::colorRamp2(breaks, colors)
+}
+
+# get range beyond which to trim
+.getTrimPoints <- function(ml, trim){
+  stopifnot(is.numeric(trim) & all(trim>=0) & all(trim<=1))
   if(length(trim)==1) trim <- c(0,trim)
   trim <- sort(trim)
   r <- c( min(unlist(lapply(ml,prob=trim[1],na.rm=TRUE,FUN=quantile))),
@@ -235,8 +249,18 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
     warning("There appears to be no signal in the data!")
     r[[2]] <- r[[1]]+1
   }
-  breaks <- seq(from=r[[1]], to=r[[2]], length.out=length(colors))
-  circlize::colorRamp2(breaks, colors)
+  r
+}
+
+# trim values beyond trim range in signal matrices
+.applyTrimming <- function(ml, trim){
+  br <- .getTrimPoints(ml, trim)
+  ml <- lapply(ml, FUN=function(x){
+    x[which(x>br[2])] <- br[2]
+    x[which(x<br[1])] <- br[1]
+    x
+  })
+  ml
 }
 
 .prepAnnoEnrich <- function(par, isFirst, isLast, ...,

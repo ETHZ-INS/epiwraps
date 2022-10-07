@@ -4,13 +4,16 @@
 #'
 #' @param ml A named list of matrices as produced by \code{\link{signal2Matrix}}
 #' @param fun An optional custom aggregation function (or named list thereof).
+#' @param trim The quantile above which to trim values. If a numeric vector of 
+#'   length 2, will be used as lower and upper quantiles beyond which to trim.
 #'
 #' @return A data.frame.
 #' @export
 #' @importFrom matrixStats colMedians
-meltSignals <- function(ml, fun=NULL, splitBy=NULL){
+meltSignals <- function(ml, fun=NULL, splitBy=NULL, trim=0.98){
   stopifnot(is.list(ml))
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
+  ml <- .applyTrimming(ml, trim)
   if(!is.null(splitBy)){
     stopifnot(length(splitBy)==nrow(ml[[1]]))
     return(dplyr::bind_rows(lapply(split(seq_along(splitBy), splitBy),

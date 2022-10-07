@@ -22,6 +22,7 @@ plotEnrichedHeatmaps(
   right_annotation = NULL,
   mean_color = "red",
   mean_scale_side = NULL,
+  mean_trim = TRUE,
   show_heatmap_legend = TRUE,
   use_raster = NULL,
   ...
@@ -83,6 +84,8 @@ image. Turned on by default if any of the matrix dimensions is greater than
 2000.}
 
 \item{...}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}}
+
+\item{Logical;}{whether to apply the trimming also to the mean plot.}
 }
 \value{
 A HeatmapList object
