@@ -277,11 +277,9 @@ TSSenrichment <- function(tracks, ensdb, useSeqLevels=c("1","2")){
     txp <- ensdb
   }else{
     txp <- promoters(transcripts(ensdb), upstream = 1000, downstream = 1000)
-    if(!is.null(useSeqLevels)){
-      txp <- txp[which(seqnames(txp) %in% useSeqLevels)]
+    if(!is.null(useSeqLevels))
       txp <- keepSeqlevels(txp, intersect(useSeqLevels, seqlevels(txp)),
                            pruning.mode="coarse")
-    }
   }
   txp <- granges(txp)
   txp <- txp[!duplicated(txp)]
