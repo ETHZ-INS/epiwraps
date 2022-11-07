@@ -248,7 +248,7 @@ fragSizesDist <- function(x, what=10000, flags=scanBamFlag(isProperPair=TRUE),
 #' @param tracks A (named) vector of paths to bigwig files.
 #' @param ensdb An `ensembldb` object. Alternatively, a GRanges object of 
 #'   regions centered around TSS.
-#' @param useSeqLevels Seqlevels to use. Set to NULL to use all.
+#' @param useSeqLevels Optional seqlevels to use. If NULL, all are used.
 #'
 #' @return A list with the slots `score` (numeric vector of TSS enrichment 
 #'   scores per sample) and `data` (per bin enrichment, for plotting)
@@ -266,7 +266,7 @@ fragSizesDist <- function(x, what=10000, flags=scanBamFlag(isProperPair=TRUE),
 #' en$score
 #' ## you can also plot using something like this:
 #' ## ggplot(en$data, aes(position, enrichment, colour=sample)) + geom_line()
-TSSenrichment <- function(tracks, ensdb, useSeqLevels=c("1","2")){
+TSSenrichment <- function(tracks, ensdb, useSeqLevels=NULL){
   stopifnot(is(ensdb, "EnsDb") || is(ensdb, "GRanges"))
   if(!is(tracks, "character") || !all(file.exists(tracks)) ||
      !all(.parseFiletypeFromName(tracks)=="bw"))
@@ -277,19 +277,20 @@ TSSenrichment <- function(tracks, ensdb, useSeqLevels=c("1","2")){
     txp <- ensdb
   }else{
     txp <- promoters(transcripts(ensdb), upstream = 1000, downstream = 1000)
-    if(!is.null(useSeqLevels))
-      txp <- keepSeqlevels(txp, intersect(useSeqLevels, seqlevels(txp)),
-                           pruning.mode="coarse")
   }
+  if(!is.null(useSeqLevels))
+    txp <- keepSeqlevels(txp, intersect(useSeqLevels, seqlevels(txp)),
+                         pruning.mode="coarse")
   txp <- granges(txp)
   txp <- txp[!duplicated(txp)]
-  if(length(txp)<100) stop("Insufficient TSS found, are you sure you are ",
-                           "providing adequate seqlevels?")
+  if(length(txp)==0)
+    stop("No TSS found. Are you sure you are providing adequate seqlevels?")
   sm <- signal2Matrix(tracks, txp, extend = 1000L, w = 100L)
   df <- dplyr::bind_rows(lapply(sm, FUN=function(x){
     x <- unclass(x)
     nf <- rowMeans(x[,c(1,ncol(x))])
     w <- which(nf>0)
+    if(length(w)<20) warning("Too few TSS for adequate estimate.")
     data.frame(position=round(seq(from=-1000L, to=1000L, length.out=ncol(x))),
                enrichment=colMeans((x[w,])/nf[w]))
   }), .id="sample")

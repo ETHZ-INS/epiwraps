@@ -4,7 +4,7 @@
 \alias{TSSenrichment}
 \title{TSSenrichment}
 \usage{
-TSSenrichment(tracks, ensdb, useSeqLevels = c("1", "2"))
+TSSenrichment(tracks, ensdb, useSeqLevels = NULL)
 }
 \arguments{
 \item{tracks}{A (named) vector of paths to bigwig files.}
@@ -12,7 +12,7 @@ TSSenrichment(tracks, ensdb, useSeqLevels = c("1", "2"))
 \item{ensdb}{An `ensembldb` object. Alternatively, a GRanges object of 
 regions centered around TSS.}
 
-\item{useSeqLevels}{Seqlevels to use. Set to NULL to use all.}
+\item{useSeqLevels}{Optional seqlevels to use. If NULL, all are used.}
 }
 \value{
 A list with the slots `score` (numeric vector of TSS enrichment 
