@@ -140,11 +140,13 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
     }
   }
   
-  col_fun <- .getColFun(ml, trim, colors=colors)
+  ml_trimmed <- .applyTrimming(ml, trim)
   if(isTRUE(mean_trim)){
-    # apply the trimming directly to the data, rather than the scale
-    ml <- .applyTrimming(ml, trim)
-  }
+    ml <- ml_trimmed # don't just trim the scale
+    trim <- 1
+  } 
+  col_fun <- .getColFun(ml, trim, colors=colors)
+
   ymin <- min(c(0,unlist(lapply(ml,FUN=min))))
   ymax <- max(unlist(lapply(ml, FUN=function(x){
     max(unlist(lapply(split(seq_along(rs), rs), FUN=function(i){
@@ -153,9 +155,9 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
     })))
   })))
   if(isTRUE(cluster_rows)){
-    cluster_rows <- hclust(dist(do.call(cbind, ml)))
+    cluster_rows <- hclust(dist(do.call(cbind, ml_trimmed)))
   }else if(is.null(row_order)){
-    row_order <- order(-rowMeans(do.call(cbind, lapply(ml, enriched_score))))
+    row_order <- order(-rowMeans(do.call(cbind, lapply(ml_trimmed, enriched_score))))
   }
   a <- attributes(ml[[1]])
   neededAxisLabs <- ifelse(length(a$target_index)==0,3,4)
@@ -254,6 +256,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 
 # trim values beyond trim range in signal matrices
 .applyTrimming <- function(ml, trim){
+  if(!is.list(ml)) ml <- list(ml)
   br <- .getTrimPoints(ml, trim)
   ml <- lapply(ml, FUN=function(x){
     x[which(x>br[2])] <- br[2]
