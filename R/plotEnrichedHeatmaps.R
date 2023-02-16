@@ -88,6 +88,12 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
                                  use_raster=NULL, ...){
   hasMean <- isTRUE(top_annotation) || is(top_annotation, "list") || 
     (is.character(top_annotation) && "mean" %in% top_annotation)
+  # avoid inconsistencies when resizing the matrix
+  if(hasMean & isFALSE(mean_trim) && 
+     !is.null(rrm <- list(...)[["raster_resize_mat"]]) && rrm){
+    warning("Enforcing mean_trim=TRUE due to the usage of 'raster_resize_mat'")
+    mean_trim <- TRUE
+  }
   meanPars <- list()
   if(is(top_annotation, "list")){
     meanPars <- top_annotation
@@ -141,6 +147,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   }
   
   ml_trimmed <- .applyTrimming(ml, trim)
+
   if(isTRUE(mean_trim)){
     ml <- ml_trimmed # don't just trim the scale
     trim <- 1
