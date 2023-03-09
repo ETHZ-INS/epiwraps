@@ -156,7 +156,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
                      keepStrand=ifelse(paired && strand!="*",strand,"*"),
                      binSummarization=binSummarization, si=seqs)
   })
-
+  
   if(is.null(bgbam)){
     if(verbose) message("Writing bigwig...")
     res <- .bam2bwScaleCovList(res, scaling=scaling, log1p=log1p)
@@ -337,7 +337,7 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
     bam <- as(readGAlignments(bamfile, param=param), "GRanges")
     ls <- length(bam)
     if(type %in% c("full","center") && extend!=0L)
-      bam <- resize(bam, width(bam)+as.integer(extend), use.names=FALSE)
+      bam <- suppressWarnings(trim(resize(bam, width(bam)+as.integer(extend), use.names=FALSE)))
   }
   if(!is.null(exclude)) bam <- bam[!overlapsAny(bam,exclude)]
   bam <- .doShift(bam, shift)
