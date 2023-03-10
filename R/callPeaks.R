@@ -45,6 +45,7 @@
 #' 
 #' @importFrom IRanges Views viewMaxs viewMeans slice viewRangeMaxs relist IntegerList
 #' @importFrom stats setNames pnorm ppois optim density
+#' @importFrom S4Vectors mean.Rle
 #' @export
 callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"), 
                       nullH=c("local","global.nb","global.bin"), ### TO IMPLEMENT
@@ -193,7 +194,7 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
     }
     covtm <- .covTrimmedMean(ctrl)
     nf <- covtm/.covTrimmedMean(co)
-    fc <- nf*mean(r$cov)/unlist(viewMeans(Views(ctrl, r)))
+    fc <- nf*S4Vectors::mean.Rle(r$cov)/unlist(viewMeans(Views(ctrl, r)))
     r <- r[which(fc>minFoldChange)]
   }
   if(breakPeaks){
@@ -231,8 +232,13 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
     r$wNeg <- r$wPos <- r$pos <- r$neg <- NULL
   }
   r$cov <- NULL
-  if(!is.null(ctrl)){
+  if(length(r)==0){
+    r$bg <- NA_integer_
+  }else if(!is.null(ctrl)){
     if(verbose) message("Computing neighborhood background")
+    print(nf)
+    print(bgWindow)
+    print(r)
     r$bg <- .getLocalBackground(ctrl, gr=r, windows=bgWindow)/nf
     r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/(pseudoCount+r$bg))))
     r <- r[which(r$log10FE > as.integer(floor(100*log10(minFoldChange))))]
