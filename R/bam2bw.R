@@ -364,9 +364,9 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
   stopifnot(length(shift) %in% 1:2)
   if(all(shift==0)) return(x)
   if(length(shift)>1){
-    bam[strand(x)=="+"] <- shift(x[strand(x)=="+"], shift=shift[1], 
+    x[strand(x)=="+"] <- shift(x[strand(x)=="+"], shift=shift[1], 
                                    use.names=FALSE)
-    bam[strand(x)=="-"] <- shift(x[strand(x)=="-"], shift=shift[2], 
+    x[strand(x)=="-"] <- shift(x[strand(x)=="-"], shift=shift[2], 
                                    use.names=FALSE)
   }else{
     x <- shift(x, shift=shift, use.names=FALSE)
