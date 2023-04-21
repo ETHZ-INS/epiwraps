@@ -398,7 +398,8 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
 tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE){
   bs <- as.integer(bs)
   stopifnot(bs>=1L)
-  if(bs<=min(min(runLength(x)))) return(x)
+  min(min(runLength(x)[lengths(runLength(x))>0]))
+  if(bs<=min(min())) return(x)
   method <- match.arg(method)
   if(is(x,"RleList"))
     return(as(lapply(x, bs=bs, method=method, FUN=tileRle), "RleList"))
