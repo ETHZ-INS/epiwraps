@@ -81,19 +81,25 @@ mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median")){
 #' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
 #' @param method Either "linear", or a normalization method, passed to 
 #'   \code{\link[edgeR]{calcNormFactors}}.
+#' @param trim Quantiles trimmed at each extreme (for linear normalization)
 #'
 #' @return A renormalized list of signal matrices.
 #' @export
 #' @importFrom edgeR calcNormFactors
-renormalizeBorders <- function(ml, method="linear", 
-                               nWindows=max(floor(ncol(ml[[1]])/20),1)){
+renormalizeBorders <- function(ml, method="linear", trim=NULL,
+                               nWindows=max(floor(ncol(ml[[1]])/10),1)){
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
   b <- do.call(cbind, lapply(ml, FUN=function(x){
     as.numeric(cbind(x[,seq_len(nWindows)],
                      x[,seq(from=ncol(x)-nWindows+1, to=ncol(x))]))
   }))
+  if(is.null(trim)) trim <- (sum(b!=0)/length(b))/10
   if(method=="linear"){
-    nf <- apply(b, 2, trim=0.01, FUN=mean)
+    nf <- apply(b, 2, FUN=function(x){
+      y <- mean(x, trim=trim)
+      if(y==0) y <- mean(x)
+      y
+    })
     nf <- nf/median(nf)
   }else{
     nf <- calcNormFactors(b, method=method, lib.size=rep(1,ncol(b)))
@@ -190,7 +196,7 @@ rescaleSignalMatrices <- function(ml, scaleFactors, applyLinearly=NULL){
 #'
 #' @return A vector of normalization factors
 #' @export
-bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
+bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.01,
                           useSeqLevels=NULL, 
                           method=c("background","SES","MAnorm","S3norm",
                                    "2cLinear")){
@@ -228,7 +234,13 @@ bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
     warning("Some samples have less than 50 non-zero windows. Consider ",
             "increasing the window size or (better) the number of windows.")
   if(method %in% c("background","SES")){
-    nf <- apply(wc, 2, trim=trim, na.rm=TRUE, FUN=mean)
+    nf <- apply(wc, 2, FUN=function(x){
+      if(sum(x!=0)<10)
+        warning("Too few non-zero windows, please increase `nwind`.")
+        y <- mean(x, trim=trim, na.rm=TRUE)
+        if(y==0) y <- mean(x, na.rm=TRUE)
+        y
+      })
     return(setNames(median(nf, na.rm=TRUE)/nf, names(x)))
   }
 

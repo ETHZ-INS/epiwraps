@@ -9,7 +9,7 @@ bwNormFactors(
   wsize = 10L,
   nwind = 20000L,
   peaks = NULL,
-  trim = 0.05,
+  trim = 0.01,
   useSeqLevels = NULL,
   method = c("background", "SES", "MAnorm", "S3norm", "2cLinear")
 )

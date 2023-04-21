@@ -232,6 +232,7 @@ fragSizesDist <- function(x, what=10000, flags=scanBamFlag(isProperPair=TRUE),
                   length=unlist(flen), row.names=NULL)
   if(!returnPlot) return(d)
   ggplot(d, aes(length, colour=sample)) + geom_density() + 
+    scale_x_continuous(breaks=c(100*0:5,750,1000), limits=c(0,1000)) +
     xlab("Fragment length")
 }
 
