@@ -233,12 +233,9 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
   }
   r$cov <- NULL
   if(length(r)==0){
-    r$bg <- NA_integer_
+    r$bg <- vector(mode = "integer", length = 0L)
   }else if(!is.null(ctrl)){
     if(verbose) message("Computing neighborhood background")
-    print(nf)
-    print(bgWindow)
-    print(r)
     r$bg <- .getLocalBackground(ctrl, gr=r, windows=bgWindow)/nf
     r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/(pseudoCount+r$bg))))
     r <- r[which(r$log10FE > as.integer(floor(100*log10(minFoldChange))))]
