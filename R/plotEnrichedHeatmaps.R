@@ -251,13 +251,19 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   stopifnot(is.numeric(trim) & all(trim>=0) & all(trim<=1))
   if(length(trim)==1) trim <- c(0,trim)
   trim <- sort(trim)
-  r <- c( min(unlist(lapply(ml,prob=trim[1],na.rm=TRUE,FUN=quantile))),
-          max(unlist(lapply(ml,prob=trim[2],na.rm=TRUE,FUN=quantile))) )
-  if(r[[1]]==r[[2]]) r <- range(unlist(lapply(ml,range)))
-  if(r[[1]]==r[[2]]){
-    warning("There appears to be no signal in the data!")
-    r[[2]] <- r[[1]]+1
-  }
+  tryCatch({
+    r <- c( min(unlist(lapply(ml,prob=trim[1],na.rm=TRUE,FUN=quantile))),
+            max(unlist(lapply(ml,prob=trim[2],na.rm=TRUE,FUN=quantile))) )
+    if(r[[1]]==r[[2]]) r <- range(unlist(lapply(ml,range)))
+    if(r[[1]]==r[[2]]){
+      warning("There appears to be no signal in the data!")
+      r[[2]] <- r[[1]]+1
+    }
+  }, error=function(e){
+    stop("Unable to apply trimming - this typically happens when the input ",
+         "contains less non-zero values than the trimmed range.\nDouble-check ",
+         "your object or try to reduce the trimming.")
+  })
   r
 }
 
