@@ -120,7 +120,7 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
       }
     }
     if(!is.list(files)) files <- as.list(files)
-    if(any(lengths(fm)>1 && sapply(fm, FUN=function(x) any(x=="bam"))))
+    if(any(lengths(fm)>1 & sapply(fm, FUN=function(x) any(x=="bam"))))
       warning("It is not advised to overlay/aggregate signals from bam files, ",
               "as these are not normalized.")
   }
