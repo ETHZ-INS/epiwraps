@@ -4,8 +4,9 @@
       alpha, maxColorValue = 255)
 }
 
-.parseFiletypeFromName <- function(x, stopOnUnrecognized=TRUE, grOk=FALSE,
-                                   trackOk=FALSE){
+.parseFiletypeFromName <- function(x, stopOnUnrecognized=TRUE, mustExist=TRUE,
+                                   grOk=FALSE, trackOk=FALSE,
+                                   requireUnique=FALSE){
   if(is(x,"GRanges")){
     if(grOk) return("GRanges")
     stop("The argument should be a filepath!")
@@ -14,11 +15,26 @@
     if(trackOk) return("track")
     stop("The argument should be a filepath!")
   }
-  if(length(x)>1) return(sapply(x, .parseFiletypeFromName))
+  if(length(x)>1){
+    y <- vapply(x, stopOnUnrecognized=stopOnUnrecognized, mustExist=FALSE,
+                grOk=grOk, trackOk=trackOk, FUN.VALUE=character(1), 
+                FUN=.parseFiletypeFromName)
+    if(requireUnique && length(y <- unique(y))>1)
+      stop("All inputs files should be of the same format!")
+    if(mustExist){
+      w <- which(y %in% c("bam","bw","bed"))
+      if(any(fe <- !file.exists(x[w])))
+        stop("The following filepath(s) appear(s) not to exist:\n",
+             paste(x[w[fe]], collapse="\n"))
+    }
+    return(y)
+  }
   if(grepl("\\.bigwig$|\\.bw$", x, ignore.case=TRUE)) return("bw")
   if(grepl("\\.bam$", x, ignore.case=TRUE)) return("bam")
   if(grepl("\\.bed$|\\.narrowpeak$|\\.broadpeak$|\\.gappedpeak$", x, 
            ignore.case=TRUE)) return("bed")
+  if(mustExist && !file.exists(x))
+    stop("The given filepath appears not to exist.")
   if(stopOnUnrecognized) stop("Format unrecongized for file\n",x)
   return(NULL)
 }
@@ -145,6 +161,8 @@ importBedlike <- function(x, ...){
   y <- try(rtracklayer::import.bed(x), silent=TRUE)
   if(is(y,"try-error"))
     y <- try(rtracklayer::import.bed15(x), silent=TRUE)
+  if(is(y,"try-error"))
+    y <- try(rtracklayer::import.bed(x, format="narrowPeak"), silent=TRUE)
   if(!is(y,"try-error")) return(y)
   y <- as.data.frame(data.table::fread(x, ...))
   strInfo <- NULL
