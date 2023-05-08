@@ -221,9 +221,9 @@ clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
   }
   m <- do.call(cbind, ml)
   res <- lapply(setNames(k,k), FUN=function(x){
-    cl <- kmeans(dist(m), centers=k)
+    cl <- kmeans(dist(m), centers=x)
     ve <- round(100*sum(cl$betweenss)/sum(c(cl$withinss,cl$betweenss)))
-    list(cl=factor(as.character(cl$cluster),as.character(seq_len(k))), ve=ve)
+    list(cl=factor(as.character(cl$cluster),as.character(seq_len(x))), ve=ve)
   })
   if(length(res)==1){
     message("  ~", res[[1]]$ve, "% of the variance explained by clusters")
