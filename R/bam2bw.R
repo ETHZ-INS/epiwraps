@@ -21,6 +21,11 @@
 #'   start (count read/fragment start locations), end, center, or 'ends' (both
 #'   ends of the read/fragment).
 #' @param strand Strand(s) to capture (any by default).
+#' @param strandMode The strandMode of the data (whether the strand is given by
+#'   the first or second mate, which depends on the library prep protocol). See
+#'   \link[GenomicAlignments]{strandMode} for more information. This parameter 
+#'   has no effect unless one of the `strand`, `extend` parameters or a 
+#'   strand-specific `shift` are used.
 #' @param shift Shift (from 3' to 5') by which reads/fragments will be shifted.
 #'   If `shift` is an integer vector of length 2, the first value will represent
 #'   the shift for the positive strand, and the second for the negative strand.
@@ -97,10 +102,10 @@
 #' # create bigwig
 #' bam2bw(bam, "output.bw")
 bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
-                   binWidth=20L, extend=0L, scaling=TRUE, 
+                   binWidth=20L, extend=0L, scaling=TRUE, shift=0L,
                    type=c("full","center","start","end","ends"),
                    compType=c("log2ratio", "subtract", "log10ppois", "log10FE"),
-                   strand=c("*","+","-"), shift=0L, log1p=FALSE, exclude=NULL,
+                   strand=c("*","+","-"), strandMode=1, log1p=FALSE, exclude=NULL,
                    includeDuplicates=TRUE, includeSecondary=FALSE, minMapq=1L, 
                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
                    splitByChr=3, pseudocount=1L, localBackground=1L,
@@ -154,7 +159,8 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
                      minFragL=minFragLength, maxFragL=maxFragLength, 
                      forceStyle=forceSeqlevelsStyle, exclude=exclude,
                      keepStrand=ifelse(paired && strand!="*",strand,"*"),
-                     binSummarization=binSummarization, si=seqs)
+                     binSummarization=binSummarization, si=seqs,
+                     strandMode=strandMode)
   })
   
   if(is.null(bgbam)){
@@ -176,7 +182,8 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
                      minFragL=minFragLength, maxFragL=maxFragLength, 
                      forceStyle=forceSeqlevelsStyle, exclude=exclude,
                      keepStrand=ifelse(paired && strand!="*",strand,"*"),
-                     binSummarization=binSummarization, si=seqs)
+                     binSummarization=binSummarization, si=seqs,
+                     strandMode=strandMode)
   })
 
   if(verbose) message("Computing relative signal...")
@@ -327,9 +334,10 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
 
 # reads reads from bam file.
 .bam2bwGetReads <- function(bamfile, paired, param, type, extend, shift=0L,
-                            minFragL, maxFragL, si=NULL, exclude=NULL){
+                            minFragL, maxFragL, si=NULL, exclude=NULL, 
+                            strandMode=0){
   if(paired){
-    bam <- readGAlignmentPairs(bamfile, param=param)
+    bam <- readGAlignmentPairs(bamfile, param=param, strandMode=strandMode)
     bam <- as(bam[isProperPair(bam)], "GRanges")
     ls <- length(bam)
     bam <- bam[width(bam)>=minFragL & width(bam)<=maxFragL]
@@ -399,7 +407,7 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
   bs <- as.integer(bs)
   stopifnot(bs>=1L)
   min(min(runLength(x)[lengths(runLength(x))>0]))
-  if(bs<=min(min())) return(x)
+  if(bs<=min(min(runLength(x)[lengths(runLength(x))>0]))) return(x)
   method <- match.arg(method)
   if(is(x,"RleList"))
     return(as(lapply(x, bs=bs, method=method, FUN=tileRle), "RleList"))
