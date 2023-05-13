@@ -210,7 +210,7 @@ bwNormFactors <- function(x, ...){
           x1=x1, x2=x2, bg1=bg1, bg2=bg2, fn=cost)$par
   })
   
-  nf <- rbind(c(ifelse(method=="S3norm",1,0),1), do.call(rbind, nf))
+  nf <- do.call(rbind, nf)
   row.names(nf) <- names(x)
   colnames(nf) <- letters[1:2]
   attributes(nf)$applyLinearly <- method=="2cLinear"
