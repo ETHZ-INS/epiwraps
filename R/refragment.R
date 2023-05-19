@@ -24,7 +24,7 @@ refragment <- function(bam, minSize=20L, nfr=120L, nuc=c(145,190), binSize=10L,
   }
   nFrags <- length(a)
   if(verbose) message("Computing breaks coverages")
-  co <- tileRle(coverage(epiwraps:::.align2cuts(a)), bs=as.integer(binSize))
+  co <- tileRle(coverage(.align2cuts(a)), bs=as.integer(binSize))
   
   wi <- width(a)
   

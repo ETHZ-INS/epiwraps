@@ -269,10 +269,9 @@ head(paste(missingLvls, collapse=", "), 3))
     if(is.list(tracks)) tracks <- tracks[[1]]
     if(is(tracks, "GRanges")){
       sl <- seqlengths(tracks)
-    }
-    else if(epiwraps:::.parseFiletypeFromName(tracks)=="bw"){
+    }else if(.parseFiletypeFromName(tracks)=="bw"){
       sl <- seqlengths(BigWigFile(tracks))
-    }else if(epiwraps:::.parseFiletypeFromName(tracks)=="bam"){
+    }else if(.parseFiletypeFromName(tracks)=="bam"){
       sl <- seqlengths(BamFile(tracks))
     }else{
       return(regions)
