@@ -5,7 +5,7 @@
 }
 
 .parseFiletypeFromName <- function(x, stopOnUnrecognized=TRUE, mustExist=TRUE,
-                                   grOk=FALSE, trackOk=FALSE,
+                                   grOk=FALSE, trackOk=FALSE, covOk=FALSE,
                                    requireUnique=FALSE){
   if(is(x,"GRanges")){
     if(grOk) return("GRanges")
@@ -13,6 +13,10 @@
   }
   if(inherits(x, "GdObject")){
     if(trackOk) return("track")
+    stop("The argument should be a filepath!")
+  }
+  if(is(x,"RleList")){
+    if(covOk) return("cov")
     stop("The argument should be a filepath!")
   }
   if(length(x)>1){

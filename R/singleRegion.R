@@ -99,7 +99,8 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
                   region[[3]]+extend[2])
   
   # check file formats (from names)
-  fm <- lapply(files, .parseFiletypeFromName, grOk=TRUE, trackOk=TRUE)
+  fm <- lapply(files, .parseFiletypeFromName, grOk=TRUE, trackOk=TRUE, 
+               covOk=TRUE)
   if(length(files)>0){
     if(any(lengths(lapply(fm,unique))!=1))
       stop("Cannot aggregate files of different formats!")
@@ -124,6 +125,20 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
       warning("It is not advised to overlay/aggregate signals from bam files, ",
               "as these are not normalized.")
   }
+  
+  # converting RleLists to temporary bigwigs
+  if(length(w <- which(fm=="cov"))>0 && 
+     any(sapply(files[w], FUN=object.size)>10^6))
+      message("Writing coverage objects to temporary bigwigs ",
+              "(this might be suboptimal for large objects)...")
+  for(i in w){
+    stopifnot(!is.list(files[[i]]))
+    fn <- tempfile("cov",fileext=".bw")
+    rtracklayer::export.bw(files[[i]], fn)
+    fm[i] <- "bw"
+    files[i] <- fn
+  }
+  
   # Handling the gene track
   gt <- NULL
   if(!is.null(ensdb) && !is(transcripts, "GeneRegionTrack") && 
@@ -246,8 +261,7 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
 
 #' signalsAcrossSamples
 #' 
-#' Obtain a matrix of score/coverages across a region for a list of BigWig files
-#' or GRanges.
+#' Obtain a matrix of score/coverages across a region for a list of BigWig files.
 #' 
 #' @param files A named list of paths to biwgig files or of `GRanges` objects
 #' with a `score` column.
