@@ -12,10 +12,11 @@ bam2bw(
   binWidth = 20L,
   extend = 0L,
   scaling = TRUE,
+  shift = 0L,
   type = c("full", "center", "start", "end", "ends"),
   compType = c("log2ratio", "subtract", "log10ppois", "log10FE"),
   strand = c("*", "+", "-"),
-  shift = 0L,
+  strandMode = 1,
   log1p = FALSE,
   exclude = NULL,
   includeDuplicates = TRUE,
@@ -57,6 +58,10 @@ scaling), or a numeric value by which the signal will be divided. If
 `bgbam` is given and `scaling=TRUE`, the background will be scaled to the
 main signal.}
 
+\item{shift}{Shift (from 3' to 5') by which reads/fragments will be shifted.
+If `shift` is an integer vector of length 2, the first value will represent
+the shift for the positive strand, and the second for the negative strand.}
+
 \item{type}{Type of the coverage to compile. Either full (full read/fragment),
 start (count read/fragment start locations), end, center, or 'ends' (both
 ends of the read/fragment).}
@@ -70,9 +75,11 @@ capped (see `zeroCap`).}
 
 \item{strand}{Strand(s) to capture (any by default).}
 
-\item{shift}{Shift (from 3' to 5') by which reads/fragments will be shifted.
-If `shift` is an integer vector of length 2, the first value will represent
-the shift for the positive strand, and the second for the negative strand.}
+\item{strandMode}{The strandMode of the data (whether the strand is given by
+the first or second mate, which depends on the library prep protocol). See
+\link[GenomicAlignments]{strandMode} for more information. This parameter 
+has no effect unless one of the `strand`, `extend` parameters or a 
+strand-specific `shift` are used.}
 
 \item{log1p}{Whether to log-transform (`log(x+1)`) the (scaled) signal.
 Ignored when the signal is relative to a background.}

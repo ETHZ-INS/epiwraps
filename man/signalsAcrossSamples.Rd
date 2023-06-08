@@ -20,6 +20,5 @@ given stranded objects.}
 A disjoined `GRanges object` with the scores as metadata columns.
 }
 \description{
-Obtain a matrix of score/coverages across a region for a list of BigWig files
-or GRanges.
+Obtain a matrix of score/coverages across a region for a list of BigWig files.
 }
