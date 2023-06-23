@@ -188,27 +188,29 @@ clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
                                   by=rep(1L,length(ml)),
                                   assay=1L, trim=c(0.05,0.95), nstart=3, ...){
   if(is(ml, "SummarizedExperiment")) ml <- .ese2ml(ml, assay=assay)
-  ml <- .comparableMatrices(ml)
+  #ml <- .comparableMatrices(ml)
   k <- unique(as.integer(k))
   stopifnot(all(k>1 & k<nrow(ml[[1]])))
   use <- match.arg(use)
+  
+  .getMatCenter <- function(x){
+    a <- attributes(x)
+    if(length(ti <- a$target_index)==0)
+      ti <- c(max(a$upstream_index),min(a$downstream_index))
+    rowMeans(x[,ti,drop=FALSE])
+  }
+  
   ml <- lapply(ml, FUN=function(x){
     q <- quantile(x, trim)
     x[x>q[2]] <- q[2]
     x[x<q[1]] <- q[1]
-    x
+    if(scaleCols) x <- (x-mean(x))/sd(x)
+    switch(use,
+           full=x,
+           max=matrixStats::rowMaxs(x),
+           center=.getMatCenter(x),
+           enrich=enriched_score(x))
   })
-  if(scaleCols) ml <- lapply(ml, FUN=function(x) (x-mean(x))/sd(x))
-  ml <- switch(use,
-               full=ml,
-               max=lapply(ml, FUN=matrixStats::rowMaxs),
-               center=lapply(ml, FUN=function(x){
-                 a <- attributes(x)
-                 if(length(ti <- a$target_index)==0)
-                   ti <- c(max(a$upstream_index),min(a$downstream_index))
-                 rowMeans(x[,ti,drop=FALSE])
-               }),
-               enrich=lapply(ml, enriched_score))
   if(scaleRows){
     stopifnot(length(ml)==length(by))
     ml <- lapply(split(ml, by), FUN=function(x){
