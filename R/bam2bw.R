@@ -95,6 +95,7 @@
 #' @importFrom GenomeInfoDb Seqinfo seqinfo seqinfo<-
 #' @importFrom S4Vectors metadata metadata<- runmean Rle
 #' @importFrom IRanges RleList
+#' @importFrom pbapply pblapply
 #' 
 #' @examples 
 #' # get an example bam file
@@ -153,7 +154,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
   if(verbose) message("Reading in signal...")
   
   # obtain coverage (and total count)
-  res <- lapply(names(param), FUN=function(x){
+  res <- pblapply(names(param), FUN=function(x){
     .bam2bwReadChunk(bamfile, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
@@ -176,7 +177,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
   if(verbose) message("Reading in background...")
   
   # same as above
-  bg <- lapply(names(param), FUN=function(x){
+  bg <- pblapply(names(param), FUN=function(x){
     .bam2bwReadChunk(bgbam, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
@@ -456,7 +457,7 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
   if(is(res[[1]], "GRanges")){
     res <- unlist(GRangesList(res))
   }else{
-    res <- Reduce("+", res)
+    res <- .reduceRleLists(res)
   }
   if(!isFALSE(scaling)){
     stopifnot(scaling>0)
@@ -474,6 +475,17 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
     }
   }
   res
+}
+
+.reduceRleLists <- function(res, fn="+"){
+  sn <- unique(unlist(lapply(res, names)))
+  as(lapply(setNames(sn,sn), FUN=function(x){
+    r2 <- lapply(res, FUN=function(co){
+      if(x %in% names(co)) return(co[[x]])
+      return(NULL)
+    })
+    suppressWarnings(Reduce(fn, r2[which(!sapply(r2,is.null))]))
+  }), "RleList")
 }
 
 # calculates local background at positions, analogous to MACS
