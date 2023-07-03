@@ -63,6 +63,8 @@
 #'   `seqlevelsStyle`.
 #' @param exclude An optional GRanges of regions for which overlapping reads 
 #'   should be excluded.
+#' @param only An optional GRanges of regions for which overlapping reads should
+#'   be included. If set, all other reads are discarded.
 #' @param binSummarization The method to summarize nucleotides into each bin,
 #'   either "max" (default), "min" or "mean".
 #' @param verbose Logical; whether to print progress messages
@@ -109,7 +111,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
                    strand=c("*","+","-"), strandMode=1, log1p=FALSE, exclude=NULL,
                    includeDuplicates=TRUE, includeSecondary=FALSE, minMapq=1L, 
                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
-                   splitByChr=3, pseudocount=1L, localBackground=1L,
+                   splitByChr=3, pseudocount=1L, localBackground=1L, only=NULL,
                    zeroCap=TRUE, forceSeqlevelsStyle=NULL, verbose=TRUE, 
                    binSummarization=c("max","min","mean"), ...){
   # check inputs
@@ -161,7 +163,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
                      forceStyle=forceSeqlevelsStyle, exclude=exclude,
                      keepStrand=ifelse(paired && strand!="*",strand,"*"),
                      binSummarization=binSummarization, si=seqs,
-                     strandMode=strandMode)
+                     strandMode=strandMode, only=only)
   })
   
   if(is.null(bgbam)){
@@ -184,7 +186,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
                      forceStyle=forceSeqlevelsStyle, exclude=exclude,
                      keepStrand=ifelse(paired && strand!="*",strand,"*"),
                      binSummarization=binSummarization, si=seqs,
-                     strandMode=strandMode)
+                     strandMode=strandMode, only=only)
   })
 
   if(verbose) message("Computing relative signal...")
@@ -318,11 +320,12 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
 
 #' @importFrom GenomeInfoDb seqlevelsStyle<- seqlevelsInUse
 .bam2bwReadChunk <- function(bamfile, param, binWidth, forceStyle=NULL, si=NULL,
-                             keepStrand="*", binSummarization="max", ...){
+                             keepStrand="*", binSummarization="max", only=NULL, 
+                             ...){
   # get reads/fragments from chunk
-  bam <- .bam2bwGetReads(bamfile, param=param, si=si, ...)
+  bam <- .bam2bwGetReads(bamfile, param=param, si=si, only=only,
+                         forceStyle=forceStyle, ...)
   if(keepStrand != "*") bam <- bam[which(strand(bam)==keepStrand)]
-  if(!is.null(forceStyle)) seqlevelsStyle(bam) <- forceStyle
   # compute coverages
   co <- tileRle(coverage(bam), bs=binWidth, method=binSummarization)
   # save library size for later normalization
@@ -335,8 +338,8 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
 
 # reads reads from bam file.
 .bam2bwGetReads <- function(bamfile, paired, param, type, extend, shift=0L,
-                            minFragL, maxFragL, si=NULL, exclude=NULL, 
-                            strandMode=0){
+                            minFragL, maxFragL, forceStyle=NULL, si=NULL,
+                            only=NULL, exclude=NULL, strandMode=0){
   if(paired){
     bam <- readGAlignmentPairs(bamfile, param=param, strandMode=strandMode)
     bam <- as(bam[isProperPair(bam)], "GRanges")
@@ -346,9 +349,18 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
     bam <- as(readGAlignments(bamfile, param=param), "GRanges")
     ls <- length(bam)
     if(type %in% c("full","center") && extend!=0L)
-      bam <- suppressWarnings(trim(resize(bam, width(bam)+as.integer(extend), use.names=FALSE)))
+      bam <- suppressWarnings(trim(resize(bam, width(bam)+as.integer(extend),
+                                          use.names=FALSE)))
   }
-  if(!is.null(exclude)) bam <- bam[!overlapsAny(bam,exclude)]
+  if(!is.null(forceStyle)) seqlevelsStyle(bam) <- forceStyle
+  if(!is.null(only) && is(only,"GRanges")){
+    .comparableStyles(bam, only)
+    bam <- bam[overlapsAny(bam,only)]
+  }
+  if(!is.null(exclude) && is(exclude,"GRanges")){
+    .comparableStyles(bam, exclude)
+    bam <- bam[!overlapsAny(bam,exclude)]
+  }
   bam <- .doShift(bam, shift)
   if(type=="ends"){
     bam <- .align2cuts(bam)

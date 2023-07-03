@@ -355,3 +355,26 @@ This usually happens when the genome annotation used for the files ",
   names(v) <- names(v2)
   v
 }
+
+.comparableStyles <- function(a,b,stopIfNot=TRUE){
+  if(.getSeqLevelsStyle(a)==.getSeqLevelsStyle(b)) return(TRUE)
+  msg <- paste("It seems your are providing objects for which the seqlevel ",
+               "styles do not match.")
+  if(stopIfNot) stop(msg)
+  warning(msg)
+  FALSE
+}
+.getSeqLevelsStyle <- function(x){
+  if(is.character(x)){
+    if(grepl("\\.bw$|\\.bigwig", x, ignore.case=TRUE)){
+      return(seqlevelsStyle(rtracklayer::BigWigFile(x)))
+    }else if(grepl("\\.bam$", x, ignore.case=TRUE)){
+      return(seqlevelsStyle(Rsamtools::BamFile(x)))
+    }
+    return(tryCatch({
+      seqlevelsStyle(rtracklayer::BEDFile(x))
+    }, error=function(e)
+      stop("Unknown filetype.")))
+  }
+  seqlevelsStyle(x)
+}

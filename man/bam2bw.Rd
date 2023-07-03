@@ -28,6 +28,7 @@ bam2bw(
   splitByChr = 3,
   pseudocount = 1L,
   localBackground = 1L,
+  only = NULL,
   zeroCap = TRUE,
   forceSeqlevelsStyle = NULL,
   verbose = TRUE,
@@ -114,6 +115,9 @@ between signals. Ignored if `compType="subtract"`.}
 tile/position for which a local background will be calculated. The 
 background used will be the maximum of the one at the given position or of
 the mean of each of the local backgrounds.}
+
+\item{only}{An optional GRanges of regions for which overlapping reads should
+be included. If set, all other reads are discarded.}
 
 \item{zeroCap}{Logical; whether to cap values below zero to zero when 
 producing relative signals.}
