@@ -168,9 +168,9 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
   })
   
   if(is.null(bgbam)){
-    if(verbose) message("Writing bigwig...")
     res <- .bam2bwScaleCovList(res, scaling=scaling, log1p=log1p)
     if(is.na(output_bw)) return(res)
+    if(verbose) message("Writing bigwig...")
     rtracklayer::export.bw(res, output_bw)
     return(invisible(output_bw))
   }
