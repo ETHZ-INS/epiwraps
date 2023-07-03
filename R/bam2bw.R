@@ -121,7 +121,8 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
     stopifnot(length(bgbam)==1 && file.exists(bgbam))
     stopifnot(is.logical(scaling) && length(scaling)==1)
   }
-  stopifnot(length(output_bw)==1 && is.character(output_bw))
+  stopifnot(length(output_bw)==1 &&
+              (is.character(output_bw) || is.na(output_bw)))
   compType <- match.arg(compType)
   strand <- match.arg(strand)
   type <- match.arg(type)
