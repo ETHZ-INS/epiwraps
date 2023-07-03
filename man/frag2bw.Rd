@@ -21,6 +21,7 @@ frag2bw(
   keepSeqLvls = NULL,
   useScore = FALSE,
   forceSeqlevelsStyle = NULL,
+  only = NULL,
   binSummarization = c("max", "min", "mean"),
   verbose = TRUE,
   ...
@@ -68,6 +69,9 @@ include.}
 seqlevel style for the output bigwig. Can take any value accepted by
 `seqlevelsStyle`.}
 
+\item{only}{An optional GRanges of regions for which overlapping reads should
+be included. If set, all other reads are discarded.}
+
 \item{binSummarization}{The method to summarize nucleotides into each bin,
 either "max" (default), "min" or "mean".}
 
@@ -79,4 +83,17 @@ The bigwig filepath. Alternatively, if `output_bw=NA_character_`,
 }
 \description{
 Creates a coverage bigwig file from a Tabix-indexed fragment file.
+}
+\examples{
+# we first create a fake tabix file:
+library(GenomicRanges)
+library(rtracklayer)
+reads <- GRanges(rep(c("1","2"), c(5,2)),
+                 IRanges(5000+10*1:7, width=100))
+bedf <- tempfile(fileext=".bed")
+rtracklayer::export.bed(reads, bedf)
+bedf <- Rsamtools::bgzip(bedf)
+Rsamtools::indexTabix(bedf, format="bed")
+# convert to bigwig
+frag2bw(bedf, tempfile(fileext=".bw"))
 }

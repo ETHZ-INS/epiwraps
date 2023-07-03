@@ -267,6 +267,8 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
 #'   `seqlevelsStyle`.
 #' @param exclude An optional GRanges of regions for which overlapping reads 
 #'   should be excluded.
+#' @param only An optional GRanges of regions for which overlapping reads should
+#'   be included. If set, all other reads are discarded.
 #' @param binSummarization The method to summarize nucleotides into each bin,
 #'   either "max" (default), "min" or "mean".
 #' @param verbose Logical; whether to print progress messages
@@ -275,33 +277,47 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
 #'   the coverage data is not written to file but returned.
 #' 
 #' @export
+#' @examples
+#' # we first create a fake tabix file:
+#' library(GenomicRanges)
+#' library(rtracklayer)
+#' reads <- GRanges(rep(c("1","2"), c(5,2)),
+#'                  IRanges(5000+10*1:7, width=100))
+#' bedf <- tempfile(fileext=".bed")
+#' rtracklayer::export.bed(reads, bedf)
+#' bedf <- Rsamtools::bgzip(bedf)
+#' Rsamtools::indexTabix(bedf, format="bed")
+#' # convert to bigwig
+#' frag2bw(bedf, tempfile(fileext=".bw"))
 frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
                     type=c("full","center","start","end","ends"), barcodes=NULL,
                     strand=c("*","+","-"), shift=0L, log1p=FALSE, exclude=NULL,
                     minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
-                    useScore=FALSE, forceSeqlevelsStyle=NULL, 
+                    useScore=FALSE, forceSeqlevelsStyle=NULL, only=NULL,
                     binSummarization=c("max","min","mean"), verbose=TRUE, ...){
   binSummarization <- match.arg(binSummarization)
+  strand <- match.arg(strand)
+  type <- match.arg(type)
   if(!is(tabixFile, "TabixFile")) tabixFile <- TabixFile(tabixFile)
   
   if(verbose) message("Reading in signal...")
   res <- tabixChrApply(tabixFile, keepSeqLvls=keepSeqLvls, exclude=exclude,
-                       FUN=function(x){
+                       only=only, fn=function(x){
     if(!is.null(barcodes) && !is.null(x$name))
       x <- x[which(x$name %in% barcodes)]
     .frag2co(x, strand=strand, type=type, minFragLength=minFragLength,
              maxFragLength=maxFragLength, shift=shift, useScore=useScore,
-             binSummarization=binSummarization)
+             binSummarization=binSummarization, binWidth=binWidth)
   })
-  if(verbose) message("Writing bigwig...")
   res <- .bam2bwScaleCovList(res, scaling=scaling)
   if(is.na(output_bw)) return(res)
+  if(verbose) message("Writing bigwig...")
   rtracklayer::export.bw(res, output_bw)
   return(invisible(output_bw))
 }
 
 .frag2co <- function(x, strand, minFragLength, maxFragLength, type, shift,
-                     binSummarization="max", useScore=FALSE){
+                     binSummarization="max", binWidth=1L, useScore=FALSE){
   nr <- length(x)
   if(strand!="*") x <- x[strand(x)==strand]
   x <- x[width(x)>=minFragLength & width(x)<=maxFragLength]
@@ -419,13 +435,16 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
 #' lines(cov2, col="red")
 tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE){
   bs <- as.integer(bs)
-  stopifnot(bs>=1L)
-  min(min(runLength(x)[lengths(runLength(x))>0]))
-  if(bs<=min(min(runLength(x)[lengths(runLength(x))>0]))) return(x)
+  if(bs<=1L) return(x)
   method <- match.arg(method)
-  if(is(x,"RleList"))
-    return(as(lapply(x, bs=bs, method=method, FUN=tileRle), "RleList"))
+  if(is(x,"RleList")){
+    x <- lapply(x, bs=bs, method=method, FUN=tileRle)
+    x <- x[which(sapply(x, FUN=function(x) !is.null(x) && length(x)>0))]
+    return(as(x, "RleList"))
+  }
   stopifnot(is(x,"Rle"))
+  if(length(x)==0) return(NULL)
+  if(bs<=min(runLength(x)[lengths(runLength(x))>0])) return(x)
   
   # define the new ends of runs based on the number of full 'bs'
   cs <- cumsum(runLength(x)) # gives the end position of each run
@@ -497,7 +516,8 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
       if(x %in% names(co)) return(co[[x]])
       return(NULL)
     })
-    suppressWarnings(Reduce(fn, r2[which(!sapply(r2,is.null))]))
+    w <- sapply(r2, FUN=function(x) !is.null(x) && length(x)>0)
+    suppressWarnings(Reduce(fn, r2[which(w)]))
   }), "RleList")
 }
 

@@ -5,29 +5,41 @@
 #' avoid loading all alignments into memory, or to parallelize reads processing.
 #'
 #' @param x The path to a tabix-indexed bam file, or a TabixFile object.
-#' @param FUN The function to be run, the first argument of which should be a
+#' @param fn The function to be run, the first argument of which should be a
 #'   `GRanges`
 #' @param keepSeqLvls An optional vector of seqLevels to keep
 #' @param BPPARAM A `BiocParallel` parameter object for multithreading. Note 
 #'   that if used, memory usage will be high; in this context we recommend a 
 #'   high `nChunks`.
-#' @param exclude An optional GRanges of regions for which overlapping reads 
-#'   should be excluded.
-#' @param ... Passed to `FUN`
+#' @param only An optional GRanges of regions for which overlapping reads should
+#'   be included. If set, all other reads are discarded.
+#' @param only 
+#' @param ... Passed to `fn`
 #'
-#' @return A list of whatever `FUN` returns
+#' @return A list of whatever `fn` returns
 #' @export
 #' @importFrom Rsamtools TabixFile seqnamesTabix
-tabixChrApply <- function(x, FUN, keepSeqLvls=NULL, exclude=NULL,
+#' @importFrom rtracklayer path import
+#' @importFrom BiocParallel bpnworkers bplapply
+#' @importFrom pbapply pblapply
+tabixChrApply <- function(x, fn, keepSeqLvls=NULL, exclude=NULL, only=NULL,
                           BPPARAM=SerialParam(), ...){
-  if(!is(x, "TabixFile")) x <- TabixFile(x)
+  x <- TabixFile(x)
   if(!is.null(exclude)) stopifnot(is(exclude, "GRanges"))
+  if(!is.null(only)) stopifnot(is(only, "GRanges"))
   
-  f2 <- function(sn, ...){
-    x <- rtracklayer::import(x, format="bed", 
+  f2 <- function(sn, postfn, ...){
+    x <- rtracklayer::import(path(x), 
                              which=GRanges(sn, IRanges(1,5*10^8)))
-    if(!is.null(exclude)) x <- x[!overlapsAny(x, exclude)]
-    FUN(x, ...)
+    if(!is.null(only)){
+      .comparableStyles(x, only)
+      x <- x[overlapsAny(x, only)]
+    }
+    if(!is.null(exclude)){
+      .comparableStyles(x, exclude)
+      x <- x[!overlapsAny(x, exclude)]
+    }
+    postfn(x, ...)
   }
 
   slvls <- seqnamesTabix(x)
@@ -41,7 +53,7 @@ head(paste(missingLvls, collapse=", "), 3)))
   }
   
   if(BiocParallel::bpnworkers(BPPARAM)==1){
-    return(lapply(slvls, FUN=f2, ...))
+    return(pblapply(slvls, FUN=f2, postfn=fn, ...))
   }
-  bplapply(slvls, FUN=f2, ..., BPPARAM=BPPARAM)
+  bplapply(slvls, FUN=f2, postfn=fn, ..., BPPARAM=BPPARAM)
 }
