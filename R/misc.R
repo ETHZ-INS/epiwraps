@@ -378,3 +378,15 @@ This usually happens when the genome annotation used for the files ",
   }
   seqlevelsStyle(x)
 }
+
+.filterFrags <- function(frags, only, exclude){
+  if(!is.null(only)){
+    .comparableStyles(frags, only)
+    frags <- frags[overlapsAny(frags, only)]
+  }
+  if(!is.null(exclude)){
+    .comparableStyles(frags, exclude)
+    frags <- frags[!overlapsAny(frags, exclude)]
+  }
+  frags
+}

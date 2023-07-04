@@ -139,9 +139,11 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
     if(verbose) message("Detected ", ifelse(paired,"paired","unpaired")," data")
   }
   if(paired) extend <- 0L
-  if(type=="ends" && !paired && verbose)
-    warning("type='ends' only makes sense with paired-end libraries...")
-
+  if(type=="ends" && !paired){
+    if(verbose)
+      warning("type='ends' only makes sense with paired-end libraries...")
+    type <- "start"
+  }
   # prepare flags for bam reading
   strandflg <- switch(strand, "*"=NA, "+"=FALSE, "-"=TRUE)
   if(paired) strandflg <- NA
@@ -244,6 +246,9 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
 #' @param output_bw The path to the output bigwig file
 #' @param barcodes An optional list of barcodes to use (assuming that the file
 #'   contains the column)
+#' @param paired Logical; whether the coordinates are that of fragments, as 
+#'  opposed to single-end reads where the only one end of the fragments is given.
+#'  TRUE by default.
 #' @param binWidth The window size. A lower value (min 1) means a higher 
 #'  resolution, but larger file size.
 #' @param scaling Either TRUE (performs Count Per Million scaling), FALSE (no 
@@ -269,6 +274,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
 #'   should be excluded.
 #' @param only An optional GRanges of regions for which overlapping reads should
 #'   be included. If set, all other reads are discarded.
+#' @param format The format of the fragment file.
 #' @param binSummarization The method to summarize nucleotides into each bin,
 #'   either "max" (default), "min" or "mean".
 #' @param verbose Logical; whether to print progress messages
@@ -289,28 +295,58 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
 #' Rsamtools::indexTabix(bedf, format="bed")
 #' # convert to bigwig
 #' frag2bw(bedf, tempfile(fileext=".bw"))
-frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
-                    type=c("full","center","start","end","ends"), barcodes=NULL,
-                    strand=c("*","+","-"), shift=0L, log1p=FALSE, exclude=NULL,
-                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
-                    useScore=FALSE, forceSeqlevelsStyle=NULL, only=NULL,
-                    binSummarization=c("max","min","mean"), verbose=TRUE, ...){
+frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
+                    scaling=TRUE, type=c("full","center","start","end","ends"),
+                    barcodes=NULL, strand=c("*","+","-"), shift=0L, log1p=FALSE,
+                    exclude=NULL, minFragLength=1L, maxFragLength=5000L,
+                    keepSeqLvls=NULL, useScore=FALSE, forceSeqlevelsStyle=NULL,
+                    only=NULL, format="bed",
+                    binSummarization=c("max","min","mean"), verbose=TRUE){
+  
   binSummarization <- match.arg(binSummarization)
   strand <- match.arg(strand)
   type <- match.arg(type)
-  if(!is(tabixFile, "TabixFile")) tabixFile <- TabixFile(tabixFile)
+  if(type=="ends" && !paired){
+    if(verbose)
+      warning("type='ends' only makes sense with paired-end libraries...")
+    type <- "start"
+  }
+  
+  if(paired) extend <- 0L
   
   if(verbose) message("Reading in signal...")
-  res <- tabixChrApply(tabixFile, keepSeqLvls=keepSeqLvls, exclude=exclude,
-                       only=only, fn=function(x){
-    if(!is.null(barcodes) && !is.null(x$name))
-      x <- x[which(x$name %in% barcodes)]
-    .frag2co(x, strand=strand, type=type, minFragLength=minFragLength,
+
+  if(!is(tabixFile, "TabixFile") && 
+     !is(tabixFile <- tryCatch({ TabixFile(tabixFile) },
+                               error=function(e){ tabixFile }),"TabixFile")){
+    if(!is(tabixFile, "GRanges")){
+      message("The input is not a tabix-indexed file, and therefore all reads ",
+              " will have to be read in memory.")
+      tabixFile <- rtracklayer::import(tabixFile, format=format)
+    }
+    if(!is(tabixFile, "GRanges")) stop("tabixFile is of an unknown format.")
+
+    res <- list(
+      .frag2co(.filterFrags(tabixFile, only=only, exclude=exclude),
+             strand=strand, type=type, minFragLength=minFragLength,
              maxFragLength=maxFragLength, shift=shift, useScore=useScore,
-             binSummarization=binSummarization, binWidth=binWidth)
-  })
+             binSummarization=binSummarization, binWidth=binWidth) )
+
+  }else{
+    
+    res <- tabixChrApply(tabixFile, keepSeqLvls=keepSeqLvls, exclude=exclude,
+                         only=only, fn=function(x){
+      if(!is.null(barcodes) && !is.null(x$name))
+        x <- x[which(x$name %in% barcodes)]
+      .frag2co(x, strand=strand, type=type, minFragLength=minFragLength,
+               maxFragLength=maxFragLength, shift=shift, useScore=useScore,
+               binSummarization=binSummarization, binWidth=binWidth)
+    })
+    
+  }
   res <- .bam2bwScaleCovList(res, scaling=scaling)
   if(is.na(output_bw)) return(res)
+  
   if(verbose) message("Writing bigwig...")
   rtracklayer::export.bw(res, output_bw)
   return(invisible(output_bw))
