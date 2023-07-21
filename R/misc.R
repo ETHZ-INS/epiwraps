@@ -334,7 +334,7 @@ This usually happens when the genome annotation used for the files ",
     if(isInt) return(IntegerList(v))
     NumericList(v)
   }
-  if(length(table(width(v2)))==1){
+  if(all(width(v2)==width(v))){
     if(forceRetAL) return(toAL(v))
     return(v)
   }
