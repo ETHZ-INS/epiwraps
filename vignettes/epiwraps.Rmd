@@ -202,11 +202,27 @@ manually, or using the following convenience function:
 merged <- mergeSignalMatrices(m, aggregation="mean")
 ```
 
+#### Normalization
+
+The `getNormFactors()` function can be used to estimate normalization factors 
+using different methods, such as background normalization (aka SSN), 
+shared-peaks (aka MAnorm), TMM, S3norm, etc., on a set of either i) bam files or
+ii) bigwig files.
+
+The normalization factors can then be applied on signal matrices, for example:
+
+```{r, eval=FALSE}
+bwfiles <- c(atac1=bwf, atac2=bwf)
+nf <- getNormFactors(bwfiles, method="background")
+sm <- signal2Matrix(bwfiles, regions, extend=1000L)
+sm2 <- rescaleSignalMatrices(sm, nf)
+```
+
 
 ## Plotting heatmaps
 
-Once the matrices have been created, we can plot heatmaps based on them as 
-follows:
+Once the matrices have been created (and eventually normalized), we can plot 
+heatmaps based on them as follows:
 
 ```{r heatmap1, fig.height=4, fig.width=4}
 plotEnrichedHeatmaps(m)
@@ -228,6 +244,7 @@ plotEnrichedHeatmaps(list("trim=1"=m[[1]]), trim=1, scale_title="trim=1",
   plotEnrichedHeatmaps(list("trim=0.9"=m[[1]]), trim=0.9, 
                        scale_title="trim=0.9", top_annotation=FALSE)
 ```
+
 The underlying data is exactly the same, only the color-mapping changes. In the 
 left one, which has no trimming, a single very high value at the top forces the
 colorscale to extend to high values, even though most of the data is in the 
@@ -237,6 +254,29 @@ colorscale, resulting in a an 'over-exposed' heatmap. In practice, it is
 advisable to use minimal trimming (e.g. the default is `c(0.01,0.99)`,
 as in the corresponding DeepTools function).
 
+
+
+### Clustering
+
+The traditional ranking by decreasing overall enrichment can easily hide 
+patterns in the data, which are instead revealed by clustering. While 
+hierarchical clustering can be performed in the plotting function itself, this
+is based on the whole enrichment profiles and seldom provides good results in 
+practice. For this reason, we provide a function that clusters the rows based on
+the distance-weighted enrichment scores. For example:
+
+```{r, eval=FALSE}
+# not run
+cl <- clusterSignalMatrices(sm2, k=3, scaleRows=TRUE)
+mycolors <- c("1"="red", "2"="blue", "3"="darkgreen")
+plotEnrichedHeatmaps(sm2, row_split=cl, mean_color=mycolors)
+```
+
+Note that here we are splitting into 3 clusters, you can also provide a range
+of values (e.g. `k=2:8`) and the function will also return cluster quality 
+metrics for each.
+
+[include proper example... Creb family]
 
 ## Plotting aggregated signals
 
@@ -250,6 +290,7 @@ for each sample/matrix:
 d <- meltSignals(m)
 head(d)
 ```
+
 This can then be used for plotting. For this example, since it consists of twice the same file, we'll first create a fake difference:
 
 ```{r}
@@ -266,6 +307,13 @@ ggplot(d, aes(position, mean, colour=sample)) +
   geom_ribbon(aes(position, ymin=mean-SE, ymax=mean+SE, fill=sample), alpha=0.4, colour=NA) + 
   geom_line(size=1.2) + labs(x="relative position", y="mean RPKM")
 ```
+
+
+Note that when the regions are clustered, the clusters can be passed to melt and
+aggregate separately the different clusters, e.g.:
+`d <- meltSignals(m, splitBy=cl)`.
+
+
 # Extra functionalities
 
 ## Generating bigwig files
@@ -288,7 +336,9 @@ A peak calling function can be used, either against an input control or against 
 p <- callPeaks(bam, fragLength=50)
 ```
 
-Note that this function is still under heavy development!
+Note that this function is still under heavy development, and its usage at the moment is discouraged!
+
+## 
 
 ## Quality control
 
