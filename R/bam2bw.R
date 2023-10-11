@@ -547,14 +547,16 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
 
 .reduceRleLists <- function(res, fn="+"){
   sn <- unique(unlist(lapply(res, names)))
-  as(lapply(setNames(sn,sn), FUN=function(x){
+  res <- lapply(setNames(sn,sn), FUN=function(x){
     r2 <- lapply(res, FUN=function(co){
       if(x %in% names(co)) return(co[[x]])
       return(NULL)
     })
     w <- sapply(r2, FUN=function(x) !is.null(x) && length(x)>0)
+    if(sum(w)==0) return(NULL)
     suppressWarnings(Reduce(fn, r2[which(w)]))
-  }), "RleList")
+  })
+  as(res[which(!sapply(res,is.null))], "RleList")
 }
 
 # calculates local background at positions, analogous to MACS
