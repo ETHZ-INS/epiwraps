@@ -4,8 +4,9 @@
       alpha, maxColorValue = 255)
 }
 
-.parseFiletypeFromName <- function(x, stopOnUnrecognized=TRUE, grOk=FALSE,
-                                   trackOk=FALSE){
+.parseFiletypeFromName <- function(x, stopOnUnrecognized=TRUE, mustExist=TRUE,
+                                   grOk=FALSE, trackOk=FALSE, covOk=FALSE,
+                                   requireUnique=FALSE){
   if(is(x,"GRanges")){
     if(grOk) return("GRanges")
     stop("The argument should be a filepath!")
@@ -14,11 +15,30 @@
     if(trackOk) return("track")
     stop("The argument should be a filepath!")
   }
-  if(length(x)>1) return(sapply(x, .parseFiletypeFromName))
+  if(is(x,"RleList")){
+    if(covOk) return("cov")
+    stop("The argument should be a filepath!")
+  }
+  if(length(x)>1){
+    y <- vapply(x, stopOnUnrecognized=stopOnUnrecognized, mustExist=FALSE,
+                grOk=grOk, trackOk=trackOk, FUN.VALUE=character(1), 
+                FUN=.parseFiletypeFromName)
+    if(requireUnique && length(y <- unique(y))>1)
+      stop("All inputs files should be of the same format!")
+    if(mustExist){
+      w <- which(y %in% c("bam","bw","bed"))
+      if(any(fe <- !file.exists(x[w])))
+        stop("The following filepath(s) appear(s) not to exist:\n",
+             paste(x[w[fe]], collapse="\n"))
+    }
+    return(y)
+  }
   if(grepl("\\.bigwig$|\\.bw$", x, ignore.case=TRUE)) return("bw")
   if(grepl("\\.bam$", x, ignore.case=TRUE)) return("bam")
   if(grepl("\\.bed$|\\.narrowpeak$|\\.broadpeak$|\\.gappedpeak$", x, 
            ignore.case=TRUE)) return("bed")
+  if(mustExist && !file.exists(x))
+    stop("The given filepath appears not to exist.")
   if(stopOnUnrecognized) stop("Format unrecongized for file\n",x)
   return(NULL)
 }
@@ -145,6 +165,8 @@ importBedlike <- function(x, ...){
   y <- try(rtracklayer::import.bed(x), silent=TRUE)
   if(is(y,"try-error"))
     y <- try(rtracklayer::import.bed15(x), silent=TRUE)
+  if(is(y,"try-error"))
+    y <- try(rtracklayer::import.bed(x, format="narrowPeak"), silent=TRUE)
   if(!is(y,"try-error")) return(y)
   y <- as.data.frame(data.table::fread(x, ...))
   strInfo <- NULL
@@ -227,7 +249,7 @@ inject <- function(what, inWhat, at){
   if(is.null(seqlvls)) return(invisible(x))
   x <- intersect(x, seqlvls)
   if(length(x)==0) stop("No seqLevel retained!")
-  if(length(missingLvls <- setdiff(seqlvls, x)==0)) return(invisible(x))
+  if(length(missingLvls <- setdiff(seqlvls, x))==0) return(invisible(x))
   msg <- paste0(
     "Some of the seqLevels specified by `keepSeqLvls` are not in the data.
 The first few are:",
@@ -241,20 +263,24 @@ head(paste(missingLvls, collapse=", "), 3))
 # checks that the regions are compatible with the bw/bam files
 .checkRegions <- function(tracks, regions, verbose=TRUE, trimOOR=FALSE){
   if( (is.list(tracks) || is.character(tracks)) && length(tracks)>1 ){
-    r2 <- lapply(tracks, regions=regions, verbose=FALSE, FUN=.checkRegions)
-    r2 <- Reduce(intersect, r2)
-    r2 <- regions[overlapsAny(regions, r2, type="equal")]
+    r2 <- lapply(tracks, regions=regions, verbose=FALSE, trimOOR=trimOOR,
+                 FUN=.checkRegions)
+    isIn <- do.call(cbind, lapply(r2, FUN=function(x){
+      overlapsAny(regions,x,type="equal")
+    }))
+    r2 <- regions[which(rowSums(isIn)==ncol(isIn))]
   }else{
     if(is.list(tracks)) tracks <- tracks[[1]]
-    if(epiwraps:::.parseFiletypeFromName(tracks)=="bw"){
-      sl <- seqlengths(BigWigFile(tracks))
-    }else if(epiwraps:::.parseFiletypeFromName(tracks)=="bam"){
-      sl <- seqlengths(BamFile(tracks))
-    }else if(is(tracks, "GRanges")){
+    if(is(tracks, "GRanges")){
       sl <- seqlengths(tracks)
+    }else if(.parseFiletypeFromName(tracks)=="bw"){
+      sl <- seqlengths(BigWigFile(tracks))
+    }else if(.parseFiletypeFromName(tracks)=="bam"){
+      sl <- seqlengths(BamFile(tracks))
     }else{
       return(regions)
     }
+    if(all(is.na(sl))) return(regions)
     r2 <- keepSeqlevels(regions, intersect(seqlevels(regions), names(sl)),
                         pruning.mode="coarse")
     if(any(is.na(seqlengths(regions))))
@@ -306,8 +332,8 @@ This usually happens when the genome annotation used for the files ",
 #' views2Matrix(v)
 views2Matrix <- function(v, padVal=NA_integer_){
   if(!is(v, "RleViewsList")) v <- RleViewsList(v)
-  ws <- width(v)[[1]]
-  stopifnot(all(all(width(v)==ws)))
+  ws <- width(v)[[1]][[1]]
+  stopifnot(all(unlist(width(v))==ws))
   x <- Reduce(c, lapply(v[lengths(v)>0], padVal=padVal, FUN=.view2paddedAL))
   matrix(unlist(x), byrow=TRUE, ncol=ws)
 }
@@ -315,7 +341,7 @@ views2Matrix <- function(v, padVal=NA_integer_){
 # converts a RleViews to an AtomicList, setting out-of-bounds regions to padVal
 .view2paddedAL <- function(v, padVal=NA_integer_, forceRetAL=TRUE){
   v2 <- trim(v)
-  if(isInt <- is.integer(runValue(v2))){
+  if(isInt <- is.integer(runValue(v2[[1]]))){
     stopifnot(is.integer(padVal))
   }else{
     stopifnot(is.numeric(padVal))
@@ -324,7 +350,7 @@ views2Matrix <- function(v, padVal=NA_integer_){
     if(isInt) return(IntegerList(v))
     NumericList(v)
   }
-  if(identical(v2,v)){
+  if(all(width(v2)==width(v))){
     if(forceRetAL) return(toAL(v))
     return(v)
   }
@@ -344,4 +370,39 @@ views2Matrix <- function(v, padVal=NA_integer_){
                    c(rep(n, pleft), rep(n, width(v2)), rep(n, pright)))
   names(v) <- names(v2)
   v
+}
+
+.comparableStyles <- function(a,b,stopIfNot=TRUE){
+  if(.getSeqLevelsStyle(a)==.getSeqLevelsStyle(b)) return(TRUE)
+  msg <- paste("It seems your are providing objects for which the seqlevel ",
+               "styles do not match.")
+  if(stopIfNot) stop(msg)
+  warning(msg)
+  FALSE
+}
+.getSeqLevelsStyle <- function(x){
+  if(is.character(x)){
+    if(grepl("\\.bw$|\\.bigwig", x, ignore.case=TRUE)){
+      return(seqlevelsStyle(rtracklayer::BigWigFile(x)))
+    }else if(grepl("\\.bam$", x, ignore.case=TRUE)){
+      return(seqlevelsStyle(Rsamtools::BamFile(x)))
+    }
+    return(tryCatch({
+      seqlevelsStyle(rtracklayer::BEDFile(x))
+    }, error=function(e)
+      stop("Unknown filetype.")))
+  }
+  seqlevelsStyle(x)
+}
+
+.filterFrags <- function(frags, only, exclude){
+  if(!is.null(only)){
+    .comparableStyles(frags, only)
+    frags <- frags[overlapsAny(frags, only)]
+  }
+  if(!is.null(exclude)){
+    .comparableStyles(frags, exclude)
+    frags <- frags[!overlapsAny(frags, exclude)]
+  }
+  frags
 }

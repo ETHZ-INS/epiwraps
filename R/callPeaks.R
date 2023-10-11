@@ -45,8 +45,10 @@
 #' 
 #' @importFrom IRanges Views viewMaxs viewMeans slice viewRangeMaxs relist IntegerList
 #' @importFrom stats setNames pnorm ppois optim density
+#' @importFrom S4Vectors mean.Rle
 #' @export
 callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"), 
+                      nullH=c("local","global.nb","global.bin"), ### TO IMPLEMENT
                       blacklist=NULL, binSize=10L, fragLength=200L, 
                       minPeakCount=5L, minFoldChange=1.3, pthres=10^-3,
                       maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=1L,
@@ -192,7 +194,7 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
     }
     covtm <- .covTrimmedMean(ctrl)
     nf <- covtm/.covTrimmedMean(co)
-    fc <- nf*mean(r$cov)/unlist(viewMeans(Views(ctrl, r)))
+    fc <- nf*S4Vectors::mean.Rle(r$cov)/unlist(viewMeans(Views(ctrl, r)))
     r <- r[which(fc>minFoldChange)]
   }
   if(breakPeaks){
@@ -230,7 +232,9 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
     r$wNeg <- r$wPos <- r$pos <- r$neg <- NULL
   }
   r$cov <- NULL
-  if(!is.null(ctrl)){
+  if(length(r)==0){
+    r$bg <- vector(mode = "integer", length = 0L)
+  }else if(!is.null(ctrl)){
     if(verbose) message("Computing neighborhood background")
     r$bg <- .getLocalBackground(ctrl, gr=r, windows=bgWindow)/nf
     r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/(pseudoCount+r$bg))))
@@ -272,13 +276,17 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
   start(r)[w] <- r$wPos[w]
   end(r)[w] <- r$wNeg[w]
   if(length(w <- which(!w0 & width(r)>maxW))>0){
-    wPos <- round(median(which(r$pos[w]>medpo[w])))
-    wNeg <- round(median(which(r$neg[w]>medneg[w])))
+    wPos <- round(.rleMedWhich(r$pos[w]>medpo[w]))
+    wNeg <- round(.rleMedWhich(r$neg[w]>medneg[w]))
     w2 <- which((wNeg-wPos)>=minW)
     start(r)[w][w2] <- start(r)[w][w2]+wPos[w2]-1L
     end(r)[w][w2] <- start(r)[w][w2]+wNeg[w2]-1L
   }
   trim(suppressWarnings(resize(r, pmax(minW,width(r)), fix="center")))
+}
+
+.rleMedWhich <- function(rle){
+  median(cumsum(runLength(rle))[IRanges::which(runValue(rle))])
 }
 
 # very slow implementation, not used -- see .breakRegions2 instead
@@ -349,10 +357,10 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
 
 # get trimmed non-zero mean of a Rle/RleList
 .covTrimmedMean <- function(x, q=0.98, th=NULL){
-  if(is.null(th)) th <- as.integer(quantile(unlist(runValue(x)), q))
+  if(is.null(th)) th <- quantile(unlist(runValue(x)), q)
   if(is(x,"RleList"))
-    return(median(unlist(lapply(x, th=th, FUN=.covTrimmedMean), "RleList"),
-                  na.rm=TRUE))
+    return(weighted.mean(unlist(lapply(x, th=th, FUN=.covTrimmedMean)),
+                         lengths(x), na.rm=TRUE))
   w <- which(runValue(x)<=th & runValue(x)>0) 
   x <- Rle(runValue(x)[w], lengths=runLength(x)[w])
   mean(x)

@@ -45,7 +45,10 @@ surroundings)}
 bin.}
 
 \item{BPPARAM}{A \code{\link[BiocParallel]{BiocParallelParam}} object, or 
-the number of threads to use to read and prepare the data.}
+the number of threads to use to read and prepare the data. Note that the 
+  rate-limiting process is reading from disk, so unless you have an unusually
+  fast disk, using multi-threading is actually likely to slow down rather 
+  than speed up the process.}
 
 \item{verbose}{Logical; whether to print processing information}
 

@@ -4,12 +4,15 @@
 \alias{meltSignals}
 \title{meltSignals}
 \usage{
-meltSignals(ml, fun = NULL, splitBy = NULL)
+meltSignals(ml, fun = NULL, splitBy = NULL, trim = 0.98)
 }
 \arguments{
 \item{ml}{A named list of matrices as produced by \code{\link{signal2Matrix}}}
 
 \item{fun}{An optional custom aggregation function (or named list thereof).}
+
+\item{trim}{The quantile above which to trim values. If a numeric vector of 
+length 2, will be used as lower and upper quantiles beyond which to trim.}
 }
 \value{
 A data.frame.

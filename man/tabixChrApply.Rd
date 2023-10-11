@@ -6,9 +6,10 @@
 \usage{
 tabixChrApply(
   x,
-  FUN,
+  fn,
   keepSeqLvls = NULL,
   exclude = NULL,
+  only = NULL,
   BPPARAM = SerialParam(),
   ...
 )
@@ -16,22 +17,21 @@ tabixChrApply(
 \arguments{
 \item{x}{The path to a tabix-indexed bam file, or a TabixFile object.}
 
-\item{FUN}{The function to be run, the first argument of which should be a
+\item{fn}{The function to be run, the first argument of which should be a
 `GRanges`}
 
 \item{keepSeqLvls}{An optional vector of seqLevels to keep}
 
-\item{exclude}{An optional GRanges of regions for which overlapping reads 
-should be excluded.}
+\item{only}{}
 
 \item{BPPARAM}{A `BiocParallel` parameter object for multithreading. Note 
 that if used, memory usage will be high; in this context we recommend a 
 high `nChunks`.}
 
-\item{...}{Passed to `FUN`}
+\item{...}{Passed to `fn`}
 }
 \value{
-A list of whatever `FUN` returns
+A list of whatever `fn` returns
 }
 \description{
 Runs a function on reads/fragments from each chromosomes of a Tabix-indexed 

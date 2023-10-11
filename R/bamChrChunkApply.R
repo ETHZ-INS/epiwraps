@@ -64,11 +64,12 @@ bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, nChunks=4,
   if(is.null(seqs$targets)) seqs <- seqs[[1]]
   seqs <- seqs$targets
   if(!is.null(keepSeqLvls)){
-    if(length(missingLvls <- setdiff(keepSeqLvls, names(seqs))>0))
+    if(length(missingLvls <- setdiff(keepSeqLvls, names(seqs)))>0){
       stop(paste0(
         "Some of the seqLevels specified by `keepSeqLvls` are not in the data.
 The first few are:",
 head(paste(missingLvls, collapse=", "), 3)))
+    }
     seqs <- seqs[keepSeqLvls]
   }
   # generate list of reading params

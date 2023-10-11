@@ -7,7 +7,8 @@
 renormalizeBorders(
   ml,
   method = "linear",
-  nWindows = max(floor(ncol(ml[[1]])/20), 1)
+  trim = NULL,
+  nWindows = max(floor(ncol(ml[[1]])/10), 1)
 )
 }
 \arguments{
@@ -15,6 +16,8 @@ renormalizeBorders(
 
 \item{method}{Either "linear", or a normalization method, passed to 
 \code{\link[edgeR]{calcNormFactors}}.}
+
+\item{trim}{Quantiles trimmed at each extreme (for linear normalization)}
 }
 \value{
 A renormalized list of signal matrices.

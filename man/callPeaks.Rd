@@ -9,6 +9,7 @@ callPeaks(
   ctrl = NULL,
   paired = FALSE,
   type = c("narrow", "broad"),
+  nullH = c("local", "global.nb", "global.bin"),
   blacklist = NULL,
   binSize = 10L,
   fragLength = 200L,

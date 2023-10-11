@@ -21,6 +21,11 @@
 #'   start (count read/fragment start locations), end, center, or 'ends' (both
 #'   ends of the read/fragment).
 #' @param strand Strand(s) to capture (any by default).
+#' @param strandMode The strandMode of the data (whether the strand is given by
+#'   the first or second mate, which depends on the library prep protocol). See
+#'   \link[GenomicAlignments]{strandMode} for more information. This parameter 
+#'   has no effect unless one of the `strand`, `extend` parameters or a 
+#'   strand-specific `shift` are used.
 #' @param shift Shift (from 3' to 5') by which reads/fragments will be shifted.
 #'   If `shift` is an integer vector of length 2, the first value will represent
 #'   the shift for the positive strand, and the second for the negative strand.
@@ -40,22 +45,26 @@
 #'   chromosome is processed separately), but we instead recommend giving a 
 #'   positive integer indicating the number of chunks.
 #' @param compType The type of relative signal to compute (ignored if `bgbam` 
-#'   isn't given). Can either be `ppois` (-log10 Poisson p-value), `logFE` 
-#'   (log10 fold-enrichment), or `subtract`. If `logFE`, the `pseudocount` 
-#'   will be added before computing the ratio.
+#'   isn't given). Can either be 'log2ratio' (log2-foldchange between signals),
+#'   'subtract' (difference), 'log10ppois' (rounded -log10 poisson p-value),
+#'   'log10FE' (log10 fold-enrichment). For fold-based signals, `pseudocount` 
+#'   will be added before computing the ratio. By default negative values are
+#'   capped (see `zeroCap`).
+#' @param zeroCap Logical; whether to cap values below zero to zero when 
+#'   producing relative signals.
 #' @param pseudocount The count to be added before fold-enrichment calculation 
-#'   between signals. Only used for `compType="logFE"`.
-#' @param localBackground Whether to use the local background instead of the 
-#'   count at the specific position/window when computing relative signal 
-#'   (analogous to MACS). Can either be a logical value, or an integer vector of
-#'   multiple sizes at which to compute a local background (as average signal).
-#'   The maximum of the average background signal across the window sizes will 
-#'   be used. If TRUE, will use 1kb and 5kb.
+#'   between signals. Ignored if `compType="subtract"`.
+#' @param localBackground A (vector of) number of windows around each 
+#'   tile/position for which a local background will be calculated. The 
+#'   background used will be the maximum of the one at the given position or of
+#'   the mean of each of the local backgrounds.
 #' @param forceSeqlevelsStyle If specified, forces the use of the specified 
 #'   seqlevel style for the output bigwig. Can take any value accepted by
 #'   `seqlevelsStyle`.
 #' @param exclude An optional GRanges of regions for which overlapping reads 
 #'   should be excluded.
+#' @param only An optional GRanges of regions for which overlapping reads should
+#'   be included. If set, all other reads are discarded.
 #' @param binSummarization The method to summarize nucleotides into each bin,
 #'   either "max" (default), "min" or "mean".
 #' @param verbose Logical; whether to print progress messages
@@ -88,20 +97,22 @@
 #' @importFrom GenomeInfoDb Seqinfo seqinfo seqinfo<-
 #' @importFrom S4Vectors metadata metadata<- runmean Rle
 #' @importFrom IRanges RleList
+#' @importFrom pbapply pblapply
 #' 
 #' @examples 
 #' # get an example bam file
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 #' # create bigwig
 #' bam2bw(bam, "output.bw")
-bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L, 
-                   extend=0L, compType=c("ppois", "subtract", "logFE"),
-                   scaling=TRUE, type=c("full","center","start","end","ends"),
-                   strand=c("*","+","-"), shift=0L, log1p=FALSE, exclude=NULL,
+bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
+                   binWidth=20L, extend=0L, scaling=TRUE, shift=0L,
+                   type=c("full","center","start","end","ends"),
+                   compType=c("log2ratio", "subtract", "log10ppois", "log10FE"),
+                   strand=c("*","+","-"), strandMode=1, log1p=FALSE, exclude=NULL,
                    includeDuplicates=TRUE, includeSecondary=FALSE, minMapq=1L, 
                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
-                   splitByChr=3, pseudocount=1L, localBackground=c(1000L,5000L),
-                   forceSeqlevelsStyle=NULL, verbose=TRUE, 
+                   splitByChr=3, pseudocount=1L, localBackground=1L, only=NULL,
+                   zeroCap=TRUE, forceSeqlevelsStyle=NULL, verbose=TRUE, 
                    binSummarization=c("max","min","mean"), ...){
   # check inputs
   stopifnot(length(bamfile)==1 && file.exists(bamfile))
@@ -110,7 +121,8 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
     stopifnot(length(bgbam)==1 && file.exists(bgbam))
     stopifnot(is.logical(scaling) && length(scaling)==1)
   }
-  stopifnot(length(output_bw)==1 && is.character(output_bw))
+  stopifnot(length(output_bw)==1 &&
+              (is.character(output_bw) || is.na(output_bw)))
   compType <- match.arg(compType)
   strand <- match.arg(strand)
   type <- match.arg(type)
@@ -127,9 +139,11 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
     if(verbose) message("Detected ", ifelse(paired,"paired","unpaired")," data")
   }
   if(paired) extend <- 0L
-  if(type=="ends" && !paired && verbose)
-    warning("type='ends' only makes sense with paired-end libraries...")
-
+  if(type=="ends" && !paired){
+    if(verbose)
+      warning("type='ends' only makes sense with paired-end libraries...")
+    type <- "start"
+  }
   # prepare flags for bam reading
   strandflg <- switch(strand, "*"=NA, "+"=FALSE, "-"=TRUE)
   if(paired) strandflg <- NA
@@ -145,19 +159,20 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
   if(verbose) message("Reading in signal...")
   
   # obtain coverage (and total count)
-  res <- lapply(names(param), FUN=function(x){
+  res <- pblapply(names(param), FUN=function(x){
     .bam2bwReadChunk(bamfile, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
                      forceStyle=forceSeqlevelsStyle, exclude=exclude,
                      keepStrand=ifelse(paired && strand!="*",strand,"*"),
-                     binSummarization=binSummarization)
+                     binSummarization=binSummarization, si=seqs,
+                     strandMode=strandMode, only=only)
   })
-
+  
   if(is.null(bgbam)){
-    if(verbose) message("Writing bigwig...")
     res <- .bam2bwScaleCovList(res, scaling=scaling, log1p=log1p)
     if(is.na(output_bw)) return(res)
+    if(verbose) message("Writing bigwig...")
     rtracklayer::export.bw(res, output_bw)
     return(invisible(output_bw))
   }
@@ -167,41 +182,26 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
   if(verbose) message("Reading in background...")
   
   # same as above
-  bg <- lapply(names(param), FUN=function(x){
+  bg <- pblapply(names(param), FUN=function(x){
     .bam2bwReadChunk(bgbam, param=param[[x]], binWidth=binWidth,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
                      forceStyle=forceSeqlevelsStyle, exclude=exclude,
                      keepStrand=ifelse(paired && strand!="*",strand,"*"),
-                     binSummarization=binSummarization)
+                     binSummarization=binSummarization, si=seqs,
+                     strandMode=strandMode, only=only)
   })
 
   if(verbose) message("Computing relative signal...")
   
-  if(isTRUE(scaling)){
-    scaling <- sum(unlist(lapply(res, FUN=function(x) metadata(x)$reads )),
-                   na.rm=TRUE)/
-                sum(unlist(lapply(bg, FUN=function(x) metadata(x)$reads )),
-                   na.rm=TRUE)
-  }
   res <- .bam2bwScaleCovList(res, scaling=FALSE)
-  bg <- .bam2bwScaleCovList(bg, scaling=scaling)
-  
-  if(!isFALSE(localBackground)){
-    if(isTRUE(localBackground)) localBackground <- 1000L*c(1L,5L)
-    bg <- .bam2bwLocalBackground(bg, binWidth=binWidth, windows=localBackground)
+  bg <- .bam2bwScaleCovList(bg, scaling=FALSE)
+  if(isTRUE(scaling)){
+    bg <- bg * .covTrimmedMean(res)/.covTrimmedMean(bg)
   }
   
-  res <- switch(compType,
-          subtract=RleList(lapply(setNames(names(res), names(res)), 
-                                  FUN=function(x) pmax(res[[x]]-bg[[x]],0))),
-          logFE=log10((res+pseudocount)/(bg+pseudocount)),
-          ppois=RleList(lapply(setNames(names(res), names(res)), 
-                               FUN=function(x){
-            Rle(-log10(ppois(as.integer(res[[x]]), as.numeric(bg[[x]]), 
-                      lower.tail=FALSE)))
-          }))
-        )
+  res <- .bwRelativeSignal(res, bg, compType=compType, pseudocount=pseudocount,
+                           localBackground=localBackground, zeroCap=zeroCap)
   rm(bg)
   
   if(is.na(output_bw)) return(res)
@@ -209,6 +209,32 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
   if(verbose) message("Writing bigwig...")
   rtracklayer::export.bw(res, output_bw)
   return(invisible(output_bw))
+}
+
+# expects a single Rle, not RleList
+.bwRelativeSignal <- function(res, bg, pseudocount=1L, localBackground=1L,
+                              compType=c("log2ratio", "subtract", 
+                                         "log10ppois", "log10FE"),
+                              zeroCap=TRUE){
+  compType <- match.arg(compType)
+  res <- lapply(setNames(names(res), names(res)), FUN=function(x){
+    bg <- .bam2bwLocalBackground(bg[[x]], windows=localBackground)
+    res <- res[[x]]
+    if(compType=="log10ppois"){
+      res[res<=pseudocount] <- 0L
+      y <- Rle(as.integer(round(-log10(ppois(
+            as.integer(res), as.numeric(bg)+pseudocount, lower.tail=FALSE)))))
+    }else{
+      y <- switch(compType,
+                  log2ratio=log10((res+pseudocount)/(bg+pseudocount)),
+                  subtract=res-bg,
+                  logFE=log10((res+pseudocount)/(bg+pseudocount)),
+            )
+      if(zeroCap) y[y<0L] <- 0L
+    }
+    y
+  })
+  as(res, "RleList")
 }
 
 
@@ -220,6 +246,9 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
 #' @param output_bw The path to the output bigwig file
 #' @param barcodes An optional list of barcodes to use (assuming that the file
 #'   contains the column)
+#' @param paired Logical; whether the coordinates are that of fragments, as 
+#'  opposed to single-end reads where the only one end of the fragments is given.
+#'  TRUE by default.
 #' @param binWidth The window size. A lower value (min 1) means a higher 
 #'  resolution, but larger file size.
 #' @param scaling Either TRUE (performs Count Per Million scaling), FALSE (no 
@@ -243,6 +272,9 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
 #'   `seqlevelsStyle`.
 #' @param exclude An optional GRanges of regions for which overlapping reads 
 #'   should be excluded.
+#' @param only An optional GRanges of regions for which overlapping reads should
+#'   be included. If set, all other reads are discarded.
+#' @param format The format of the fragment file.
 #' @param binSummarization The method to summarize nucleotides into each bin,
 #'   either "max" (default), "min" or "mean".
 #' @param verbose Logical; whether to print progress messages
@@ -251,33 +283,77 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL, binWidth=20L,
 #'   the coverage data is not written to file but returned.
 #' 
 #' @export
-frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
-                    type=c("full","center","start","end","ends"), barcodes=NULL,
-                    strand=c("*","+","-"), shift=0L, log1p=FALSE, exclude=NULL,
-                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
-                    useScore=FALSE, forceSeqlevelsStyle=NULL, 
-                    binSummarization=c("max","min","mean"), verbose=TRUE, ...){
+#' @examples
+#' # we first create a fake tabix file:
+#' library(GenomicRanges)
+#' library(rtracklayer)
+#' reads <- GRanges(rep(c("1","2"), c(5,2)),
+#'                  IRanges(5000+10*1:7, width=100))
+#' bedf <- tempfile(fileext=".bed")
+#' rtracklayer::export.bed(reads, bedf)
+#' bedf <- Rsamtools::bgzip(bedf)
+#' Rsamtools::indexTabix(bedf, format="bed")
+#' # convert to bigwig
+#' frag2bw(bedf, tempfile(fileext=".bw"))
+frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
+                    scaling=TRUE, type=c("full","center","start","end","ends"),
+                    barcodes=NULL, strand=c("*","+","-"), shift=0L, log1p=FALSE,
+                    exclude=NULL, minFragLength=1L, maxFragLength=5000L,
+                    keepSeqLvls=NULL, useScore=FALSE, forceSeqlevelsStyle=NULL,
+                    only=NULL, format="bed",
+                    binSummarization=c("max","min","mean"), verbose=TRUE){
+  
   binSummarization <- match.arg(binSummarization)
-  if(!is(tabixFile, "TabixFile")) tabixFile <- TabixFile(tabixFile)
+  strand <- match.arg(strand)
+  type <- match.arg(type)
+  if(type=="ends" && !paired){
+    if(verbose)
+      warning("type='ends' only makes sense with paired-end libraries...")
+    type <- "start"
+  }
+  
+  if(paired) extend <- 0L
   
   if(verbose) message("Reading in signal...")
-  res <- tabixChrApply(tabixFile, keepSeqLvls=keepSeqLvls, exclude=exclude,
-                       FUN=function(x){
-    if(!is.null(barcodes) && !is.null(x$name))
-      x <- x[which(x$name %in% barcodes)]
-    .frag2co(x, strand=strand, type=type, minFragLength=minFragLength,
+
+  if(!is(tabixFile, "TabixFile") && 
+     !is(tabixFile <- tryCatch({ TabixFile(tabixFile) },
+                               error=function(e){ tabixFile }),"TabixFile")){
+    if(!is(tabixFile, "GRanges")){
+      message("The input is not a tabix-indexed file, and therefore all reads ",
+              " will have to be read in memory.")
+      tabixFile <- rtracklayer::import(tabixFile, format=format)
+    }
+    if(!is(tabixFile, "GRanges")) stop("tabixFile is of an unknown format.")
+
+    res <- list(
+      .frag2co(.filterFrags(tabixFile, only=only, exclude=exclude),
+             strand=strand, type=type, minFragLength=minFragLength,
              maxFragLength=maxFragLength, shift=shift, useScore=useScore,
-             binSummarization=binSummarization)
-  })
-  if(verbose) message("Writing bigwig...")
+             binSummarization=binSummarization, binWidth=binWidth) )
+
+  }else{
+    
+    res <- tabixChrApply(tabixFile, keepSeqLvls=keepSeqLvls, exclude=exclude,
+                         only=only, fn=function(x){
+      if(!is.null(barcodes) && !is.null(x$name))
+        x <- x[which(x$name %in% barcodes)]
+      .frag2co(x, strand=strand, type=type, minFragLength=minFragLength,
+               maxFragLength=maxFragLength, shift=shift, useScore=useScore,
+               binSummarization=binSummarization, binWidth=binWidth)
+    })
+    
+  }
   res <- .bam2bwScaleCovList(res, scaling=scaling)
   if(is.na(output_bw)) return(res)
+  
+  if(verbose) message("Writing bigwig...")
   rtracklayer::export.bw(res, output_bw)
   return(invisible(output_bw))
 }
 
 .frag2co <- function(x, strand, minFragLength, maxFragLength, type, shift,
-                     binSummarization="max", useScore=FALSE){
+                     binSummarization="max", binWidth=1L, useScore=FALSE){
   nr <- length(x)
   if(strand!="*") x <- x[strand(x)==strand]
   x <- x[width(x)>=minFragLength & width(x)<=maxFragLength]
@@ -296,12 +372,13 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
 }
 
 #' @importFrom GenomeInfoDb seqlevelsStyle<- seqlevelsInUse
-.bam2bwReadChunk <- function(bamfile, param, binWidth, forceStyle=NULL, 
-                             keepStrand="*", binSummarization="max", ...){
+.bam2bwReadChunk <- function(bamfile, param, binWidth, forceStyle=NULL, si=NULL,
+                             keepStrand="*", binSummarization="max", only=NULL, 
+                             ...){
   # get reads/fragments from chunk
-  bam <- .bam2bwGetReads(bamfile, param=param, ...)
+  bam <- .bam2bwGetReads(bamfile, param=param, si=si, only=only,
+                         forceStyle=forceStyle, ...)
   if(keepStrand != "*") bam <- bam[which(strand(bam)==keepStrand)]
-  if(!is.null(forceStyle)) seqlevelsStyle(bam) <- forceStyle
   # compute coverages
   co <- tileRle(coverage(bam), bs=binWidth, method=binSummarization)
   # save library size for later normalization
@@ -314,9 +391,10 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
 
 # reads reads from bam file.
 .bam2bwGetReads <- function(bamfile, paired, param, type, extend, shift=0L,
-                            minFragL, maxFragL, si=NULL, exclude=NULL){
+                            minFragL, maxFragL, forceStyle=NULL, si=NULL,
+                            only=NULL, exclude=NULL, strandMode=0){
   if(paired){
-    bam <- readGAlignmentPairs(bamfile, param=param)
+    bam <- readGAlignmentPairs(bamfile, param=param, strandMode=strandMode)
     bam <- as(bam[isProperPair(bam)], "GRanges")
     ls <- length(bam)
     bam <- bam[width(bam)>=minFragL & width(bam)<=maxFragL]
@@ -324,9 +402,18 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
     bam <- as(readGAlignments(bamfile, param=param), "GRanges")
     ls <- length(bam)
     if(type %in% c("full","center") && extend!=0L)
-      bam <- resize(bam, width(bam)+as.integer(extend), use.names=FALSE)
+      bam <- suppressWarnings(trim(resize(bam, width(bam)+as.integer(extend),
+                                          use.names=FALSE)))
   }
-  if(!is.null(exclude)) bam <- bam[!overlapsAny(bam,exclude)]
+  if(!is.null(forceStyle)) seqlevelsStyle(bam) <- forceStyle
+  if(!is.null(only) && is(only,"GRanges")){
+    .comparableStyles(bam, only)
+    bam <- bam[overlapsAny(bam,only)]
+  }
+  if(!is.null(exclude) && is(exclude,"GRanges")){
+    .comparableStyles(bam, exclude)
+    bam <- bam[!overlapsAny(bam,exclude)]
+  }
   bam <- .doShift(bam, shift)
   if(type=="ends"){
     bam <- .align2cuts(bam)
@@ -340,6 +427,7 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
     seqinfo(bam) <- si
   }
   bam <- trim(bam)
+  bam <- bam[width(bam)>0]
   metadata(bam)$reads <- ls
   bam
 }
@@ -350,10 +438,10 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
   stopifnot(length(shift) %in% 1:2)
   if(all(shift==0)) return(x)
   if(length(shift)>1){
-    bam[strand(x)=="+"] <- shift(x[strand(x)=="+"], shift=shift[1], 
-                                   use.names=FALSE)
-    bam[strand(x)=="-"] <- shift(x[strand(x)=="-"], shift=shift[2], 
-                                   use.names=FALSE)
+    w <- strand(x)=="+"
+    bam <- sort(c(
+      shift(x[IRanges::which(w)], shift=shift[1], use.names=FALSE),
+      shift(x[IRanges::which(!w)], shift=shift[2], use.names=FALSE)))
   }else{
     x <- shift(x, shift=shift, use.names=FALSE)
   }
@@ -383,12 +471,16 @@ frag2bw <- function(tabixFile, output_bw, binWidth=20L, extend=0L, scaling=TRUE,
 #' lines(cov2, col="red")
 tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE){
   bs <- as.integer(bs)
-  stopifnot(bs>=1L)
-  if(bs<=min(min(runLength(x)))) return(x)
+  if(bs<=1L) return(x)
   method <- match.arg(method)
-  if(is(x,"RleList"))
-    return(as(lapply(x, bs=bs, method=method, FUN=tileRle), "RleList"))
+  if(is(x,"RleList")){
+    x <- lapply(x, bs=bs, method=method, FUN=tileRle)
+    x <- x[which(sapply(x, FUN=function(x) !is.null(x) && length(x)>0))]
+    return(as(x, "RleList"))
+  }
   stopifnot(is(x,"Rle"))
+  if(length(x)==0) return(NULL)
+  if(bs<=min(runLength(x)[lengths(runLength(x))>0])) return(x)
   
   # define the new ends of runs based on the number of full 'bs'
   cs <- cumsum(runLength(x)) # gives the end position of each run
@@ -423,7 +515,6 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
 # eventually applies a scaling
 .bam2bwScaleCovList <- function(res, scaling, log1p=FALSE){
   if(isTRUE(scaling)){
-    saveRDS(res, file="~/TMP.rds")
     # get scaling from chunks read counts
     scaling <- sum(unlist(lapply(res, FUN=function(x) metadata(x)$reads )),
                    na.rm=TRUE)/10^6
@@ -434,7 +525,7 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
   if(is(res[[1]], "GRanges")){
     res <- unlist(GRangesList(res))
   }else{
-    res <- Reduce("+", res)
+    res <- .reduceRleLists(res)
   }
   if(!isFALSE(scaling)){
     stopifnot(scaling>0)
@@ -454,21 +545,31 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
   res
 }
 
+.reduceRleLists <- function(res, fn="+"){
+  sn <- unique(unlist(lapply(res, names)))
+  as(lapply(setNames(sn,sn), FUN=function(x){
+    r2 <- lapply(res, FUN=function(co){
+      if(x %in% names(co)) return(co[[x]])
+      return(NULL)
+    })
+    w <- sapply(r2, FUN=function(x) !is.null(x) && length(x)>0)
+    suppressWarnings(Reduce(fn, r2[which(w)]))
+  }), "RleList")
+}
+
 # calculates local background at positions, analogous to MACS
 # TO DO: handle chr that are smaller than windows !!!
-.bam2bwLocalBackground <- function(x, binWidth=1L, windows=1000L*c(1L,5L)){
+.bam2bwLocalBackground <- function(x, windows=10L){
+  if(length(windows)==0 || sum(windows)<=1L) return(x)
   if(is(x,"GRanges")){
     x <- x[order(seqnames(x))]
     score(x) <- Rle(score(x))
     score(x) <- unlist(.bam2bwLocalBackground(
-      split(Rle(score(x)), seqnames(x)), binWidth=binWidth, windows=windows))
+      split(Rle(score(x)), seqnames(x)), windows=windows))
     return(x)
   }
   if(is.numeric(x)) x <- Rle(x)
   stopifnot(is(x,"RleList") || is(x,"Rle"))
-  windows <- windows[windows>=binWidth]
-  if(length(windows)==0) return(x)
-  windows <- as.integer(windows/binWidth)
   if(length(windows)==1) return(runmean(x, k=windows, endrule = "constant"))
   do.call(pmax, lapply(windows, FUN=function(w){
     if(w==1) return(x)
@@ -480,4 +581,17 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
   x <- granges(GRanges(x))
   sort(c(resize(x, width=1L, fix="start", use.names=FALSE),
          resize(x, width=1L, fix="end", use.names=FALSE)))
+}
+
+# returns the bin size of a fixed-width RleList
+.getBinWidth <- function(x){
+  if(is(x,"RleList")){
+    x <- unlist(lapply(x, .getBinWidth))
+    return(as.integer(round(median(x, na.rm=TRUE))))
+  }else if(is(x,"Rle")){
+    x <- runLength(x)
+    if(length(x)==1) return(NA_integer_)
+    return(min(x[-length(x)]))
+  }
+  stop("x is not a Rle/RleList")
 }

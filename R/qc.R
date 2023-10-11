@@ -232,5 +232,73 @@ fragSizesDist <- function(x, what=10000, flags=scanBamFlag(isProperPair=TRUE),
                   length=unlist(flen), row.names=NULL)
   if(!returnPlot) return(d)
   ggplot(d, aes(length, colour=sample)) + geom_density() + 
+    scale_x_continuous(breaks=c(100*0:5,750,1000), limits=c(0,1000)) +
     xlab("Fragment length")
+}
+
+
+#' TSSenrichment
+#' 
+#' A common quality metric for ATAC-seq data (see
+#' [definition](https://www.encodeproject.org/data-standards/terms/#enrichment)
+#'  ). The interpretation of the enrichment score depends on the annotation 
+#'  (the score tends to increase when only fewer, more common TSS are used), but
+#'  according to ENCODE guidelines anything below 5 is of concerning quality,
+#'  while a score >8 is ideal.
+#'
+#' @param tracks A (named) vector of paths to bigwig files.
+#' @param ensdb An `ensembldb` object. Alternatively, a GRanges object of 
+#'   regions centered around TSS.
+#' @param useSeqLevels Optional seqlevels to use. If NULL, all are used.
+#'
+#' @return A list with the slots `score` (numeric vector of TSS enrichment 
+#'   scores per sample) and `data` (per bin enrichment, for plotting)
+#' 
+#' @export
+#' @examples
+#' # we first fetch the path to the example bigwig file:
+#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+#' ## normally, we would load an ensembldb object using AnnotationHub. For the 
+#' ## purpose of this example, we'll pretend that the following set of regions
+#' ## represent TSS:
+#' tss <- system.file("extdata/example_peaks.bed", package="epiwraps")
+#' tss <- rtracklayer::import(tss)
+#' en <- TSSenrichment(bw, tss)
+#' en$score
+#' ## you can also plot using something like this:
+#' ## ggplot(en$data, aes(position, enrichment, colour=sample)) + geom_line()
+TSSenrichment <- function(tracks, ensdb, useSeqLevels=NULL){
+  stopifnot(is(ensdb, "EnsDb") || is(ensdb, "GRanges"))
+  if(!is(tracks, "character") || !all(file.exists(tracks)) ||
+     !all(.parseFiletypeFromName(tracks)=="bw"))
+    stop("`tracks` should be a character vector giving the paths to existing",
+         "bigwig files.")
+  if(is.null(names(tracks))) names(tracks) <- .cleanFileNames(tracks)
+  if(is(ensdb,"GRanges")){
+    txp <- ensdb
+  }else{
+    txp <- promoters(transcripts(ensdb), upstream = 1000, downstream = 1000)
+  }
+  if(!is.null(useSeqLevels))
+    txp <- keepSeqlevels(txp, intersect(useSeqLevels, seqlevels(txp)),
+                         pruning.mode="coarse")
+  txp <- granges(txp)
+  txp <- txp[!duplicated(txp)]
+  if(length(txp)==0)
+    stop("No TSS found. Are you sure you are providing adequate seqlevels?")
+  sm <- signal2Matrix(tracks, txp, extend = 1000L, w = 100L)
+  df <- dplyr::bind_rows(lapply(sm, FUN=function(x){
+    x <- unclass(x)
+    nf <- rowMeans(x[,c(1,ncol(x))])
+    w <- which(nf>0)
+    if(length(w)<20) warning("Too few TSS for adequate estimate.")
+    data.frame(position=round(seq(from=-1000L, to=1000L, length.out=ncol(x))),
+               enrichment=colMeans((x[w,])/nf[w]))
+  }), .id="sample")
+  df$sample <- factor(df$sample)
+  w <- which(df$position %in% unique(df$position)[10:11])
+  ag <- aggregate(df[w,"enrichment",drop=FALSE], by=list(sample=df$sample[w]),
+                  FUN=mean)
+  ag <- setNames(ag$enrichment, ag$sample)
+  list(score=ag, data=df)
 }

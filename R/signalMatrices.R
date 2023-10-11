@@ -4,13 +4,16 @@
 #'
 #' @param ml A named list of matrices as produced by \code{\link{signal2Matrix}}
 #' @param fun An optional custom aggregation function (or named list thereof).
+#' @param trim The quantile above which to trim values. If a numeric vector of 
+#'   length 2, will be used as lower and upper quantiles beyond which to trim.
 #'
 #' @return A data.frame.
 #' @export
 #' @importFrom matrixStats colMedians
-meltSignals <- function(ml, fun=NULL, splitBy=NULL){
+meltSignals <- function(ml, fun=NULL, splitBy=NULL, trim=0.98){
   stopifnot(is.list(ml))
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
+  ml <- .applyTrimming(ml, trim)
   if(!is.null(splitBy)){
     stopifnot(length(splitBy)==nrow(ml[[1]]))
     return(dplyr::bind_rows(lapply(split(seq_along(splitBy), splitBy),
@@ -78,19 +81,25 @@ mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median")){
 #' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
 #' @param method Either "linear", or a normalization method, passed to 
 #'   \code{\link[edgeR]{calcNormFactors}}.
+#' @param trim Quantiles trimmed at each extreme (for linear normalization)
 #'
 #' @return A renormalized list of signal matrices.
 #' @export
 #' @importFrom edgeR calcNormFactors
-renormalizeBorders <- function(ml, method="linear", 
-                               nWindows=max(floor(ncol(ml[[1]])/20),1)){
+renormalizeBorders <- function(ml, method="linear", trim=NULL,
+                               nWindows=max(floor(ncol(ml[[1]])/10),1)){
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
   b <- do.call(cbind, lapply(ml, FUN=function(x){
     as.numeric(cbind(x[,seq_len(nWindows)],
                      x[,seq(from=ncol(x)-nWindows+1, to=ncol(x))]))
   }))
+  if(is.null(trim)) trim <- (sum(b!=0)/length(b))/10
   if(method=="linear"){
-    nf <- apply(b, 2, trim=0.01, FUN=mean)
+    nf <- apply(b, 2, FUN=function(x){
+      y <- mean(x, trim=trim)
+      if(y==0) y <- mean(x)
+      y
+    })
     nf <- nf/median(nf)
   }else{
     nf <- calcNormFactors(b, method=method, lib.size=rep(1,ncol(b)))
@@ -148,198 +157,6 @@ rescaleSignalMatrices <- function(ml, scaleFactors, applyLinearly=NULL){
 }
 
 
-#' bwNormFactors
-#' 
-#' Estimates normalization factors for a set of bigwig files.
-#'
-#' @param x A vector of paths to bigwig files, or alternatively a list of 
-#'   coverages in RleList format.
-#' @param wsize The size of the random windows. If any of the bigwig files 
-#'  records point events (e.g. insertions) at high resolution (e.g. nucleotide),
-#'  use a lot (e.g. >10k) of small windows (e.g. `wsize=10`), as per default
-#'  settings. Otherwise the process can be lightened by using fewer bigger 
-#'  windows.
-#' @param nwind The number of random windows
-#' @param peaks A list of peaks (GRanges) for each experiment in `x`, or a
-#'   vector of paths to such files, or a single GRanges of peaks to use for 
-#'   MAnorm
-#' @param trim Amount of trimming when calculating means
-#' @param method Normalization method (see details)
-#' 
-#' @return A vector of normalization factors, or for the 'S3norm' and '2cLinear'
-#'   methods, a numeric matrix with a number of rows equal to the length 
-#'   of `x`, and two columns indicating the alpha and beta terms.
-#' 
-#' @details 
-#' The 'background' or 'SES' normalization method (they are synonyms here)
-#' (Diaz et al., Stat Appl Gen et Mol Biol, 2012) assumes that the background
-#' noise should on average be the same across experiments, an assumption that 
-#' works well in practice when there are not very large differences in 
-#' signal-to-noise ratio. The implementation uses the trimmed mean number of 
-#' reads in random windows with non-zero counts.
-#' The 'MAnorm' approach (Shao et al., Genome Biology 
-#' 2012) assumes that regions that are commonly enriched in two experiments
-#' should on average have the same signal in the two experiments. These methods
-#' then use linear scaling.
-#' The 'S3norm' (Xiang et al., NAR 2020) and '2cLinear' methods try to 
-#' normalize both simultaneously. S3norm does this in a log-linear fashion (as 
-#' in the publication), while '2cLinear' does it on the original scale.
-#'
-#' @return
-#' @export
-bwNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.05,
-                          useSeqLevels=NULL, 
-                          method=c("background","SES","MAnorm","S3norm",
-                                   "2cLinear")){
-  method <- match.arg(method)
-  chrsizes <- lapply(x, FUN=function(x){
-    if(is.character(x)) return(seqlengths(BigWigFile(x)))
-    if(is(x,"RleList")) return(lengths(x))
-    stop("Unrecognized input")
-  })
-  tt <- table(unlist(lapply(chrsizes, names)))
-  tt <- names(tt)[tt==length(x)]
-  if(length(tt)==0) stop("The files appear to have no chromosome in common.")
-  chrsizes <- do.call(cbind, lapply(chrsizes, FUN=function(x) x[tt]))
-  chrsizes <- matrixStats::rowMins(chrsizes)
-  names(chrsizes) <- tt
-  if(!is.null(useSeqLevels)){
-    if(!all(useSeqLevels %in% names(chrsizes)))
-      stop("Some of the requested seqlevels are not found in the data!")
-    chrsizes <- chrsizes[useSeqLevels]
-  }
-  stopifnot(length(chrsizes)>0)
-  names(seqlvls) <- seqlvls <- names(chrsizes)
-  
-  if(!(method %in% c("background","SES")) && is.null(peaks))
-    stop("The selected normalization method requires peaks.")
-
-  if(method=="MAnorm"){
-    return(.MAnorm(x, peaks, trim=trim, useSeqLevels=useSeqLevels))
-  }
-  
-  windows <- .randomTiles(chrsizes, nwind, wsize)
-  wc <- do.call(cbind, lapply(x, windows=windows, FUN=.getCovVals))
-  wc <- wc[which(rowSums(is.na(wc))==0 & rowSums(wc)>0),]
-  if(any(colSums(wc)<50))
-    warning("Some samples have less than 50 non-zero windows. Consider ",
-            "increasing the window size or (better) the number of windows.")
-  if(method %in% c("background","SES")){
-    nf <- apply(wc, 2, trim=trim, na.rm=TRUE, FUN=mean)
-    return(setNames(median(nf, na.rm=TRUE)/nf, names(x)))
-  }
-
-  wc <- wc[!overlapsAny(windows, 
-                        reduce(unlist(GRangesList(peaks), use.names=FALSE))),]
-  
-  peaks <- lapply(peaks, FUN=function(x){
-    if(is.character(x)) x <- rtracklayer::import(x)
-    if(!is.null(useSeqLevels)) x <- x[seqnames(x) %in% useSeqLevels]
-    x
-  })
-  
-  cost <- function(p){
-    a <- p["a"]
-    b <- p["b"]
-    if(method=="S3norm"){
-      x1 <- a*(x1)^b
-      bg1 <- a*(bg1[bg1>0])^b
-    }else{
-      x1 <- a+b*x1
-      bg1 <- a+(bg1[bg1>0])*b
-    }
-    abs(mean(x1, trim=trim)-mean(x2, trim=trim)) +
-      abs(mean(bg1, trim=trim) - mean(bg2[bg2>0L], trim=trim))
-  }
-  
-  nf <- lapply(seq_along(x)[-1], FUN=function(i){
-    common <- reduce(resize(intersect(peaks[[1]],peaks[[i]]), width=wsize))
-    common <- common[seqnames(common) %in% names(chrsizes)]
-    common <- keepSeqlevels(common, seqlevelsInUse(common), pruning.mode="coarse")
-    seqlengths(common) <- chrsizes[seqlevels(common)]
-    x1 <- .getCovVals(x[[1]], common)
-    x2 <- .getCovVals(x[[i]], common)
-    if(method=="MAnorm") return(mean(x1,trim=trim)/mean(x2,trim=trim))
-    optim(c(a=ifelse(method=="S3norm",1,0), b=1), fn=cost)$par
-  })
-  if(method=="MAnorm") return(setNames(c(1,unlist(nf)), names(x)))
-  
-  nf <- rbind(c(ifelse(method=="S3norm",1,0),1), do.call(rbind, nf))
-  row.names(nf) <- names(x)
-  colnames(nf) <- letters[1:2]
-  attributes(nf)$applyLinearly <- method=="2cLinear"
-  nf
-}
-
-.MAnorm <- function(x, peaks, trim=0.05, useSeqLevels=NULL){
-  stopifnot(is(peaks, "GRanges") || length(peaks)==length(x))
-  if(is(peaks, "GRanges")){
-    peaks <- c(list(NULL), lapply(seq_len(length(x)-1), FUN=function(x) peaks))
-  }else{
-    po <- sapply(seq_along(peaks), FUN=function(i){
-      sapply(seq_along(peaks), FUN=function(j){
-        if(i==j) return(NA)
-        sum(overlapsAny(peaks[[i]], peaks[[j]]))
-      })
-    })
-    ref <- which.max(matrixStats::rowMaxs(po,na.rm=TRUE))
-    if(min(po[ref,],na.rm=TRUE)<100){
-      if(min(po[ref,],na.rm=TRUE)<1){
-        stop("Some of the experiments have no peak in common!")
-      }
-      warning("Some of the experiments have few (<100) peaks in common.",
-              "The calculated factors might be inaccurate.")
-    }
-    refP <- sort(peaks[[ref]])
-    refP$ID <- seq_along(refP)
-    peaks <- lapply(peaks, FUN=function(x){
-      if(identical(refP,x)) return(NULL)
-      refP[overlapsAny(refP, x)]$ID
-    })
-  }
-  refC <- .getCovVals(x[[ref]], refP)
-  nf <- mapply(p=peaks, x=x, FUN=function(p,x){
-    co <- .getCovVals(x, refP[p])
-    if(any(refC<0))
-      return(mean(refC[p],trim=trim)/mean(co, trim=trim))
-    nf <- edgeR::calcNormFactors(cbind(refC[p], co))
-    nf[2]/nf[1]
-  })
-  setNames(nf, names(x))
-}
-
-
-#' @importFrom IRanges IRangesList
-.randomTiles <- function(chrsizes, nwind, wsize){
-  winPerChr <- round(nwind*(chrsizes/sum(chrsizes)))
-  winPerChr <- winPerChr[winPerChr>=1]
-  windows <- as(IRangesList(lapply(setNames(names(winPerChr),names(winPerChr)),
-                                   FUN=function(x){
-    possibleWindows <- floor(chrsizes[x]/wsize)
-    IRanges(sort(1L+wsize*(sample.int(possibleWindows, winPerChr[x])-1L)), 
-                 width=wsize)
-  })), "GRanges")
-  seqlengths(windows) <- chrsizes[seqlevels(windows)]
-  windows
-}
-
-.getCovVals <- function(x, windows){
-  if(is.character(x)){
-    x <- rtracklayer::import(x, format="BigWig", 
-                             selection=BigWigSelection(windows))
-    x <- coverage(x, weight=x$score)
-  }
-  windows <- sort(windows)
-  y <- rep(NA_integer_, length(windows))
-  w <- which(as.factor(seqnames(windows)) %in% names(x))
-  if(length(w)==0) stop("No window found in coverage! Wrong seqlevel style?")
-  windows <- windows[w]
-  windows <- keepSeqlevels(windows, seqlevelsInUse(windows), pruning.mode="coarse")
-  windows <- split(ranges(windows),seqnames(windows),drop=TRUE)
-  y[w] <- unlist(viewMaxs(Views(x[names(windows)], windows)),
-                 use.names=FALSE)
-  y
-}
 
 #' clusterSignalMatrices
 #'
@@ -371,27 +188,29 @@ clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
                                   by=rep(1L,length(ml)),
                                   assay=1L, trim=c(0.05,0.95), nstart=3, ...){
   if(is(ml, "SummarizedExperiment")) ml <- .ese2ml(ml, assay=assay)
-  ml <- .comparableMatrices(ml)
+  #ml <- .comparableMatrices(ml)
   k <- unique(as.integer(k))
   stopifnot(all(k>1 & k<nrow(ml[[1]])))
   use <- match.arg(use)
+  
+  .getMatCenter <- function(x){
+    a <- attributes(x)
+    if(length(ti <- a$target_index)==0)
+      ti <- c(max(a$upstream_index),min(a$downstream_index))
+    rowMeans(x[,ti,drop=FALSE])
+  }
+  
   ml <- lapply(ml, FUN=function(x){
     q <- quantile(x, trim)
     x[x>q[2]] <- q[2]
     x[x<q[1]] <- q[1]
-    x
+    if(scaleCols) x <- (x-mean(x))/sd(x)
+    switch(use,
+           full=x,
+           max=matrixStats::rowMaxs(x),
+           center=.getMatCenter(x),
+           enrich=enriched_score(x))
   })
-  if(scaleCols) ml <- lapply(ml, FUN=function(x) (x-mean(x))/sd(x))
-  ml <- switch(use,
-               full=ml,
-               max=lapply(ml, FUN=matrixStats::rowMaxs),
-               center=lapply(ml, FUN=function(x){
-                 a <- attributes(x)
-                 if(length(ti <- a$target_index)==0)
-                   ti <- c(max(a$upstream_index),min(a$downstream_index))
-                 rowMeans(x[,ti,drop=FALSE])
-               }),
-               enrich=lapply(ml, enriched_score))
   if(scaleRows){
     stopifnot(length(ml)==length(by))
     ml <- lapply(split(ml, by), FUN=function(x){
@@ -404,9 +223,9 @@ clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
   }
   m <- do.call(cbind, ml)
   res <- lapply(setNames(k,k), FUN=function(x){
-    cl <- kmeans(dist(m), centers=k)
+    cl <- kmeans(dist(m), centers=x)
     ve <- round(100*sum(cl$betweenss)/sum(c(cl$withinss,cl$betweenss)))
-    list(cl=factor(as.character(cl$cluster),as.character(seq_len(k))), ve=ve)
+    list(cl=factor(as.character(cl$cluster),as.character(seq_len(x))), ve=ve)
   })
   if(length(res)==1){
     message("  ~", res[[1]]$ve, "% of the variance explained by clusters")

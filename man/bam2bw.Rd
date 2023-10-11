@@ -11,11 +11,12 @@ bam2bw(
   paired = NULL,
   binWidth = 20L,
   extend = 0L,
-  compType = c("ppois", "subtract", "logFE"),
   scaling = TRUE,
-  type = c("full", "center", "start", "end", "ends"),
-  strand = c("*", "+", "-"),
   shift = 0L,
+  type = c("full", "center", "start", "end", "ends"),
+  compType = c("log2ratio", "subtract", "log10ppois", "log10FE"),
+  strand = c("*", "+", "-"),
+  strandMode = 1,
   log1p = FALSE,
   exclude = NULL,
   includeDuplicates = TRUE,
@@ -26,7 +27,9 @@ bam2bw(
   keepSeqLvls = NULL,
   splitByChr = 3,
   pseudocount = 1L,
-  localBackground = c(1000L, 5000L),
+  localBackground = 1L,
+  only = NULL,
+  zeroCap = TRUE,
   forceSeqlevelsStyle = NULL,
   verbose = TRUE,
   binSummarization = c("max", "min", "mean"),
@@ -51,25 +54,33 @@ resolution, but larger file size.}
 \item{extend}{The amount *by* which to extend single-end reads (e.g. 
 fragment length minus read length). Ignored if `paired=TRUE`.}
 
-\item{compType}{The type of relative signal to compute (ignored if `bgbam` 
-isn't given). Can either be `ppois` (-log10 Poisson p-value), `logFE` 
-(log10 fold-enrichment), or `subtract`. If `logFE`, the `pseudocount` 
-will be added before computing the ratio.}
-
 \item{scaling}{Either TRUE (performs Count Per Million scaling), FALSE (no 
 scaling), or a numeric value by which the signal will be divided. If 
 `bgbam` is given and `scaling=TRUE`, the background will be scaled to the
 main signal.}
 
+\item{shift}{Shift (from 3' to 5') by which reads/fragments will be shifted.
+If `shift` is an integer vector of length 2, the first value will represent
+the shift for the positive strand, and the second for the negative strand.}
+
 \item{type}{Type of the coverage to compile. Either full (full read/fragment),
 start (count read/fragment start locations), end, center, or 'ends' (both
 ends of the read/fragment).}
 
+\item{compType}{The type of relative signal to compute (ignored if `bgbam` 
+isn't given). Can either be 'log2ratio' (log2-foldchange between signals),
+'subtract' (difference), 'log10ppois' (rounded -log10 poisson p-value),
+'log10FE' (log10 fold-enrichment). For fold-based signals, `pseudocount` 
+will be added before computing the ratio. By default negative values are
+capped (see `zeroCap`).}
+
 \item{strand}{Strand(s) to capture (any by default).}
 
-\item{shift}{Shift (from 3' to 5') by which reads/fragments will be shifted.
-If `shift` is an integer vector of length 2, the first value will represent
-the shift for the positive strand, and the second for the negative strand.}
+\item{strandMode}{The strandMode of the data (whether the strand is given by
+the first or second mate, which depends on the library prep protocol). See
+\link[GenomicAlignments]{strandMode} for more information. This parameter 
+has no effect unless one of the `strand`, `extend` parameters or a 
+strand-specific `shift` are used.}
 
 \item{log1p}{Whether to log-transform (`log(x+1)`) the (scaled) signal.
 Ignored when the signal is relative to a background.}
@@ -98,14 +109,18 @@ chromosome is processed separately), but we instead recommend giving a
 positive integer indicating the number of chunks.}
 
 \item{pseudocount}{The count to be added before fold-enrichment calculation 
-between signals. Only used for `compType="logFE"`.}
+between signals. Ignored if `compType="subtract"`.}
 
-\item{localBackground}{Whether to use the local background instead of the 
-count at the specific position/window when computing relative signal 
-(analogous to MACS). Can either be a logical value, or an integer vector of
-multiple sizes at which to compute a local background (as average signal).
-The maximum of the average background signal across the window sizes will 
-be used. If TRUE, will use 1kb and 5kb.}
+\item{localBackground}{A (vector of) number of windows around each 
+tile/position for which a local background will be calculated. The 
+background used will be the maximum of the one at the given position or of
+the mean of each of the local backgrounds.}
+
+\item{only}{An optional GRanges of regions for which overlapping reads should
+be included. If set, all other reads are discarded.}
+
+\item{zeroCap}{Logical; whether to cap values below zero to zero when 
+producing relative signals.}
 
 \item{forceSeqlevelsStyle}{If specified, forces the use of the specified 
 seqlevel style for the output bigwig. Can take any value accepted by

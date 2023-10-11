@@ -36,6 +36,7 @@
 #'   colors for each cluster. Can also be a `gpar` object.
 #' @param mean_scale_side The side on which to show the y-axis scale of the mean
 #'   plots. Either "both" (default), "left", "right", or "none".
+#' @param  Logical; whether to apply the trimming also to the mean plot.
 #' @param use_raster Logical; whether to render the heatmap body as a raster 
 #'   image. Turned on by default if any of the matrix dimensions is greater than
 #'   2000.
@@ -83,11 +84,18 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
                                  scale_rows=FALSE, top_annotation=TRUE, 
                                  left_annotation=NULL, right_annotation=NULL,
                                  mean_color="red", mean_scale_side=NULL, 
-                                 show_heatmap_legend=TRUE, use_raster=NULL, ...){
+                                 mean_trim=TRUE, show_heatmap_legend=TRUE,
+                                 use_raster=NULL, ...){
   hasMean <- isTRUE(top_annotation) || is(top_annotation, "list") || 
     (is.character(top_annotation) && "mean" %in% top_annotation)
+  # avoid inconsistencies when resizing the matrix
+  if(hasMean & isFALSE(mean_trim) && 
+     !is.null(rrm <- list(...)[["raster_resize_mat"]]) && rrm){
+    warning("Enforcing mean_trim=TRUE due to the usage of 'raster_resize_mat'")
+    mean_trim <- TRUE
+  }
   meanPars <- list()
-  if(hasMean && is(top_annotation, "list")){
+  if(is(top_annotation, "list")){
     meanPars <- top_annotation
     top_annotation <- NULL
   }else if(is.logical(top_annotation)){
@@ -137,6 +145,15 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
       mean_gp <- gpar(col=mean_color[levels(row_split)])
     }
   }
+  
+  ml_trimmed <- .applyTrimming(ml, trim)
+
+  if(isTRUE(mean_trim)){
+    ml <- ml_trimmed # don't just trim the scale
+    trim <- 1
+  } 
+  col_fun <- .getColFun(ml, trim, colors=colors)
+
   ymin <- min(c(0,unlist(lapply(ml,FUN=min))))
   ymax <- max(unlist(lapply(ml, FUN=function(x){
     max(unlist(lapply(split(seq_along(rs), rs), FUN=function(i){
@@ -144,11 +161,10 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
       max(colMeans(x2)+matrixStats::colSds(x2)/sqrt(nrow(x2)))
     })))
   })))
-  col_fun <- .getColFun(ml, trim, colors=colors)
   if(isTRUE(cluster_rows)){
-    cluster_rows <- hclust(dist(do.call(cbind, ml)))
+    cluster_rows <- hclust(dist(do.call(cbind, ml_trimmed)))
   }else if(is.null(row_order)){
-    row_order <- order(-rowMeans(do.call(cbind, lapply(ml, enriched_score))))
+    row_order <- order(-rowMeans(do.call(cbind, lapply(ml_trimmed, enriched_score))))
   }
   a <- attributes(ml[[1]])
   neededAxisLabs <- ifelse(length(a$target_index)==0,3,4)
@@ -224,19 +240,43 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 }
 
 .getColFun <- function(ml, trim, colors){
-  stopifnot(is.numeric(trim) & all(trim>=0) & all(trim<=1))
   stopifnot(length(colors)>1)
-  if(length(trim)==1) trim <- c(0,trim)
-  trim <- sort(trim)
-  r <- c( min(unlist(lapply(ml,prob=trim[1],na.rm=TRUE,FUN=quantile))),
-          max(unlist(lapply(ml,prob=trim[2],na.rm=TRUE,FUN=quantile))) )
-  if(r[[1]]==r[[2]]) r <- range(unlist(lapply(ml,range)))
-  if(r[[1]]==r[[2]]){
-    warning("There appears to be no signal in the data!")
-    r[[2]] <- r[[1]]+1
-  }
+  r <- .getTrimPoints(ml, trim)
   breaks <- seq(from=r[[1]], to=r[[2]], length.out=length(colors))
   circlize::colorRamp2(breaks, colors)
+}
+
+# get range beyond which to trim
+.getTrimPoints <- function(ml, trim){
+  stopifnot(is.numeric(trim) & all(trim>=0) & all(trim<=1))
+  if(length(trim)==1) trim <- c(0,trim)
+  trim <- sort(trim)
+  tryCatch({
+    r <- c( min(unlist(lapply(ml,prob=trim[1],na.rm=TRUE,FUN=quantile))),
+            max(unlist(lapply(ml,prob=trim[2],na.rm=TRUE,FUN=quantile))) )
+    if(r[[1]]==r[[2]]) r <- range(unlist(lapply(ml,range)))
+    if(r[[1]]==r[[2]]){
+      warning("There appears to be no signal in the data!")
+      r[[2]] <- r[[1]]+1
+    }
+  }, error=function(e){
+    stop("Unable to apply trimming - this typically happens when the input ",
+         "contains less non-zero values than the trimmed range.\nDouble-check ",
+         "your object or try to reduce the trimming.")
+  })
+  r
+}
+
+# trim values beyond trim range in signal matrices
+.applyTrimming <- function(ml, trim){
+  if(!is.list(ml)) ml <- list(ml)
+  br <- .getTrimPoints(ml, trim)
+  ml <- lapply(ml, FUN=function(x){
+    x[which(x>br[2])] <- br[2]
+    x[which(x<br[1])] <- br[1]
+    x
+  })
+  ml
 }
 
 .prepAnnoEnrich <- function(par, isFirst, isLast, ...,
@@ -275,7 +315,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 }
 
 .parseTopAnn <- function(CD, fields){
-  if(isFALSE(fields) || isTRUE(fields)) return(NULL)
+  if(is.null(fields) || isFALSE(fields) || isTRUE(fields)) return(NULL)
   if(is.list(CD)) return(NULL)
   if(is(CD, "SummarizedExperiment")) CD <- colData(CD)
   fields <- intersect(fields, colnames(CD))
@@ -284,8 +324,9 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 }
 
 .prepTopAnn <- function(df, i, ml){
-  if(is.null(df)) return(NULL)
-  df <- df[rep(i,ncol(ml[[i]])),,drop=FALSE]
-  row.names(df) <- NULL
+  if(is.data.frame(df) || is(df,"DFrame")){
+    df <- df[rep(i,ncol(ml[[i]])),,drop=FALSE]
+    row.names(df) <- NULL
+  }
   df
 }

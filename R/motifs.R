@@ -68,6 +68,7 @@ motifFootprint <- function(bamfile, motif, motif_occurences, genome=NULL,
   stopifnot(is(motif_occurences, "GRanges"))
   if(!requireNamespace("ATACseqQC", quietly=TRUE))
     stop("This requires the ATACseqQC package.")
+  seqlevelsStyle(motif_occurences) <- seqlevelsStyle(BamFile(bamfile))
   if(all(is.na(seqlengths(motif_occurences)))){
     if(!is.null(genome)){
       seqlengths(motif_occurences) <-
@@ -78,6 +79,7 @@ motifFootprint <- function(bamfile, motif, motif_occurences, genome=NULL,
                                 seqnames(motif_occurences)), max)
     }
   }
+  if(is.null(motif_occurences$score)) motif_occurences$score <- 1
   ATACseqQC:::factorFootprints(bamfile, pfm=motif, bindingSites=motif_occurences, 
                               upstream=around, downstream=around,
                               seqlev=seqlevels(motif_occurences))
