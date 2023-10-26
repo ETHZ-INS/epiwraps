@@ -332,7 +332,7 @@ This usually happens when the genome annotation used for the files ",
 #' views2Matrix(v)
 views2Matrix <- function(v, padVal=NA_integer_){
   if(!is(v, "RleViewsList")) v <- RleViewsList(v)
-  ws <- width(v)[[1]][[1]]
+  ws <- width(v)[[head(which(lengths(v)>0),1)]][[1]]
   stopifnot(all(unlist(width(v))==ws))
   x <- Reduce(c, lapply(v[lengths(v)>0], padVal=padVal, FUN=.view2paddedAL))
   matrix(unlist(x), byrow=TRUE, ncol=ws)
