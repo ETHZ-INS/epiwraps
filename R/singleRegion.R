@@ -81,7 +81,8 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
                              tracks.params=list(), extraTracks=list(), 
                              background.title="white", col.axis="grey40", 
                              bed.rotation.title=0, col.title="black", 
-                             cex.title=0.65, overlay.alpha=100, ...){
+                             cex.title=0.65, overlay.alpha=100, 
+                             normFactors=NULL, ...){
   if(length(files)==0 && is.null(ensdb))
     stop("No track to plot!")
   options(ucscChromosomeNames=FALSE)
@@ -124,6 +125,8 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
     if(any(lengths(fm)>1 & sapply(fm, FUN=function(x) any(x=="bam"))))
       warning("It is not advised to overlay/aggregate signals from bam files, ",
               "as these are not normalized.")
+    if(any(lengths(fm)>1) && aggregation=="overlay" && !is.null(normFactors))
+      warning("Custom normalization factors not yet implemented for 'overlay' aggregation.")
   }
   
   # converting RleLists to temporary bigwigs
@@ -216,6 +219,16 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
       return(tr[[1]])
     }
     gr <- signalsAcrossSamples(files[[subf]], region2)
+    if(!is.null(normFactors)){
+      if(!all(names(files[[subf]]) %in% names(normFactors))){
+        warning("Tracks names not found in `normFactors` - the normalization ",
+                "factors will be ignored.")
+      }else{
+        for(f in colnames(mcols(gr))){
+          mcols(gr)[[f]] <- mcols(gr)[[f]]*normFactors[[f]]
+        }
+      }
+    }
     if(aggregation=="heatmap"){
       tp$type <- "heatmap"
       tp$range <- gr
@@ -280,6 +293,9 @@ signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
   region <- .parseRegion(region, asGR=TRUE)
   files <- lapply(files, which=region, rtracklayer::import.bw)
   grs <- lapply(files,FUN=function(x) x[x$score>0])
+  grs <- lapply(grs, FUN=function(x){
+    keepSeqlevels(x, seqnames(region), pruning.mode="coarse")
+  })
   gr <- disjoin(unlist(GRangesList(grs)), ignore.strand=ignore.strand)
   m <- sapply(grs, FUN=function(x){
     o <- findOverlaps(gr,x, ignore.strand=ignore.strand)
