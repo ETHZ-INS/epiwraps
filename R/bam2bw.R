@@ -12,7 +12,10 @@
 #' @param binWidth The window size. A lower value (min 1) means a higher 
 #'  resolution, but larger file size.
 #' @param extend The amount *by* which to extend single-end reads (e.g. 
-#'   fragment length minus read length). Ignored if `paired=TRUE`.
+#'   fragment length minus read length). Ignored if `paired=TRUE`. When 
+#'   `type="ends"`, this will be applied after taking the (shifted) fragment 
+#'   ends, resulting in ranges of width equal to `extend`, centered on the 
+#'   (shifted) fragment ends (e.g. insertion sites).
 #' @param scaling Either TRUE (performs Count Per Million scaling), FALSE (no 
 #'   scaling), or a numeric value by which the signal will be divided. If 
 #'   `bgbam` is given and `scaling=TRUE`, the background will be scaled to the
@@ -129,6 +132,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
   binWidth <- as.integer(binWidth)
   shift <- as.integer(shift)
   stopifnot(length(shift) %in% 1:2)
+  stopifnot(extend>=0L)
   stopifnot(length(binWidth)==1 && binWidth>=1)
   if(is.null(paired)){
     if(verbose) message("`paired` not specified, assuming single-end reads. ",
@@ -138,7 +142,9 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
     paired <- testPairedEndBam(bamfile)
     if(verbose) message("Detected ", ifelse(paired,"paired","unpaired")," data")
   }
-  if(paired) extend <- 0L
+  if(paired && type!="ends" && verbose) 
+    warning("Extending fragments. ",
+            "Did you really mean to extend paired-end reads?")
   if(type=="ends" && !paired){
     if(verbose)
       warning("type='ends' only makes sense with paired-end libraries...")
@@ -417,6 +423,8 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
   bam <- .doShift(bam, shift)
   if(type=="ends"){
     bam <- .align2cuts(bam)
+    if(extend!=0L) bam <- suppressWarnings(trim(resize(bam, as.integer(extend),
+                                                       use.names=FALSE)))
   }else if(type!="full"){
     bam <- resize(bam, width=1L, fix=type, use.names=FALSE)
   }
