@@ -10,7 +10,7 @@ signal2Matrix(
   extend = 2000,
   w = NULL,
   scaledBins = 50L,
-  type = c("center", "scale"),
+  type = c("center", "scaled"),
   binMethod = c("max", "mean", "min"),
   BPPARAM = 1L,
   ret = c("list", "ESE"),

@@ -1,0 +1,135 @@
+---
+title: "Visualizing signals in a single region"
+author: 
+- name: Pierre-Luc Germain
+  affiliation:
+    - D-HEST Institute for Neuroscience, ETH
+    - Lab of Statistical Bioinformatics, UZH
+package: epiwraps
+output:
+  BiocStyle::html_document
+abstract: |
+  This vignette documents the use of the 'plotSignalTracks' to generate 
+  genome-browser-like plots of signals and annotations along genomic coordinates
+  in a single given region. It is chiefly a wrapper around the 'Gviz' package.
+vignette: |
+  %\VignetteIndexEntry{singleRegionPlot}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+library(BiocStyle)
+```
+
+# Plotting signals in a region
+
+The `plotSignalTracks` function is a wrapper around the 
+`r BiocStyle::Biocpkg("Gviz")` package, which plots one or more signals along 
+genomic coordinates (in a genome-browser like fashion). 
+The function lacks the full flexibility of the `r BiocStyle::Biocpkg("Gviz")` 
+package, but presents a considerable simpler interface, with automatic default 
+parameters, etc. It has two essential arguments: a (named) list of files whose 
+signal to display (can be a mixture of bigwig, bam, or bed-like files), and the 
+region in which to display the signals (can be given as a GRanges or as a 
+string). The function then automatically determines the relevant track type and 
+setting from the file types.
+
+```{r signal1, fig.width=6, fig.height=2.5, message=FALSE}
+library(GenomicRanges)
+library(epiwraps)
+# get the path to an example bigwig file:
+bwf1 <- system.file("extdata/example_rna.bw", package="epiwraps")
+plotSignalTracks(list(RNA=bwf1), region="8:22165140-22212326", genomeAxis=TRUE)
+# we could plot multiple tracks as follows:
+plotSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326")
+```
+
+`GRanges` objects can also be plotted as annotation tracks alongside other data:
+
+```{r signal2, fig.width=6, fig.height=2}
+myregions <- GRanges("8", IRanges(c(22166000,22202300), width=3000))
+plotSignalTracks(list(RNA=bwf1, regions=myregions), region="8:22165140-22212326")
+```
+
+Colors, track display types, and such parameters can either be set for all tracks
+or for each individual track, for example:
+
+```{r signal3, fig.width=6, fig.height=2}
+myregions <- GRanges("8", IRanges(c(22166000,22202300), width=3000))
+plotSignalTracks(list(RNA=bwf1, regions=myregions), colors=c("red", "black"),
+                 region="8:22165140-22212326")
+```
+
+
+For bam files, we can also plot individual reads:
+
+```{r signalAlignments}
+# we fetch an example bam file:
+bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
+plotSignalTracks(c("my bam file"=bam), "seq1:1-1500", type="alignments")
+```
+
+## Merging signal from different tracks
+
+In addition to being displayed one below the other, data tracks can be combined
+in different ways. To do this, the tracks can simply be given in a nested 
+fashion:
+
+```{r mergingSignals, eval=FALSE}
+plotSignalTracks(list(track1=bwf1, combined=c(bwf1,bwf1)),
+                 region="8:22165140-22212326")
+```
+
+In this example we are always using the same track, but the first element 
+('track1') plots the track alone, while the second ('combined') merges the two 
+given tracks. By default, the mean is shown, but this can be controlled through 
+the `aggregation` argument. In addition to usual operations, the tracks can be 
+overlayed on top of one another (`aggregation='overlay'`), or shown as a 
+heatmap (`aggregation='heatmap'`).
+
+## Using an EnsDb object
+
+If an `EnsDb` object is available (see the `r BiocStyle::Biocpkg("ensembldb")` 
+package for a description of the class and its methods, and the 
+`r BiocStyle::Biocpkg("AnnotationHub")` package for a convenient way of 
+fetching such annotation objects), two additional options are available: first,
+instead of specifying the region as coordinates, one can specify a gene or 
+transcript name, and the corresponding region will be fetched. In addition, the
+genes or transcripts can be displayed. For example:
+
+```{r ensdb, eval=FALSE}
+# we fetch the GRCh38 Ensembl 103 annotation (this is not run in the vignette,
+# as it takes some time to download the annotation the first time is used):
+library(AnnotationHub)
+ah <- AnnotationHub()
+ensdb <- ah[["AH89426"]]
+# we plot our previous RNA bigwig file, around the BMP1 locus:
+plotSignalTracks(c(coverage=bwf1), region="BMP1", ensdb=ensdb, 
+                 transcripts="full")
+```
+
+```{r trackWithTx, echo=FALSE}
+knitr::include_graphics(system.file('docs', 'TracksWithTranscripts.png', 
+                                    package='epiwraps'))
+```
+Now we can see that the coverage is nicely restricted to exons, and that some 
+transcripts/exons are not expressed as highly as others. The transcripts could 
+also have been collapsed into a gene model using `transcripts="collapsed"` (the
+default).
+
+To display only the gene track, the first argument can simply be omitted.
+
+## Further track customization
+
+In addition to the `colors` and `type` argument (and a number of others), which 
+can customize the appearance of tracks, any additional parameters supported by 
+the respective `r BiocStyle::Biocpkg("Gviz")` function can be passed through the
+`genes.params` (for Gviz's `GeneRegionTrack`), `align.params` (for Gviz's 
+`AlignmentsTrack`, when plotting individual reads), or `tracks.params` (for any 
+other Gviz `DataTrack`).
+
+Also, in addition to passing filepaths or `GRanges`, any Gviz track(s) can be 
+passed (i.e. objects inheriting the `GdObject` class) can be passed, enabling 
+full track customization when needed.
+

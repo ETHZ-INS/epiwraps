@@ -52,7 +52,10 @@ set to FALSE.}
 resolution, but larger file size.}
 
 \item{extend}{The amount *by* which to extend single-end reads (e.g. 
-fragment length minus read length). Ignored if `paired=TRUE`.}
+fragment length minus read length). Ignored if `paired=TRUE`. When 
+`type="ends"`, this will be applied after taking the (shifted) fragment 
+ends, resulting in ranges of width equal to `extend`, centered on the 
+(shifted) fragment ends (e.g. insertion sites).}
 
 \item{scaling}{Either TRUE (performs Count Per Million scaling), FALSE (no 
 scaling), or a numeric value by which the signal will be divided. If 

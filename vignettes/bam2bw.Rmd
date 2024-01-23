@@ -9,7 +9,7 @@ package: epiwraps
 output:
   BiocStyle::html_document
 abstract: |
-  This vignette document the use of the 'bam2bw' function of the epiwraps 
+  This vignette documents the use of the 'bam2bw' function of the epiwraps 
   package, which generates bigwig tracks from alignment files in an efficient 
   and flexible fashion.
 vignette: |
