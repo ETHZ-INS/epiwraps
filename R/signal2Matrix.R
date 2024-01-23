@@ -59,7 +59,7 @@
 #' dim(m[[1]])
 #' plotEnrichedHeatmaps(m)
 signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
-                          scaledBins=50L, type=c("center","scale"),
+                          scaledBins=50L, type=c("center","scaled"),
                           binMethod=c("max","mean","min"), BPPARAM=1L, 
                           ret=c("list","ESE"), verbose=TRUE, ...){
   type <- match.arg(type)
@@ -172,7 +172,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
 
       ####### BIGWIG INPUT
       
-      if(type=="scale"){
+      if(type=="scaled"){
         co <- rtracklayer::import(filepath, format="BigWig", 
                                   selection=BigWigSelection(reduce(regions)))
         co <- coverage(co, weight=co$score)
@@ -248,12 +248,17 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
                                 method=c("max","min","mean"), verbose=TRUE){
   method <- match.arg(method)
   stopifnot(length(unique(width(regions2)))==1)
-  regions2 <- .filterRegions(regions2, seqlevels(BigWigFile(filepath)),
-                             verbose=verbose)
-  co <- rtracklayer::import(filepath, format="BigWig", as="RleList",
-                            selection=BigWigSelection(reduce(regions2)))
+  if(is(filepath, "RleList")){
+    sqlvls <- names(filepath)
+    co <- filepath
+  }else{
+    sqlvls <- seqlevels(BigWigFile(filepath))
+    co <- rtracklayer::import(filepath, format="BigWig", as="RleList",
+                              selection=BigWigSelection(reduce(regions2)))
+  }
+  regions2 <- .filterRegions(regions2, sqlvls, verbose=verbose)
   if(w==1L){
-    mat <- .views2Matrix(Views(co[seqlevels(regions2)], regions2), padVal=0L)
+    mat <- views2Matrix(Views(co[seqlevels(regions2)], regions2), padVal=0L)
   }else{
     mat <- .getBinSignal(co[seqlevels(regions2)], regions2, w=w, method=method)
   }
