@@ -119,7 +119,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     regions2 <- regions2[names(regions2)]
   }
 
-  if(type=="scale"){
+  if(type=="scaled"){
     upstream <- flank(regions, extend[[1]], start=TRUE)
     downstream <- flank(regions, extend[[2]], start=FALSE)
   }
