@@ -24,6 +24,7 @@ plotSignalTracks(
   col.title = "black",
   cex.title = 0.65,
   overlay.alpha = 100,
+  normFactors = NULL,
   ...
 )
 }

@@ -12,10 +12,10 @@
 #' @param binWidth The window size. A lower value (min 1) means a higher 
 #'  resolution, but larger file size.
 #' @param extend The amount *by* which to extend single-end reads (e.g. 
-#'   fragment length minus read length). Ignored if `paired=TRUE`. When 
-#'   `type="ends"`, this will be applied after taking the (shifted) fragment 
-#'   ends, resulting in ranges of width equal to `extend`, centered on the 
-#'   (shifted) fragment ends (e.g. insertion sites).
+#'   fragment length minus read length). If `paired=TRUE` and `type` is either
+#'   'ends' or 'center', then the extension will be applied after taking the 
+#'   (shifted) fragment ends or centers, resulting in ranges of width equal to 
+#'   `extend`.
 #' @param scaling Either TRUE (performs Count Per Million scaling), FALSE (no 
 #'   scaling), or a numeric value by which the signal will be divided. If 
 #'   `bgbam` is given and `scaling=TRUE`, the background will be scaled to the
@@ -32,6 +32,7 @@
 #' @param shift Shift (from 3' to 5') by which reads/fragments will be shifted.
 #'   If `shift` is an integer vector of length 2, the first value will represent
 #'   the shift for the positive strand, and the second for the negative strand.
+#'   For ATACseq data, one normally uses `shift=c(4L,-5L)`.
 #' @param includeDuplicates Logical, whether to include reads flagged as 
 #'   duplicates.
 #' @param includeSecondary Logical; whether to include secondary alignments
@@ -142,12 +143,11 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
     paired <- testPairedEndBam(bamfile)
     if(verbose) message("Detected ", ifelse(paired,"paired","unpaired")," data")
   }
-  if(paired && type!="ends" && verbose) 
-    warning("Extending fragments. ",
-            "Did you really mean to extend paired-end reads?")
+  if(paired && !(type %in% c("center","ends")) && verbose)
+    message("`extend` argument ignored.")
   if(type=="ends" && !paired){
     if(verbose)
-      warning("type='ends' only makes sense with paired-end libraries...")
+      warning("type='ends' typically only makes sense with paired-end data...")
     type <- "start"
   }
   # prepare flags for bam reading
@@ -425,6 +425,9 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
     bam <- .align2cuts(bam)
     if(extend!=0L) bam <- suppressWarnings(trim(resize(bam, as.integer(extend),
                                                        use.names=FALSE)))
+  }else if(type=="center" && paired){
+    bam <- suppressWarnings(trim(resize(bam, max(1L,extend), fix="center",
+                                        use.names=FALSE)))
   }else if(type!="full"){
     bam <- resize(bam, width=1L, fix=type, use.names=FALSE)
   }

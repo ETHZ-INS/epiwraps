@@ -52,10 +52,10 @@ set to FALSE.}
 resolution, but larger file size.}
 
 \item{extend}{The amount *by* which to extend single-end reads (e.g. 
-fragment length minus read length). Ignored if `paired=TRUE`. When 
-`type="ends"`, this will be applied after taking the (shifted) fragment 
-ends, resulting in ranges of width equal to `extend`, centered on the 
-(shifted) fragment ends (e.g. insertion sites).}
+fragment length minus read length). If `paired=TRUE` and `type` is either
+'ends' or 'center', then the extension will be applied after taking the 
+(shifted) fragment ends or centers, resulting in ranges of width equal to 
+`extend`.}
 
 \item{scaling}{Either TRUE (performs Count Per Million scaling), FALSE (no 
 scaling), or a numeric value by which the signal will be divided. If 
@@ -64,7 +64,8 @@ main signal.}
 
 \item{shift}{Shift (from 3' to 5') by which reads/fragments will be shifted.
 If `shift` is an integer vector of length 2, the first value will represent
-the shift for the positive strand, and the second for the negative strand.}
+the shift for the positive strand, and the second for the negative strand.
+For ATACseq data, one normally uses `shift=c(4L,-5L)`.}
 
 \item{type}{Type of the coverage to compile. Either full (full read/fragment),
 start (count read/fragment start locations), end, center, or 'ends' (both
