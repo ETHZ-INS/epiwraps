@@ -340,16 +340,18 @@ fragments differently. For example, the heatmap of insertion sites of
 nucleosome-free fragments was based on a bigwig file generated using:
 
 ```r
-bam2bw("aligned.bam", output_bw="NF_cuts.bw", paired=TRUE, binWidth=1L, 
-       minFragLength=30, maxFragLength=115, type="ends")
+bam2bw("aligned.bam", output_bw="NF_cuts.bw", paired=TRUE, `shift=c(4L,-5L), 
+       binWidth=1L, minFragLength=25, maxFragLength=120, type="ends"`)
 ```
 
 The arguments specify that only the beginning and end of the 
-fragments (`type="ends"`) of length 30-115 (`minFragLength` and `maxFragLength`)
-should be used to compute per-bp (`binWidth=1`) coverage. Bigwig files can also 
-be generated as an enrichment over an input, allowing the use of local 
-neighborhood backgrounds (MACS-like). For more detail, see the `bam2bw` 
-vignette.
+fragments (`type="ends"`) of length 25-120 (`minFragLength` and `maxFragLength`)
+should be used to compute per-bp (`binWidth=1`) coverage. Shifts are applied to
+fragments to get to the actual site where the transposase sits.
+
+Bigwig files can also be generated as an enrichment over an input, allowing the 
+use of local neighborhood backgrounds (MACS-like). For more detail, see the 
+`bam2bw` vignette.
 
 <br/><br/>
 

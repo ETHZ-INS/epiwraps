@@ -122,9 +122,9 @@ relative to the extended read (i.e. extension is applied first).
 
 The following figure, created using `epiwraps` (see 
 <a href="epiwraps.html">the vignette</a>), represent chromatin accessibility 
-(ATAC-seq) signals around CTCF motifs. The different signals are based on 
-different bigwig files derived from the same bam file using the functions 
-described above.
+(ATAC-seq) signals around bound CTCF motifs in T-cells. The different signals 
+are based on different bigwig files derived from the same bam file using the 
+functions described above.
 
 ```{r egBwigs, echo=FALSE}
 knitr::include_graphics(system.file('docs', 'example_bigwigs_hm.png', 
@@ -133,16 +133,15 @@ knitr::include_graphics(system.file('docs', 'example_bigwigs_hm.png',
 
 * The first heatmap ('full coverage') was generated with default parameter, and
 is the fragment coverage (i.e. how many fragments overlap any given location).
-* The second heatmap shows where the transposase inserted itself, and was 
-generated with `type="ends"` (to be precise, a +4/-5 shift could also be 
-included with the `shift` argument). Using this we can see a nice footprint 
-protected from the transposase by CTCF binding.
-* The third heatmap was generated with `maxFragLength=115`, which aims to 
-capture fragments that are too small to be protected by a nucleosome, and 
-therefore must be bound by a transcription factor. We see that this signal is 
-more concentrated right on the center (i.e. the CTCF sites).
-* The fourth heatmap combines the previous two.
-* The last heatmap shows the centers of nucleosome-sized fragments using
-`type="center", minFragLength=150, maxFragLength=220`. Well-positioned 
-nucleosomes are thus highlighted on each sides of the CTCF bindings.
+* The second heatmap shows the fragment of sizes compatible with mono-nucleosomes,
+resizing fragments from their centers. The exact arguments used were 
+`shift=c(4L,-5L), minFragLength=147, maxFragLength=230, type="center", extend=10L`.
+Using this we can see nucleosomes well-positioned at some distance from CTCF 
+binding sites, but not nucleosome at the bound site itself.
+* The third shows the coverage of nucleosome-free fragments, in this case it 
+was used with `shift=c(4L,-5L), maxFragLength=120`.
+* The fourth shows where the transposase inserted itself, and was 
+generated with 
+`shift=c(4L,-5L), binWidth=1L, maxFragLength=120, type="ends"`. Using this we 
+can see a nice footprint protected from the transposase by CTCF binding.
 
