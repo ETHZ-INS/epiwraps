@@ -143,19 +143,19 @@ rescaleSignalMatrices <- function(ml, scaleFactors, applyLinearly=NULL){
   ml
 }
 
-.resizeNmatrix <- function(x, i=seq_len(nrow(x)), j=seq_len(ncol(x))){
+.resizeNmatrix <- function(x, i = NULL, j = NULL){
   a <- attributes(x)
   xcl <- class(x)
   a$dimnames[[1]] <- a$dimnames[[1]][i]
   a$dimnames[[2]] <- a$dimnames[[2]][j]
   a$names <- a$names[i]
-  x <- x[i,j,drop=FALSE]
+  if(!is.null(i)) x <- x[i, , drop = FALSE]
+  if(!is.null(j)) x <- x[, j, drop = FALSE]
   a$dim <- dim(x)
   attributes(x) <- a
   class(x) <- xcl
   x
 }
-
 
 
 #' clusterSignalMatrices
