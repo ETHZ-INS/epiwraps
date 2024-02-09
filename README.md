@@ -359,9 +359,9 @@ use of local neighborhood backgrounds (MACS-like). For more detail, see the
 
 The `callPeaks` function offers a R-based implementation of the general strategy
 used by MACS2 (Zhang et al., Genome Biology 2008). The function is still under
-development, especially with respect to single-end reads, where some optimization
-might still be needed. For paired-end reads, the results are nearly identical 
-with those of MACS2, with two main differences: 1) the p-values are more 
+heavy development, especially with respect to single-end reads, and its usage is
+not currently recommended.
+Key differences with respect to MACS are that: 1) the p-values are more 
 conservative (and arguably more calibrated) and 2) because the implementation 
 does not rely on sliding windows, with default settings the peaks are narrower.
 
