@@ -4,15 +4,19 @@
 \alias{mergeSignalMatrices}
 \title{mergeSignalMatrices}
 \usage{
-mergeSignalMatrices(ml, aggregation = c("mean", "sum", "median"))
+mergeSignalMatrices(ml, aggregation = c("mean", "sum", "median"), assay = 1L)
 }
 \arguments{
-\item{ml}{A named list of matrices as produced by \code{\link{signal2Matrix}}}
+\item{ml}{A named list of signal matrices or an EnrichmentSE object as 
+produced by \code{\link{signal2Matrix}}}
 
 \item{aggregation}{The method to aggregate matrices}
+
+\item{assay}{Assay to use (ignored unless `ml` is an ESE object), defaults to
+the first assay.}
 }
 \value{
-A `normalizedMatrix` object
+A single `normalizedMatrix` object.
 }
 \description{
 mergeSignalMatrices

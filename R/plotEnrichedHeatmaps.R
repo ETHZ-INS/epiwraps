@@ -101,7 +101,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   }else if(is.logical(top_annotation)){
     top_annotation <- NULL
   }
-  if(is(ml, "SummarizedExperiment")){
+  if(is(ml, "EnrichmentSE")){
     left_annotation <- .parseRowAnn(ml, left_annotation)
     right_annotation <- .parseRowAnn(ml, right_annotation)
     top_annotation <- .parseTopAnn(ml, top_annotation)
@@ -299,9 +299,9 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 }
 
 .parseRowAnn <- function(RD, fields){
-  if(is(RD, "RangedSummarizedExperiment")){
+  if(inherits(RD, "RangedSummarizedExperiment")){
     RD <- as.data.frame(rowRanges(RD))
-  }else if(is(RD, "SummarizedExperiment")){
+  }else if(inherits(RD, "SummarizedExperiment")){
     RD <- rowData(RD)
   }
   if(!is.character(fields) || length(fields)==nrow(RD)) return(fields)
@@ -317,7 +317,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 .parseTopAnn <- function(CD, fields){
   if(is.null(fields) || isFALSE(fields) || isTRUE(fields)) return(NULL)
   if(is.list(CD)) return(NULL)
-  if(is(CD, "SummarizedExperiment")) CD <- colData(CD)
+  if(inherits(CD, "SummarizedExperiment")) CD <- colData(CD)
   fields <- intersect(fields, colnames(CD))
   if(length(fields)==0) return(NULL)
   as.data.frame(CD[,fields,drop=FALSE])

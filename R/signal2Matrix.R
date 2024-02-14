@@ -26,6 +26,8 @@
 #'   fast disk, using multi-threading is actually likely to slow down rather 
 #'   than speed up the process.
 #' @param verbose Logical; whether to print processing information
+#' @param ret The type of output to return, either an "EnrichmentSE" object 
+#'   (default), or a simple list of signal matrices ("list").
 #' @param ... Passed to \code{\link[EnrichedHeatmap]{as.normalizedMatrix}} when
 #'   reading bigwig files, or to \code{\link{getBinSignalFromBam}} when reading
 #'   bam files.
@@ -49,19 +51,16 @@
 #' length(regions)
 #' # we obtain the matrix of the signal around the regions:
 #' m <- signal2Matrix(bw, regions)
-#' dim(m[[1]])
 #' # we can plot it with:
 #' plotEnrichedHeatmaps(m)
 #' # we could also take a broader range around the center of the regions, and 
 #' # use bigger bins:
 #' m <- signal2Matrix(bw, regions, extend=2000, w=20)
-#' # the matrix has the same size, but shows broader regions:
-#' dim(m[[1]])
 #' plotEnrichedHeatmaps(m)
 signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
                           scaledBins=50L, type=c("center","scaled"),
                           binMethod=c("max","mean","min"), BPPARAM=1L, 
-                          ret=c("list","ESE"), verbose=TRUE, ...){
+                          ret=c("EnrichmentSE","list"), verbose=TRUE, ...){
   type <- match.arg(type)
   ret <- match.arg(ret)
   binMethod <- match.arg(binMethod)
@@ -91,7 +90,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   stopifnot(is(regions,"GRanges") || is(regions, "GRangesList"))
   
   # give names to regions
-  if(is.null(names(regions))){
+  if(is.null(names(regions)) || any(is.na(names(regions)))){
     if(is(regions, "GRanges")){
       names(regions) <- paste0(as.character(granges(regions)))
     }else{
@@ -200,7 +199,8 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
       stop("Unknown file format")
     }
     mat <- tryCatch({
-        if(is.null(names(mat))) names(mat) <- names(regions)
+        if(is.null(row.names(mat)) || any(is.na(row.names(mat))))
+          row.names(mat) <- row.names(regions)
         mat[rnames,]
       }, error=function(e){
         if(verbose) warning(e)
@@ -221,10 +221,11 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     if(verbose) warning(e)
     ml
   })
-  if(ret=="ESE"){
-    ml <- tryCatch(.ml2ese(ml, rowRanges=regions), error=function(e){
+  if(ret=="EnrichmentSE"){
+    ml <- tryCatch(ml2ESE(ml, rowRanges=regions, addScore=TRUE),
+                   error=function(e){
       if(verbose)
-        warning("Could not create ESE object (list returned instead):", e)
+        warning("Could not create EnrichmentSE object (list returned):", e)
       ml
     })
   }

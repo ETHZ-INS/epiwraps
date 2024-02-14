@@ -277,3 +277,149 @@ bwNormFactors <- function(x, ...){
   }
   ref
 }
+
+
+#' renormalizeBorders
+#'
+#' This function is \strong{deprecated} and will be replaced by
+#' \code{\link{renormalizeMatrices}}.
+#' Renormalizes a list of signal matrices on the assumption that
+#' the left/right borders of the matrices represent background signal which 
+#' should be equal across samples.
+#' \strong{This is not a safe normalization procedure}: it will work only if 
+#' 1) the left/right borders of the matrices are sufficiently far from the 
+#' signal (e.g. peaks), and 2) the signal-to-noise ratio is comparable across 
+#' samples.
+#'
+#' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
+#' @param trim Quantiles trimmed at each extreme (for linear normalization)
+#' @param assay Assay to use (ignored unless `ml` is an ESE object), defaults to
+#'   the first assay.
+#'
+#' @return A renormalized list of signal matrices.
+#' @export
+#' @importFrom edgeR calcNormFactors
+renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
+  .Deprecated(
+    old="renormalizeBorders", new="renormalizeSignalMatrices",
+    msg=paste('renormalizeBorders is deprecated, please gradually',
+              'switch to `renormalizeSignalMatrices(..., method="border"`.'))
+  renormalizeSignalMatrices(ml, trim=trim, assay=assay, nWindows=nWindwos,
+                            method="border")
+}
+
+
+#' renormalizeSignalMatrices
+#'
+#' Renormalizes a list of signal matrices or an EnrichmentSE object.
+#'
+#' @param ml A named matrix list or EnrichmentSE object as produced by 
+#'   \code{\link{signal2Matrix}}.
+#' @param method Either "border" or "top" (see details below).
+#' @param trim Quantiles trimmed at each extreme before calculating 
+#'   normalization factors.
+#' @param assay Assay to use (ignored unless `ml` is an EnrichmentSE object),
+#'   defaults to the first assay.
+#' @param scaleFactors A numeric vector of same length as `ml`, 
+#'   indicating the scaling factors by which to multiply each matrix.
+#'   Alternatively, a numeric matrix with a number of rows equal to the length 
+#'   of `ml`, and two columns indicating the alpha and beta arguments of a 
+#'   s3norm normalization. Ignored unless `method="manual"`.
+#'
+#' @details
+#' * `method="border"` works on the assumption that the left/right borders of the 
+#' matrices represent background signal which should be equal across samples. As
+#' a result, it will work only if 1) the left/right borders of the matrices are 
+#' sufficiently far from the signal (e.g. peaks) to be chiefly noise, and 
+#' 2) the signal-to-noise ratio is comparable across tracks/samples.
+#' * `method="top"` instead works on the assumption that the highest signal should
+#' be the same across tracks/samples.
+#' By default, extreme values are trimmed before establishing either kind of 
+#' normalization factor. The proportion trimmed can be set using the `trim` 
+#' argument, and is by default 10% of the non-zero values.
+#' * `method="manual"` enables the use of independently computed normalization
+#' factors, for instance obtained through \code{\link{getNormFactors}}.
+#'
+#' @return Either a renormalized list of signal matrices or, if `ml` was an 
+#'   `EnrichmentSE` object, the same object with an additional normalized
+#'   assay automatically put at the front.
+#' @export
+renormalizeSignalMatrices <- function(ml, method=c("border","top","manual"), 
+                                      trim=NULL, assay="input", nWindows=NULL,
+                                      scaleFactors=NULL, ...){
+  method <- match.arg(method)
+  if(is(ml, "EnrichmentSE")){
+    ml2 <- renormalizeBorders(.ese2ml(ml,assay=assay), method=method, trim=trim,
+                              nWindows=nWindows, scaleFactors=scaleFactors)
+    an <- switch(method,
+                 "border"="borderNormalized",
+                 "top"="topNormalized",
+                 "normalized")
+    return(.addAssayToESE(ml, a=ml2, name=an, replace=TRUE))
+  }
+  if(method=="manual"){
+    stopifnot(!is.null(sizeFactors) & length(sizeFactors)==length(ml))
+  }else{
+    if(!is.null(sizeFactors)) 
+      message('`sizeFactors` is ignored when method=!"manual"')
+  }
+  if(is.null(nWindows)) nWindows <- max(floor(ncol(ml[[1]])/10),1)
+  ml <- .comparableMatrices(ml, checkAttributes=TRUE)
+  b <- do.call(cbind, lapply(ml, FUN=function(x){
+    x <- unclass(x)
+    as.numeric(cbind(x[,seq_len(nWindows)],
+                     x[,seq(from=ncol(x)-nWindows+1L,to=ncol(x))]))
+  }))
+  if(is.null(trim)) trim <- (sum(b!=0)/length(b))/10
+  if(method=="linear"){
+    nf <- apply(b, 2, FUN=function(x){
+      y <- mean(x, trim=trim)
+      if(y==0) y <- mean(x)
+      y
+    })
+    nf <- nf/median(nf)
+  }else if(method=="top"){
+    nf <- apply(b, 2, FUN=function(x){
+      y <- quantile(y, 1-trim)
+      if(y==0) y <- max(x)
+      y
+    })
+    nf <- nf/median(nf)
+  }else if(method=="manual"){
+    nf <- 1/scaleFactors
+  }
+  ml <- .applyMatricesScaling(ml, 1/nf)
+  ml
+}
+
+#' .applyMatricesScaling
+#' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
+#' @param scaleFactors A numeric vector of same length as `ml`, 
+#'   indicating the scaling factors by which to multiply each matrix.
+#'   Alternatively, a numeric matrix with a number of rows equal to the length 
+#'   of `ml`, and two columns indicating the alpha and beta arguments of a 
+#'   s3norm normalization.
+#' @return A renormalized list of signal matrices.
+.applyMatricesScaling <- function(ml, scaleFactors, applyLinearly=NULL){
+  ml <- .comparableMatrices(ml, checkAttributes=TRUE)
+  if(is.matrix(scaleFactors)){
+    stopifnot(ncol(scaleFactors)==2 && nrow(scaleFactors)==length(ml))
+    if(is.null(applyLinearly)){
+      if(is.null(applyLinearly <- attributes(scaleFactors)[["applyLinearly"]]))
+        stop("Could not determine whether the scaling factors should be",
+             "applied linearly or on the log scale. Please use the ",
+             "`applyLinearly` argument.")
+    }
+    for(i in seq_along(ml)){
+      if(applyLinearly){
+        ml[[i]] <- scaleFactors[i,1]+ml[[i]]*scaleFactors[i,2]
+      }else{
+        ml[[i]] <- scaleFactors[i,1]*ml[[i]]^scaleFactors[i,2]
+      }
+    }
+  }else{
+    stopifnot(is.numeric(scaleFactors) && length(scaleFactors)==length(ml))
+    for(i in seq_along(scaleFactors)) ml[[i]] <- ml[[i]]*scaleFactors[i]
+  }
+  ml
+}

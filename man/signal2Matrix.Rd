@@ -13,7 +13,7 @@ signal2Matrix(
   type = c("center", "scaled"),
   binMethod = c("max", "mean", "min"),
   BPPARAM = 1L,
-  ret = c("list", "ESE"),
+  ret = c("EnrichmentSE", "list"),
   verbose = TRUE,
   ...
 )
@@ -50,6 +50,9 @@ the number of threads to use to read and prepare the data. Note that the
   fast disk, using multi-threading is actually likely to slow down rather 
   than speed up the process.}
 
+\item{ret}{The type of output to return, either an "EnrichmentSE" object 
+(default), or a simple list of signal matrices ("list").}
+
 \item{verbose}{Logical; whether to print processing information}
 
 \item{...}{Passed to \code{\link[EnrichedHeatmap]{as.normalizedMatrix}} when
@@ -71,13 +74,10 @@ regions <- rtracklayer::import(system.file("extdata/example_peaks.bed",
 length(regions)
 # we obtain the matrix of the signal around the regions:
 m <- signal2Matrix(bw, regions)
-dim(m[[1]])
 # we can plot it with:
 plotEnrichedHeatmaps(m)
 # we could also take a broader range around the center of the regions, and 
 # use bigger bins:
 m <- signal2Matrix(bw, regions, extend=2000, w=20)
-# the matrix has the same size, but shows broader regions:
-dim(m[[1]])
 plotEnrichedHeatmaps(m)
 }

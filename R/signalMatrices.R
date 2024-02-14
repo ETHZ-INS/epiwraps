@@ -2,15 +2,19 @@
 #'
 #' Aggregates and melts a list of signal matrices, for plotting (with ggplot).
 #'
-#' @param ml A named list of matrices as produced by \code{\link{signal2Matrix}}
+#' @param ml A named list of signal matrices or an EnrichmentSE object as 
+#'   produced by \code{\link{signal2Matrix}}
 #' @param fun An optional custom aggregation function (or named list thereof).
 #' @param trim The quantile above which to trim values. If a numeric vector of 
 #'   length 2, will be used as lower and upper quantiles beyond which to trim.
+#' @param assay Assay to use (ignored unless `ml` is an ESE object), defaults to
+#'   the first assay.
 #'
 #' @return A data.frame.
 #' @export
 #' @importFrom matrixStats colMedians
-meltSignals <- function(ml, fun=NULL, splitBy=NULL, trim=0.98){
+meltSignals <- function(ml, fun=NULL, splitBy=NULL, trim=0.98, assay=1L){
+  if(is(ml, "EnrichmentSE")) ml <- .ese2ml(ml, assay=assay)
   stopifnot(is.list(ml))
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
   ml <- .applyTrimming(ml, trim)
@@ -18,7 +22,7 @@ meltSignals <- function(ml, fun=NULL, splitBy=NULL, trim=0.98){
     stopifnot(length(splitBy)==nrow(ml[[1]]))
     return(dplyr::bind_rows(lapply(split(seq_along(splitBy), splitBy),
                                    FUN=function(i){
-      meltSignals(lapply(ml, i=i, FUN=.resizeNmatrix), fun=fun)
+      meltSignals(lapply(ml, FUN=function(x) x[i,]), fun=fun)
     }), .id="split"))
   }
   a <- attributes(ml[[1]])
@@ -45,12 +49,17 @@ meltSignals <- function(ml, fun=NULL, splitBy=NULL, trim=0.98){
 
 #' mergeSignalMatrices
 #'
-#' @param ml A named list of matrices as produced by \code{\link{signal2Matrix}}
+#' @param ml A named list of signal matrices or an EnrichmentSE object as 
+#'   produced by \code{\link{signal2Matrix}}
 #' @param aggregation The method to aggregate matrices
+#' @param assay Assay to use (ignored unless `ml` is an ESE object), defaults to
+#'   the first assay.
 #'
-#' @return A `normalizedMatrix` object
+#' @return A single `normalizedMatrix` object.
 #' @export
-mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median")){
+mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median"),
+                                assay=1L){
+  if(inherits(ml, "SummarizedExperiment")) ml <- .ese2ml(ml, assay=assay)
   aggregation <- match.arg(aggregation)
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
   switch(aggregation,
@@ -67,96 +76,6 @@ mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median")){
   y[seq_len(nrow(y)),seq_len(ncol(y))] <- x
   y
 }
-
-#' renormalizeBorders
-#'
-#' This function renormalizes a list of signal matrices on the assumption that
-#' the left/right borders of the matrices represent background signal which 
-#' should be equal across samples.
-#' \strong{This is not a safe normalization procedure}: it will work only if 
-#' 1) the left/right borders of the matrices are sufficiently far from the 
-#' signal (e.g. peaks), and 2) the signal-to-noise ratio is comparable across 
-#' samples.
-#'
-#' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
-#' @param method Either "linear", or a normalization method, passed to 
-#'   \code{\link[edgeR]{calcNormFactors}}.
-#' @param trim Quantiles trimmed at each extreme (for linear normalization)
-#'
-#' @return A renormalized list of signal matrices.
-#' @export
-#' @importFrom edgeR calcNormFactors
-renormalizeBorders <- function(ml, method="linear", trim=NULL,
-                               nWindows=max(floor(ncol(ml[[1]])/10),1)){
-  ml <- .comparableMatrices(ml, checkAttributes=TRUE)
-  b <- do.call(cbind, lapply(ml, FUN=function(x){
-    as.numeric(cbind(x[,seq_len(nWindows)],
-                     x[,seq(from=ncol(x)-nWindows+1, to=ncol(x))]))
-  }))
-  if(is.null(trim)) trim <- (sum(b!=0)/length(b))/10
-  if(method=="linear"){
-    nf <- apply(b, 2, FUN=function(x){
-      y <- mean(x, trim=trim)
-      if(y==0) y <- mean(x)
-      y
-    })
-    nf <- nf/median(nf)
-  }else{
-    nf <- calcNormFactors(b, method=method, lib.size=rep(1,ncol(b)))
-  }
-  ml <- rescaleSignalMatrices(ml, 1/nf)
-  ml
-}
-
-#' rescaleSignalMatrices
-#'
-#' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
-#' @param scaleFactors A numeric vector of same length as `ml`, 
-#'   indicating the scaling factors by which to multiply each matrix.
-#'   Alternatively, a numeric matrix with a number of rows equal to the length 
-#'   of `ml`, and two columns indicating the alpha and beta arguments of a 
-#'   s3norm normalization.
-#'
-#' @return A renormalized list of signal matrices.
-#' @export
-rescaleSignalMatrices <- function(ml, scaleFactors, applyLinearly=NULL){
-  ml <- .comparableMatrices(ml, checkAttributes=TRUE)
-  if(is.matrix(scaleFactors)){
-    stopifnot(ncol(scaleFactors)==2 && nrow(scaleFactors)==length(ml))
-    if(is.null(applyLinearly)){
-      if(is.null(applyLinearly <- attributes(scaleFactors)[["applyLinearly"]]))
-        stop("Could not determine whether the scaling factors should be",
-              "applied linearly or on the log scale. Please use the ",
-              "`applyLinearly` argument.")
-    }
-    for(i in seq_along(ml)){
-      if(applyLinearly){
-        ml[[i]] <- scaleFactors[i,1]+ml[[i]]*scaleFactors[i,2]
-      }else{
-        ml[[i]] <- scaleFactors[i,1]*ml[[i]]^scaleFactors[i,2]
-      }
-    }
-  }else{
-    stopifnot(is.numeric(scaleFactors) && length(scaleFactors)==length(ml))
-    for(i in seq_along(scaleFactors)) ml[[i]] <- ml[[i]]*scaleFactors[i]
-  }
-  ml
-}
-
-.resizeNmatrix <- function(x, i = NULL, j = NULL){
-  a <- attributes(x)
-  xcl <- class(x)
-  a$dimnames[[1]] <- a$dimnames[[1]][i]
-  a$dimnames[[2]] <- a$dimnames[[2]][j]
-  a$names <- a$names[i]
-  if(!is.null(i)) x <- x[i, , drop = FALSE]
-  if(!is.null(j)) x <- x[, j, drop = FALSE]
-  a$dim <- dim(x)
-  attributes(x) <- a
-  class(x) <- xcl
-  x
-}
-
 
 #' clusterSignalMatrices
 #'
@@ -187,7 +106,7 @@ clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
                                   use=c("enrich","full","max","center"),
                                   by=rep(1L,length(ml)),
                                   assay=1L, trim=c(0.05,0.95), nstart=3, ...){
-  if(is(ml, "SummarizedExperiment")) ml <- .ese2ml(ml, assay=assay)
+  if(is(ml, "EnrichmentSE")) ml <- .ese2ml(ml, assay=assay)
   #ml <- .comparableMatrices(ml)
   k <- unique(as.integer(k))
   stopifnot(all(k>1 & k<nrow(ml[[1]])))
@@ -246,3 +165,35 @@ clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
 #   x <- asplit(unclass(x), 1)
 #   max(runmean(as(lapply(x, as.numeric), "RleList"), k))
 # }
+
+
+
+# overwrites the subsetting function of EnrichedHeatmap in order to avoid att
+# mismatches
+"[.normalizedMatrix" = function(x, i=NULL, j=NULL, drop=FALSE){
+  .resizeNmatrix(x,i=i,j=j,drop=drop)
+}
+
+.resizeNmatrix <- function(x, i=NULL, j=NULL, drop=FALSE){
+  if(!is.null(i)){
+    if(is.factor(i)) i <- as.character(i)
+    if(is.character(i)) i <- setdiff(match(i,row.names(x)),NA_integer_)
+  }
+  a <- attributes(x)
+  a$names <- NULL
+  xcl <- class(x)
+  x <- unclass(x)
+  if(!is.null(i)){
+    a$dimnames[[1]] <- a$dimnames[[1]][i]
+    #a$names <- a$names[i]
+    x <- x[i, , drop = FALSE]
+  }
+  if(!is.null(j)){
+    a$dimnames[[2]] <- a$dimnames[[2]][j]
+    x <- x[, j, drop = FALSE]
+  }
+  a$dim <- dim(x)
+  attributes(x) <- a
+  class(x) <- xcl
+  x
+}
