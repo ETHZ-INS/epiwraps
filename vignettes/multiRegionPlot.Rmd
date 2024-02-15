@@ -156,7 +156,7 @@ ii) bigwig files.
 
 The normalization factors can then be applied on signal matrices, for example:
 
-```{r, eval=FALSE}
+```{r, warning=FALSE}
 bwfiles <- c(atac1=bwf, atac2=bwf)
 nf <- getNormFactors(bwfiles, method="background")
 # in this case since the files are identical the normalization factors are both 1:
@@ -259,4 +259,4 @@ ggplot(d, aes(position, mean, colour=sample)) +
 
 Note that when the regions are clustered, the clusters can be passed to melt and
 aggregate separately the different clusters, e.g.:
-`d <- meltSignals(m, splitBy=cl)`.
+`d <- meltSignals(sm, splitBy=cl)`.
