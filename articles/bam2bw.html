@@ -96,136 +96,39 @@ or compatible with a variety of tools, including genome browsers.</p>
 <p>To introduce the different variations on coverage, let’s assume
 you’ve go the following single-end reads:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ethz-ins.github.io/epiwraps/">epiwraps</a></span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Loading required package: SummarizedExperiment</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: MatrixGenerics</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: matrixStats</span></span></code></pre>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Attaching package: 'MatrixGenerics'</span></span></code></pre>
-<pre><code><span><span class="co">## The following objects are masked from 'package:matrixStats':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,</span></span>
-<span><span class="co">##     colCounts, colCummaxs, colCummins, colCumprods, colCumsums,</span></span>
-<span><span class="co">##     colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,</span></span>
-<span><span class="co">##     colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,</span></span>
-<span><span class="co">##     colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,</span></span>
-<span><span class="co">##     colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,</span></span>
-<span><span class="co">##     colWeightedMeans, colWeightedMedians, colWeightedSds,</span></span>
-<span><span class="co">##     colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,</span></span>
-<span><span class="co">##     rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,</span></span>
-<span><span class="co">##     rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,</span></span>
-<span><span class="co">##     rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,</span></span>
-<span><span class="co">##     rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,</span></span>
-<span><span class="co">##     rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,</span></span>
-<span><span class="co">##     rowWeightedMads, rowWeightedMeans, rowWeightedMedians,</span></span>
-<span><span class="co">##     rowWeightedSds, rowWeightedVars</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: GenomicRanges</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: stats4</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: BiocGenerics</span></span></code></pre>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Attaching package: 'BiocGenerics'</span></span></code></pre>
-<pre><code><span><span class="co">## The following objects are masked from 'package:stats':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     IQR, mad, sd, var, xtabs</span></span></code></pre>
-<pre><code><span><span class="co">## The following objects are masked from 'package:base':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     anyDuplicated, aperm, append, as.data.frame, basename, cbind,</span></span>
-<span><span class="co">##     colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,</span></span>
-<span><span class="co">##     get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,</span></span>
-<span><span class="co">##     match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,</span></span>
-<span><span class="co">##     Position, rank, rbind, Reduce, rownames, sapply, setdiff, sort,</span></span>
-<span><span class="co">##     table, tapply, union, unique, unsplit, which.max, which.min</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: S4Vectors</span></span></code></pre>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Attaching package: 'S4Vectors'</span></span></code></pre>
-<pre><code><span><span class="co">## The following object is masked from 'package:utils':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     findMatches</span></span></code></pre>
-<pre><code><span><span class="co">## The following objects are masked from 'package:base':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     expand.grid, I, unname</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: IRanges</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: GenomeInfoDb</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: Biobase</span></span></code></pre>
-<pre><code><span><span class="co">## Welcome to Bioconductor</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     Vignettes contain introductory material; view with</span></span>
-<span><span class="co">##     'browseVignettes()'. To cite Bioconductor, see</span></span>
-<span><span class="co">##     'citation("Biobase")', and for packages 'citation("pkgname")'.</span></span></code></pre>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Attaching package: 'Biobase'</span></span></code></pre>
-<pre><code><span><span class="co">## The following object is masked from 'package:MatrixGenerics':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     rowMedians</span></span></code></pre>
-<pre><code><span><span class="co">## The following objects are masked from 'package:matrixStats':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     anyMissing, rowMedians</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: EnrichedHeatmap</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: grid</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: ComplexHeatmap</span></span></code></pre>
-<pre><code><span><span class="co">## ========================================</span></span>
-<span><span class="co">## ComplexHeatmap version 2.18.0</span></span>
-<span><span class="co">## Bioconductor page: http://bioconductor.org/packages/ComplexHeatmap/</span></span>
-<span><span class="co">## Github page: https://github.com/jokergoo/ComplexHeatmap</span></span>
-<span><span class="co">## Documentation: http://jokergoo.github.io/ComplexHeatmap-reference</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## If you use it in published research, please cite either one:</span></span>
-<span><span class="co">## - Gu, Z. Complex Heatmap Visualization. iMeta 2022.</span></span>
-<span><span class="co">## - Gu, Z. Complex heatmaps reveal patterns and correlations in multidimensional </span></span>
-<span><span class="co">##     genomic data. Bioinformatics 2016.</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## The new InteractiveComplexHeatmap package can directly export static </span></span>
-<span><span class="co">## complex heatmaps into an interactive Shiny app with zero effort. Have a try!</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## This message can be suppressed by:</span></span>
-<span><span class="co">##   suppressPackageStartupMessages(library(ComplexHeatmap))</span></span>
-<span><span class="co">## ========================================</span></span></code></pre>
-<pre><code><span><span class="co">## ========================================</span></span>
-<span><span class="co">## EnrichedHeatmap version 1.32.0</span></span>
-<span><span class="co">## Bioconductor page: http://bioconductor.org/packages/EnrichedHeatmap/</span></span>
-<span><span class="co">## Github page: https://github.com/jokergoo/EnrichedHeatmap</span></span>
-<span><span class="co">## Documentation: http://bioconductor.org/packages/EnrichedHeatmap/</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## If you use it in published research, please cite:</span></span>
-<span><span class="co">## Gu, Z. EnrichedHeatmap: an R/Bioconductor package for comprehensive </span></span>
-<span><span class="co">## visualization of genomic signal associations. BMC Genomics 2018.</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## This message can be suppressed by:</span></span>
-<span><span class="co">##   suppressPackageStartupMessages(library(EnrichedHeatmap))</span></span>
-<span><span class="co">## ========================================</span></span></code></pre>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="st">"chr1"</span>, <span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/IRanges-constructor.html" class="external-link">IRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>,<span class="fl">70</span>,<span class="fl">120</span><span class="op">)</span>, width<span class="op">=</span><span class="fl">50</span><span class="op">)</span>, strand<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"+"</span>,<span class="st">"+"</span>,<span class="st">"-"</span><span class="op">)</span>,</span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ethz-ins.github.io/epiwraps/">epiwraps</a></span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># we create some arbitrary genomic ranges</span></span>
+<span><span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="st">"chr1"</span>, <span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/IRanges-constructor.html" class="external-link">IRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>,<span class="fl">70</span>,<span class="fl">120</span><span class="op">)</span>, width<span class="op">=</span><span class="fl">50</span><span class="op">)</span>, strand<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"+"</span>,<span class="st">"+"</span>,<span class="st">"-"</span><span class="op">)</span>,</span>
 <span>              seqlengths<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>chr1<span class="op">=</span><span class="fl">500</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>reads<span class="op">=</span><span class="va">gr</span><span class="op">)</span>, region<span class="op">=</span><span class="st">"chr1:1:180"</span>, extend<span class="op">=</span><span class="fl">0</span>, genomeAxis<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="bam2bw_files/figure-html/unnamed-chunk-2-1.png" width="384"></p>
 <p>For testing purposes, we’ll save this as a bam file and index it:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bam"</span><span class="op">)</span> <span class="co"># temp file name</span></span>
 <span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="va">gr</span>, <span class="va">bam</span>, format<span class="op">=</span><span class="st">"bam"</span><span class="op">)</span></span>
 <span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">indexBam</a></span><span class="op">(</span><span class="va">bam</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##       /tmp/RtmpcZ4YJz/file35f17efa104b.bam </span></span>
-<span><span class="co">## "/tmp/RtmpcZ4YJz/file35f17efa104b.bam.bai"</span></span></code></pre>
+<pre><code><span><span class="co">##       /tmp/RtmpYWmoKM/file1ae893a773a.bam </span></span>
+<span><span class="co">## "/tmp/RtmpYWmoKM/file1ae893a773a.bam.bai"</span></span></code></pre>
 <p>Using these example reads, we can illustrate different ways of
 computing coverages.</p>
 <p>First, we can save coverage at different resolutions, from full
 resolution (each nucleotide is a single bin) to larger bin sizes, the
 latter giving smaller filesizes:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Full coverage with bin width of 1 nucleotide (i.e. full resolution)</span></span>
 <span><span class="va">cov_full_bw1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bw"</span><span class="op">)</span> <span class="co"># temp file name</span></span>
 <span><span class="fu"><a href="../reference/bam2bw.html">bam2bw</a></span><span class="op">(</span><span class="va">bam</span>, <span class="va">cov_full_bw1</span>, binWidth<span class="op">=</span><span class="fl">1L</span>, scaling<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## `paired` not specified, assuming single-end reads. Set to paired='auto' to automatically detect.</span></span></code></pre>
 <pre><code><span><span class="co">## Reading in signal...</span></span></code></pre>
 <pre><code><span><span class="co">## Writing bigwig...</span></span></code></pre>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Full coverage with larger bins</span></span>
 <span><span class="va">cov_full_bw25</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bw"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/bam2bw.html">bam2bw</a></span><span class="op">(</span><span class="va">bam</span>, <span class="va">cov_full_bw25</span>, binWidth<span class="op">=</span><span class="fl">25L</span>, scaling<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## `paired` not specified, assuming single-end reads. Set to paired='auto' to automatically detect.</span></span></code></pre>
 <pre><code><span><span class="co">## Reading in signal...</span></span></code></pre>
 <pre><code><span><span class="co">## Writing bigwig...</span></span></code></pre>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>reads<span class="op">=</span><span class="va">gr</span>, <span class="st">"binWidth=1"</span><span class="op">=</span><span class="va">cov_full_bw1</span>, <span class="st">"binWidth=25"</span><span class="op">=</span><span class="va">cov_full_bw25</span><span class="op">)</span>,</span>
 <span>                 region<span class="op">=</span><span class="st">"chr1:1:180"</span>, extend<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="bam2bw_files/figure-html/unnamed-chunk-4-1.png" width="432"></p>
@@ -233,14 +136,14 @@ latter giving smaller filesizes:</p>
 but in the bottom track the signal is by chunks of 25 nucleotides. By
 default, the maximum signal inside a bin is used, however it is possible
 to change this:</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Using mean per bin:</span></span>
 <span><span class="va">cov_full_bw25mean</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bw"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/bam2bw.html">bam2bw</a></span><span class="op">(</span><span class="va">bam</span>, <span class="va">cov_full_bw25mean</span>, binWidth<span class="op">=</span><span class="fl">25L</span>, binSummarization <span class="op">=</span> <span class="st">"mean"</span>, scaling<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## `paired` not specified, assuming single-end reads. Set to paired='auto' to automatically detect.</span></span></code></pre>
 <pre><code><span><span class="co">## Reading in signal...</span></span></code></pre>
 <pre><code><span><span class="co">## Writing bigwig...</span></span></code></pre>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>reads<span class="op">=</span><span class="va">gr</span>, <span class="st">"binWidth=1"</span><span class="op">=</span><span class="va">cov_full_bw1</span>, </span>
 <span>                      <span class="st">"binWidth=25\n(max)"</span><span class="op">=</span><span class="va">cov_full_bw25</span>,</span>
 <span>                      <span class="st">"binWidth=25\n(mean)"</span><span class="op">=</span><span class="va">cov_full_bw25mean</span><span class="op">)</span>,</span>
@@ -253,34 +156,34 @@ the simpler <code>estimate.mean.fraglen</code> function of the <em><a href="http
 package). It is therefore common to extend reads to this size when
 computing coverage, so as to obtain the number of fragments (rather than
 reads) coverage each position. This can be done as follows:</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Here the reads are 50bp, and we want to extend them to 100bp, hence _by_ 50:</span></span>
 <span><span class="va">cov_full_ext</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bw"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/bam2bw.html">bam2bw</a></span><span class="op">(</span><span class="va">bam</span>, <span class="va">cov_full_ext</span>, binWidth<span class="op">=</span><span class="fl">1L</span>, extend<span class="op">=</span><span class="fl">50L</span>, scaling<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## `paired` not specified, assuming single-end reads. Set to paired='auto' to automatically detect.</span></span></code></pre>
 <pre><code><span><span class="co">## Reading in signal...</span></span></code></pre>
 <pre><code><span><span class="co">## Writing bigwig...</span></span></code></pre>
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>reads<span class="op">=</span><span class="va">gr</span>, <span class="st">"no extension"</span><span class="op">=</span><span class="va">cov_full_bw1</span>, </span>
 <span>                      <span class="st">"read extension"</span><span class="op">=</span><span class="va">cov_full_ext</span><span class="op">)</span>,</span>
 <span>                 region<span class="op">=</span><span class="st">"chr1:1:190"</span>, extend<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="bam2bw_files/figure-html/unnamed-chunk-6-1.png" width="432"></p>
 <p>Instead of computing coverage, we could compute the number of reads
 starting, ending, or being centered at each position:</p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Here the reads are 50bp, and we want to extend them to 100bp, hence _by_ 50:</span></span>
 <span><span class="va">cov_start</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bw"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/bam2bw.html">bam2bw</a></span><span class="op">(</span><span class="va">bam</span>, <span class="va">cov_start</span>, binWidth<span class="op">=</span><span class="fl">1L</span>, extend<span class="op">=</span><span class="fl">50L</span>, scaling<span class="op">=</span><span class="cn">FALSE</span>, type<span class="op">=</span><span class="st">"start"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## `paired` not specified, assuming single-end reads. Set to paired='auto' to automatically detect.</span></span></code></pre>
 <pre><code><span><span class="co">## Reading in signal...</span></span></code></pre>
 <pre><code><span><span class="co">## Writing bigwig...</span></span></code></pre>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cov_center</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bw"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/bam2bw.html">bam2bw</a></span><span class="op">(</span><span class="va">bam</span>, <span class="va">cov_center</span>, binWidth<span class="op">=</span><span class="fl">1L</span>, extend<span class="op">=</span><span class="fl">50L</span>, scaling<span class="op">=</span><span class="cn">FALSE</span>, type<span class="op">=</span><span class="st">"center"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## `paired` not specified, assuming single-end reads. Set to paired='auto' to automatically detect.</span></span></code></pre>
 <pre><code><span><span class="co">## Reading in signal...</span></span></code></pre>
 <pre><code><span><span class="co">## Writing bigwig...</span></span></code></pre>
-<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>reads<span class="op">=</span><span class="va">gr</span>, <span class="st">"type=full"</span><span class="op">=</span><span class="va">cov_full_bw1</span>, </span>
 <span>                      <span class="st">"type=start"</span><span class="op">=</span><span class="va">cov_start</span>, <span class="st">"type=center"</span><span class="op">=</span><span class="va">cov_center</span><span class="op">)</span>,</span>
 <span>                 region<span class="op">=</span><span class="st">"chr1:1:190"</span>, extend<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></code></pre></div>
