@@ -36,8 +36,8 @@ string). The function then automatically determines the relevant track type and
 setting from the file types.
 
 ```{r signal1, fig.width=6, fig.height=2.5, message=FALSE}
-library(GenomicRanges)
-library(epiwraps)
+suppressPackageStartupMessages(library(epiwraps))
+
 # get the path to an example bigwig file:
 bwf1 <- system.file("extdata/example_rna.bw", package="epiwraps")
 plotSignalTracks(list(RNA=bwf1), region="8:22165140-22212326", genomeAxis=TRUE)

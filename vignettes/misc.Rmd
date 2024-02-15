@@ -36,6 +36,7 @@ be used to exclude regions likely to be technical artefacts (e.g. blacklisted
 regions). 
 
 ```{r covstats, message=FALSE}
+suppressPackageStartupMessages(library(epiwraps))
 # get the path to an example bigwig file:
 bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
 cs <- getCovStats(bwf, exclude=GRanges("1", IRanges(1, 4300000)))
