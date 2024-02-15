@@ -286,7 +286,7 @@ TSSenrichment <- function(tracks, ensdb, useSeqLevels=NULL){
   txp <- txp[!duplicated(txp)]
   if(length(txp)==0)
     stop("No TSS found. Are you sure you are providing adequate seqlevels?")
-  sm <- signal2Matrix(tracks, txp, extend = 1000L, w = 100L)
+  sm <- signal2Matrix(tracks, txp, extend = 1000L, w = 100L, ret="list")
   df <- dplyr::bind_rows(lapply(sm, FUN=function(x){
     x <- unclass(x)
     nf <- rowMeans(x[,c(1,ncol(x))])

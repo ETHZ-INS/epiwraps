@@ -1,6 +1,7 @@
 #' regionUpset
 #' 
-#' A wrapper around \code{\link[UpSetR]{upset}} for GRanges.
+#' A wrapper around \code{\link[UpSetR]{upset}} for comparing multiple sets of
+#' genomic ranges.
 #'
 #' @param x A named list of genomic ranges (or paths to bed files)
 #' @param reference The method for creating the reference windows ('reduce' or
@@ -80,6 +81,9 @@ regionUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
 
 #' regionOverlaps
 #'
+#' A wrapper for visualizing pairwise-wise overlaps across multiple sets of
+#' genomic ranges.
+#' 
 #' @param listOfRegions A named list of two or more (non-empty) `GRanges`
 #' @param ignore.strand Logical; whether to ignore strand for overlaps
 #' @param color Heatmap colorscale
@@ -128,8 +132,8 @@ regionOverlaps <- function(listOfRegions, ignore.strand=TRUE,
 #' Computes/plots the 'concordance at the top' (CAT) of two lists of genomic
 #'   regions.
 #'
-#' @param regions1 A GRanges object
-#' @param regions2 A GRanges object
+#' @param regions1,regions2 A GRanges object with a `score` metadata column according to 
+#'   which the regions will be ranked (descending).
 #' @param start The rank at which to start plotting (removes large variations
 #'   at the beginning when very few regions are considered)
 #' @param concord.type Concordance type to plot, either 'inTop', 'inAll', or 

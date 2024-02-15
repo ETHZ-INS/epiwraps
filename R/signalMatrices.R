@@ -91,7 +91,7 @@ mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median"),
 #' @param by Optional factor/character/integer vector of the same length as 
 #'   `ml`. When scaling rows, this can be used to indicate which rows should be
 #'   scaled together.
-#' @param trim Values to trim (applied individidually for each signal matrix)
+#' @param trim Values to trim (applied individually for each signal matrix)
 #' @param nstart Number of starts for k-means clustering
 #' @param ... Passed to `kmeans`
 #'
@@ -137,10 +137,12 @@ clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
       m <- m - rowMeans(m)
       sd <- sqrt(matrixStats::rowVars(m, na.rm=TRUE))
       sd[which(sd==0)] <- 1
-      m <- m/sd
+      m/sd
     })
   }
   m <- do.call(cbind, ml)
+  if(all(m==0) || all(is.na(m)))
+    stop("Cannot cluster - there is not variability between tracks/samples.")
   res <- lapply(setNames(k,k), FUN=function(x){
     cl <- kmeans(dist(m), centers=x)
     ve <- round(100*sum(cl$betweenss)/sum(c(cl$withinss,cl$betweenss)))

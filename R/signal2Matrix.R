@@ -30,7 +30,8 @@
 #'   (default), or a simple list of signal matrices ("list").
 #' @param ... Passed to \code{\link[EnrichedHeatmap]{as.normalizedMatrix}} when
 #'   reading bigwig files, or to \code{\link{getBinSignalFromBam}} when reading
-#'   bam files.
+#'   bam files. For example, this can be used to pass arguments to 
+#'   `normalizeToMatrix` such as `smooth=TRUE`. 
 #'
 #' @return A list of `normalizeToMatrix` objects
 #' @export

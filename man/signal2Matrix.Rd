@@ -57,7 +57,8 @@ the number of threads to use to read and prepare the data. Note that the
 
 \item{...}{Passed to \code{\link[EnrichedHeatmap]{as.normalizedMatrix}} when
 reading bigwig files, or to \code{\link{getBinSignalFromBam}} when reading
-bam files.}
+bam files. For example, this can be used to pass arguments to 
+`normalizeToMatrix` such as `smooth=TRUE`.}
 }
 \value{
 A list of `normalizeToMatrix` objects

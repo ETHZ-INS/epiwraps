@@ -1,7 +1,7 @@
 Package: epiwraps
 Type: Package
 Title: epiwraps: Wrappers for plotting and dealing with epigenomics data
-Version: 0.99.80
+Version: 0.99.81
 Date: 2024-02-14
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
@@ -9,6 +9,7 @@ Authors@R: c(
     person("Emanuel", "Sonder", email="emanuel.sonder@hest.ethz.ch", role="aut"))
 Depends:
     R (>= 4.0),
+    SummarizedExperiment,
     GenomicRanges,
     EnrichedHeatmap
 Imports:
@@ -55,3 +56,4 @@ VignetteBuilder: knitr
 Encoding: UTF-8
 Config/testthat/edition: 3
 RoxygenNote: 7.2.3
+URL: https://ethz-ins.github.io/epiwraps/

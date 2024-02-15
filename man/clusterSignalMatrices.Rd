@@ -37,7 +37,7 @@ scaled together.}
 
 \item{assay}{Assay to use (ignored unless `ml` is an ESE object)}
 
-\item{trim}{Values to trim (applied individidually for each signal matrix)}
+\item{trim}{Values to trim (applied individually for each signal matrix)}
 
 \item{nstart}{Number of starts for k-means clustering}
 

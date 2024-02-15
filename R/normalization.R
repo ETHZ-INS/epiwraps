@@ -318,8 +318,11 @@ renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
 #' @param method Either "border" or "top" (see details below).
 #' @param trim Quantiles trimmed at each extreme before calculating 
 #'   normalization factors.
-#' @param assay Assay to use (ignored unless `ml` is an EnrichmentSE object),
-#'   defaults to the first assay.
+#' @param fromAssay Assay to use (ignored unless `ml` is an EnrichmentSE 
+#'   object), defaults to the first assay.
+#' @param toAssay Assay in which to store the normalized data (ignored unless 
+#'   `ml` is an EnrichmentSE object). By default an assay name will be set based
+#'   on the normalization method used.
 #' @param scaleFactors A numeric vector of same length as `ml`, 
 #'   indicating the scaling factors by which to multiply each matrix.
 #'   Alternatively, a numeric matrix with a number of rows equal to the length 
@@ -345,23 +348,26 @@ renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
 #'   assay automatically put at the front.
 #' @export
 renormalizeSignalMatrices <- function(ml, method=c("border","top","manual"), 
-                                      trim=NULL, assay="input", nWindows=NULL,
-                                      scaleFactors=NULL, ...){
+                                      trim=NULL, fromAssay="input", toAssay=NULL,
+                                      nWindows=NULL, scaleFactors=NULL, ...){
+  if(missing(method) && !is.null(scaleFactors)) method <- "manual"
   method <- match.arg(method)
   if(is(ml, "EnrichmentSE")){
-    ml2 <- renormalizeBorders(.ese2ml(ml,assay=assay), method=method, trim=trim,
-                              nWindows=nWindows, scaleFactors=scaleFactors)
-    an <- switch(method,
-                 "border"="borderNormalized",
-                 "top"="topNormalized",
-                 "normalized")
-    return(.addAssayToESE(ml, a=ml2, name=an, replace=TRUE))
+    ml2 <- renormalizeSignalMatrices(.ese2ml(ml,assay=fromAssay), method=method,
+                                     trim=trim, nWindows=nWindows,
+                                     toAssay=toAssay, scaleFactors=scaleFactors)
+    if(is.null(toAssay))
+      toAssay <- switch(method,
+                         "border"="borderNormalized",
+                         "top"="topNormalized",
+                         "normalized")
+    return(addAssayToESE(ml, a=ml2, name=toAssay, replace=TRUE))
   }
   if(method=="manual"){
-    stopifnot(!is.null(sizeFactors) & length(sizeFactors)==length(ml))
+    stopifnot(!is.null(scaleFactors) && length(scaleFactors)==length(ml))
   }else{
-    if(!is.null(sizeFactors)) 
-      message('`sizeFactors` is ignored when method=!"manual"')
+    if(!is.null(scaleFactors)) 
+      message('`scaleFactors` is ignored when method=!"manual"')
   }
   if(is.null(nWindows)) nWindows <- max(floor(ncol(ml[[1]])/10),1)
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
@@ -380,7 +386,7 @@ renormalizeSignalMatrices <- function(ml, method=c("border","top","manual"),
     nf <- nf/median(nf)
   }else if(method=="top"){
     nf <- apply(b, 2, FUN=function(x){
-      y <- quantile(y, 1-trim)
+      y <- quantile(x, 1-trim)
       if(y==0) y <- max(x)
       y
     })

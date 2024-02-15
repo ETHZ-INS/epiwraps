@@ -10,6 +10,7 @@ plotEnrichedHeatmaps(
   assay = 1L,
   colors = inferno(100),
   scale_title = "density",
+  column_title = NULL,
   column_title_gp = gpar(fontsize = 11),
   row_order = NULL,
   cluster_rows = FALSE,

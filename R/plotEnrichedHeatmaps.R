@@ -78,6 +78,7 @@
 #' plotEnrichedHeatmaps(m, row_title="My regions of interest")
 plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, 
                                  colors=inferno(100), scale_title="density",
+                                 column_title=NULL,
                                  column_title_gp=gpar(fontsize=11), 
                                  row_order=NULL, cluster_rows=FALSE, 
                                  row_split=NULL, axis_name=NULL, minRowVal=0, 
@@ -228,8 +229,9 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
       if(is.data.frame(ra))
         ra <- rowAnnotation(df=ra, annotation_name_side="bottom")
     }
-    hl <- hl + EnrichedHeatmap( ml[[m]],
-     col=col_fun, ..., column_title=m, column_title_gp=column_title_gp,
+    if(is.null(column_title)) column_title <- m
+    hl <- hl + EnrichedHeatmap( ml[[m]], ...,
+     col=col_fun, column_title=column_title, column_title_gp=column_title_gp,
      cluster_rows=cluster_rows, row_order=row_order, row_split=row_split,
      show_heatmap_legend=isLast && show_heatmap_legend,
      left_annotation=la, right_annotation=ra,

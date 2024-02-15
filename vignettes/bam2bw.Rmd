@@ -121,15 +121,12 @@ relative to the extended read (i.e. extension is applied first).
 ## Example heatmaps created using different bigwig generation procedures
 
 The following figure, created using `epiwraps` (see 
-<a href="epiwraps.html">the vignette</a>), represent chromatin accessibility 
-(ATAC-seq) signals around bound CTCF motifs in T-cells. The different signals 
-are based on different bigwig files derived from the same bam file using the 
-functions described above.
+<a href="multiRegionPlot.html">the vignette on generating such plots</a>), 
+represent chromatin accessibility (ATAC-seq) signals around bound CTCF motifs 
+in T-cells. The different signals are based on different bigwig files derived 
+from the same bam file using the functions described above.
 
-```{r egBwigs, echo=FALSE}
-knitr::include_graphics(system.file('docs', 'example_bigwigs_hm.png', 
-                                    package='epiwraps'))
-```
+<img src="example_bigwigs_hm.png" width="700" />
 
 * The first heatmap ('full coverage') was generated with default parameter, and
 is the fragment coverage (i.e. how many fragments overlap any given location).
@@ -145,3 +142,8 @@ generated with
 `shift=c(4L,-5L), binWidth=1L, maxFragLength=120, type="ends"`. Using this we 
 can see a nice footprint protected from the transposase by CTCF binding.
 
+# Working with fragment files as an input
+
+If you use fragment files (preferably tabix-indexed) rather than bam files as 
+input, you can still perform most of the above tasks. See the `?frag2bw` 
+function for more information.

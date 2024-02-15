@@ -31,5 +31,6 @@ A `Heatmap` showing the overlap coefficient as colors, and the
   overlap size as values.
 }
 \description{
-regionOverlaps
+A wrapper for visualizing pairwise-wise overlaps across multiple sets of
+genomic ranges.
 }

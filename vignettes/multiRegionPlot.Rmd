@@ -37,9 +37,12 @@ documentation.
 
 The `signal2Matrix` function reads genomic signals around the centers of a set
 of regions. It can read from bam and BigWig files, although reading from bam 
-files is considerably slower and we strongly recommend using bigwig files.
+files is considerably slower and we strongly recommend using bigwig files. For
+generating bigwig files that show the kind of signal you want to visualize, see
+the <a href="bam2bw.html">vignette to this effect</a>.
 
 ```{r}
+suppressPackageStartupMessages(library(epiwraps))
 # we fetch the path to the example bigwig file:
 bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
 # we load example regions (could be a GRanges or a path to a bed-like file):
@@ -47,40 +50,104 @@ regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
 # we obtain the matrix of the signal around the regions. For the purpose of this
 # example, we'll read twice from the same:
 m <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L, binMethod = "mean")
-lapply(m,dim)
+m
 ```
 
-The result is a named list of matrices (more specifically, `normalizedMatrix`
-objects, see `r BiocStyle::Biocpkg("EnrichedHeatmap")`) with equal dimensions. 
-In this example, the matrix has 264 rows/regions, and 200 columns because we
-asked to extend 1000bp on either side, and the default bin size is 10bp.
+The result is an object of class `EnrichmentSE`, which inherits from a 
+`r BiocStyle::Biocpkg("SummarizedExperiment","RangedSummarizedExperiment")`, and
+therefore affords all the manipulations that the latter offers. Each region is
+stored as a row, and each sample or signal track as a column of the object. So 
+we can see that we have signal for 264 rows/regions from two tracks.
 
-In addition to the arguments explicitly described in the function's help, it
-can accept a number of arguments also accepted by the `normalizeToMatrix` 
-function (e.g. `smooth=TRUE`). 
+We could subset to the first 50 regions as follows:
 
-When reading multiple files, the `BPPARAM` argument can be used to set 
-multi-threading and increase speed.
+```{r}
+m[1:50,]
+```
 
-### Manipulating signal matrices
+or obtain the coordinates of the queried regions :
 
-The list of signal matrices can be manipulated as any list of matrices, for 
-instance using subsetting (e.g. `m[1:2]`), but even using transformations, e.g.:
+```{r}
+rowRanges(m)
+```
+
+One can further obtain more detailed information about the bins saved in the object:
+
+```{r}
+showTrackInfo(m)
+```
+
+This means that each signal track is a matrix of 200 columns, because we
+asked to extend 1000bp on either side, and the default bin size is 10bp, making 
+100 bins/windows on each side.
+
+### Extracting and manipulating signal matrices
+
+It is possible to extract the list of signal matrix for manipulations, e.g. for 
+transformation:
 
 ```{r}
 # square-root transform
-m2 <- lapply(m, sqrt)
+m2 <- lapply(getSignalMatrices(m), sqrt)
 ```
 
-For re-normalizing lists of signal matrices, see `?rescaleSignalMatrices` and/or
-`?renormalizeBorders`. In addition, signal matrices can be combined either 
-manually, or using the following convenience function:
+See `?addAssayToESE` for adding a list of signal matrices (such as `m2` here) to
+an existing `EnrichmentSE` object. In addition, signal matrices can be combined, 
+either manually or using `?mergeSignalMatrices`.
 
-```{r}
-merged <- mergeSignalMatrices(m, aggregation="mean")
+
+## Plotting heatmaps
+
+Once the signal has been read and the object prepared, (and eventually 
+normalized, see the section below), we can plot heatmaps based on them as follows:
+
+```{r heatmap1, fig.height=4, fig.width=4}
+plotEnrichedHeatmaps(m)
+```
+We can use most arguments that are supported by 
+`r BiocStyle::Biocpkg("EnrichedHeatmap")` (and thus, by extension, by 
+`r BiocStyle::Biocpkg("ComplexHeatmap")`), for example:
+
+
+```{r heatmap1, fig.height=4, fig.width=4}
+plotEnrichedHeatmaps(m, colors=c("white","darkred"), cluster_rows=TRUE,
+                     show_row_dend=TRUE, top_annotation=FALSE, 
+                     row_title="My list of cool regions")
 ```
 
-#### Normalization
+#### Color-scale trimming
+
+By default, the colorscale is trimmed to prevent most of it being driven by rare
+extreme values. This can be controlled via the `trim` argument (which indicates
+up to which quantile of data points to keep to establish the colorscale). 
+Compare for instance the following two heatmaps:
+
+```{r heatmapTrim, fig.height=4, fig.width=5}
+plotEnrichedHeatmaps(m[,1], trim=1, scale_title="trim=1", column_title="trim=1 (no trim)",
+                     top_annotation=FALSE) +
+  plotEnrichedHeatmaps(m[,1], trim=0.99, scale_title="trim=0.99",
+                       column_title="trim=0.99", top_annotation=FALSE) +
+  plotEnrichedHeatmaps(m[,1], trim=0.9, column_title="trim=0.9",
+                       scale_title="trim=0.9", top_annotation=FALSE)
+```
+
+The underlying data is exactly the same, only the color-mapping changes. In the 
+left one, which has no trimming, a single very high value at the top forces the
+colorscale to extend to high values, even though most of the data is in the 
+very low range, resulting in a very dark heatmap. In the one on the right, it's
+the opposite: so much is trimmed that many points reach the top of the 
+colorscale, resulting in a an 'over-exposed' heatmap. In practice, it is 
+advisable to use minimal trimming (e.g. the default is `c(0.02,0.98)`).
+
+
+## Normalization
+
+We distinguish between two ways of calculating normalization factors: either 
+from the signal files (e.g. bigwig tracks), which is the most robust way, or 
+from an existing signal matrices (as for instance contained in the above \
+`EnrichmentSE` object).
+
+### Obtaining normalization factors for a set of signal files
 
 The `getNormFactors()` function can be used to estimate normalization factors 
 using different methods, such as background normalization (aka SSN), 
@@ -92,47 +159,47 @@ The normalization factors can then be applied on signal matrices, for example:
 ```{r, eval=FALSE}
 bwfiles <- c(atac1=bwf, atac2=bwf)
 nf <- getNormFactors(bwfiles, method="background")
+# in this case since the files are identical the normalization factors are both 1:
+nf
 sm <- signal2Matrix(bwfiles, regions, extend=1000L)
-sm2 <- rescaleSignalMatrices(sm, nf)
+sm <- renormalizeSignalMatrices(sm, scaleFactors=nf)
+sm
 ```
 
+The object now has a new assay, called `normalized`, which has been put in front
+and therefore will be used for most downstream usages.
 
-## Plotting heatmaps
+### Normalization of the signal matrices themselves
 
-Once the matrices have been created (and eventually normalized), we can plot 
-heatmaps based on them as follows:
+It is also possible to normalize the signal matrices using factors derived from 
+the matrices themselves, using the `renormalizeSignalMatrices` function. 
+Specifically, beyond providing scaling factors, two methods are available:
 
-```{r heatmap1, fig.height=4, fig.width=4}
-plotEnrichedHeatmaps(m)
-# we  can use most arguments that are supported by EnrichedHeatmap, e.g.:
-plotEnrichedHeatmaps(m, colors=c("white","darkred"), cluster_rows=TRUE,
-                     show_row_dend=TRUE, top_annotation=FALSE, 
-                     row_title="My list of cool regions")
-```
-By default, the colorscale is trimmed to prevent most of it being driven by rare
-extreme values. This can be controlled via the `trim` argument (which indicates
-up to which quantile of data points to keep to establish the colorscale). 
-Compare for instance the following two heatmaps:
+* `method="border"` works on the assumption that the left/right borders of the 
+matrices represent background signal which should be equal across samples. As
+a result, it will work only if 1) the left/right borders of the matrices are 
+sufficiently far from the signal (e.g. peaks) to be chiefly noise, and 2) the 
+signal-to-noise ratio is comparable across tracks/samples.
+* `method="top"` instead works on the assumption that the highest signal (after
+some trimming of the extremes) should be the same across tracks/samples.
 
-```{r heatmapTrim, fig.height=4, fig.width=5}
-plotEnrichedHeatmaps(list("trim=1"=m[[1]]), trim=1, scale_title="trim=1",
-                     top_annotation=FALSE) +
-  plotEnrichedHeatmaps(list("trim=0.99"=m[[1]]), trim=0.99, scale_title="trim=0.99",
-                     top_annotation=FALSE) +
-  plotEnrichedHeatmaps(list("trim=0.9"=m[[1]]), trim=0.9, 
-                       scale_title="trim=0.9", top_annotation=FALSE)
+To illustrate these, we will first introduce some difference between our two 
+tracks using arbitrary factors:
+
+```{r}
+sm <- renormalizeSignalMatrices(sm, scaleFactors=c(1,4), toAssay="test")
+plotEnrichedHeatmaps(sm, assay = "test")
 ```
 
-The underlying data is exactly the same, only the color-mapping changes. In the 
-left one, which has no trimming, a single very high value at the top forces the
-colorscale to extend to high values, even though most of the data is in the 
-very low range, resulting in a very dark heatmap. In the one on the right, it's
-the opposite: so much is trimmed that many points reach the top of the 
-colorscale, resulting in a an 'over-exposed' heatmap. In practice, it is 
-advisable to use minimal trimming (e.g. the default is `c(0.01,0.99)`,
-as in the corresponding DeepTools function).
+Then we can normalize:
 
+```{r}
+sm <- renormalizeSignalMatrices(sm, method="top", fromAssay="test")
+# again this adds an assay to the object, which will be automatically used when plotting:
+plotEnrichedHeatmaps(sm)
+```
 
+And we've recovered comparable signal across the two tracks/samples.
 
 ### Clustering
 
@@ -144,10 +211,12 @@ practice. For this reason, we provide a function that clusters the rows based on
 the distance-weighted enrichment scores. For example:
 
 ```{r, eval=FALSE}
-# not run
-cl <- clusterSignalMatrices(sm2, k=3, scaleRows=TRUE)
+# not run - would fail here due to the absence of variability between tracks
+cl <- clusterSignalMatrices(sm, k=3, scaleRows=TRUE)
+# we could store this in the rowData of the object:
+rowData(sm)$cluster <- cl
 mycolors <- c("1"="red", "2"="blue", "3"="darkgreen")
-plotEnrichedHeatmaps(sm2, row_split=cl, mean_color=mycolors)
+plotEnrichedHeatmaps(sm, row_split=rowData(sm)$cluster, mean_color=mycolors)
 ```
 
 Note that here we are splitting into 3 clusters, you can also provide a range
@@ -165,7 +234,7 @@ deviation, standard error and median at each position relative to the center,
 for each sample/matrix:
 
 ```{r}
-d <- meltSignals(m)
+d <- meltSignals(sm)
 head(d)
 ```
 
@@ -183,7 +252,8 @@ library(ggplot2)
 ggplot(d, aes(position, mean, colour=sample)) +
   geom_vline(xintercept=0, linetype="dashed") +
   geom_ribbon(aes(position, ymin=mean-SE, ymax=mean+SE, fill=sample), alpha=0.4, colour=NA) + 
-  geom_line(size=1.2) + labs(x="relative position", y="mean RPKM")
+  geom_line(size=1.2) + 
+  theme_bw() + labs(x="relative position", y="mean RPKM")
 ```
 
 

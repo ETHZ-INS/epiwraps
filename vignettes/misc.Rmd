@@ -1,0 +1,92 @@
+---
+title: "Miscellaneous epiwraps functions"
+author: 
+- name: Pierre-Luc Germain
+  affiliation:
+    - D-HEST Institute for Neuroscience, ETH
+    - Lab of Statistical Bioinformatics, UZH
+package: epiwraps
+output:
+  BiocStyle::html_document
+abstract: |
+  This vignette introduces some more isolated epiwraps functions.
+vignette: |
+  %\VignetteIndexEntry{misc}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+library(BiocStyle)
+```
+
+## Quality control
+
+### Coverage statistics
+
+Coverage statistics give an overview of how the reads are distributed across 
+the genome (or more precisely, across a large number of random regions). The 
+`getCovStats` will compute such statistics from bam or bigwig files (from 
+bigwig files will be considerably faster, but if the files are normalized 
+the coverage/density will be relative).
+
+Because our example data spans only part of a chromosome, we'll exclude 
+completely empty regions using the `exclude` parameter, which would normally
+be used to exclude regions likely to be technical artefacts (e.g. blacklisted
+regions). 
+
+```{r covstats, message=FALSE}
+# get the path to an example bigwig file:
+bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
+cs <- getCovStats(bwf, exclude=GRanges("1", IRanges(1, 4300000)))
+plotCovStats(cs)
+```
+
+Panel A shows the proportion of sampled regions which are above a certain read 
+density (relative because this is a normalized bigwig file, would be coverage 
+otherwise). This shows us, for example, that as expected only a minority of 
+regions have any reads at all (indicating that the reads are not randomly 
+distributed).
+Panel B is what is sometimes called a fingerprint plot. It similarly shows us 
+that the reads are concentrated in very few regions, since the vast majority of
+regions have only a very low fraction of the coverage of a few high-density 
+regions.
+Randomly distributed reads would go along the diagonal, but one normally has a 
+curve somewhere between this line and the lower-right corner -- the farther 
+away from the diagonal, to more strongly enriched the data is.
+
+This can be done for multiple files simultaneously. If we have several files, 
+we can also use the coverage in the random windows to computer their similarity 
+(see `?plotCorFromCovStats`).
+
+### Fragment length distributions
+
+Given one or more paired-end bam files, we can extract and plot the fragment 
+length distribution using:
+
+```{r fragSize, fig.width=4, fig.height=3}
+fragSizesDist(bam, what=100)
+```
+
+### TSS enrichment
+
+The TSS enrichment can also be calculated and plotted using the `TSSenrichment`
+function.
+
+## Peak calling
+
+A very experimental peak calling function can be used, either against an input 
+control or against local or global backgrounds:
+
+```{r, eval=FALSE}
+p <- callPeaks(bam, fragLength=50)
+```
+
+Note that this function is still under heavy development, and its usage at the moment is discouraged!
+
+## Region overlapping
+
+The `GenomicRanges` package offers fast and powerful functions for overlapping
+genomic regions. `epiwraps` includes wrappers around those for common tasks, 
+such as calculating and visualizing overlaps across multiple sets of regions 
+(see `?regionUpset`, `?regionOverlaps`, and `?regionCAT`).

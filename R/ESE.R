@@ -22,11 +22,14 @@ EnrichmentSE <- function(assays, rowRanges=NULL, ...){
 
 
 #' @export
-setMethod("[", "EnrichmentSE", function(x, i, j, drop=TRUE){
+setMethod("[", c("EnrichmentSE", "ANY", "ANY"), function(x, i, j, ..., drop=TRUE){
+  if(missing(j)) j <- NULL
+  if(missing(i)) i <- NULL
   .resizeESE(x, i, j, drop=drop)
 })
 
-#' @importFrom SummarizedExperiment assays assays<- rowRanges
+#' @importFrom SummarizedExperiment assays assays<- rowRanges 
+#' @importFrom SummarizedExperiment assayNames assayNames<-
 setMethod("show", "EnrichmentSE", function(object){
   cat("class:", class(object), "\n")
   cat(ncol(object), "tracks across", nrow(object), "regions\n")
@@ -60,6 +63,49 @@ setMethod("show", "EnrichmentSE", function(object){
   coolcat("metadata(%d): %s\n", expt)
   
 })
+
+#' showTrackInfo
+#' 
+#' Provide some information about the relative signal ranges of each track.
+#'
+#' @param x A named list of signal matrices or an EnrichmentSE object as 
+#'   produced by \code{\link{signal2Matrix}}
+#' @param assay The assay to use, defaults to the input assay.
+#' @param doPrint Logical; whether to print the information.
+#'
+#' @return An invisible list of captions.
+#' @export
+showTrackInfo <- function(x, assay="input", doPrint=TRUE){
+  if(is(x, "EnrichmentSE")) x <- getSignalMatrices(x, assay=assay)
+  stopifnot(is(x,"list") & all(vapply(x, FUN.VALUE=logical(1), 
+                                      class2="normalizedMatrix", FUN=is)))
+  out <- lapply(x, FUN=function(x){
+    upstream_index = attr(x, "upstream_index")
+    downstream_index = attr(x, "upstream_index")
+    target_index_len = length(attr(x, "target_index"))
+    extend = attr(x, "extend")
+    out <- paste0("  -",extend[1],"/+",extend[2],"bp (")
+    if(length(upstream_index)==length(downstream_index)){
+      out <- paste0(out, length(upstream_index), " windows each")
+    }else{
+      out <- paste0(out, "respectively ", length(upstream_index), " and ",
+                    length(downstream_index), " windows")
+    }
+    if(isTRUE(attr(x, "smooth"))) out <- paste0(out, ", smoothed")
+    if(target_index_len>1){
+      out <- paste0(out, ")\n  around given regions (", target_index_len, 
+                    " windows)")
+    }else{
+      out <- paste0(out, ")\n  around the centers of given regions")
+    }
+    if(doPrint){
+      cat(attr(x, "signal_name"),"(",paste(dim(x), collapse="x"),") :\n")
+      cat(out, "\n")
+    }
+    out
+  })
+  invisible(out)
+}
 
 #' @importFrom SummarizedExperiment SummarizedExperiment colData rowData
 .ml2assay <- function(ml){
@@ -101,19 +147,18 @@ ml2ESE <- function(ml, assayName="input", rowRanges=NULL, addScore=FALSE, ...){
         stop("The matrices' features/rows do not match the 'rowRanges'.")
     }
   }
-  al <- list()
-  al[[assayName]] <- a
-  a <- EnrichmentSE(a, rowRanges=rowRanges, ...)
+  a <- EnrichmentSE(list(a), rowRanges=rowRanges, ...)
   if(addScore){
     es <- DataFrame(lapply(ml, enriched_score))
     dimnames(es) <- dimnames(a)
     suppressWarnings({assays(a)$enriched_score <- es})
   }
+  suppressWarnings({assayNames(a)[1] <- assayName})
   a
 }
 
 .ese2ml <- function(x, assay=1L){
-  if(is.numeric(assay) && length(assays(x))>1 && 
+  if(is.numeric(assay) && length(setdiff(assayNames(x),"enriched_score"))>1 && 
      !is.null(assayNames(x)[assay]) && assayNames(x)[assay]!=""){
     message("Using assay ", assayNames(x)[assay])
   }
@@ -159,13 +204,30 @@ getSignalMatrices <- function(x, assay=1L){
   x
 }
 
-.addAssayToESE <- function(ml, a, name="normalized", replace=FALSE){
+#' addAssayToESE
+#' 
+#' Adds an assay of signal matrices to an existing `EnrichmentSE` object.
+#'
+#' @param x An object of class `EnrichmentSE`, as produced by 
+#'   \code{\link{signal2Matrix}}.
+#' @param a The assay to add, e.g. a list of normalizedMatrix objects
+#' @param name 
+#' @param replace Logical, whether to replace any existing assay of the same 
+#'   name (default TRUE). If FALSE and the assay already existed, the new assay 
+#'   name is given a suffix.
+#'
+#' @return `x` with the added/updated assay.
+#' @export
+addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
+  stopifnot(is(x,"EnrichmentSE"))
   if(is(a, "list")) a <- .ml2assay(a)
+  if(ncol(a)!=ncol(x))
+    stop("The new assay does not have as many tracks as the existing ones.")
   al <- list()
-  if(replace) name <- rev(make.unique(c(assayNames(ml), name)))[1]
+  if(!replace) name <- rev(make.unique(c(assayNames(x), name)))[1]
   al[[name]] <- a
-  assays(ml) <- c(al, as.list(assays(ml)[setdiff(assayNames(ml),name)]))
-  ml
+  assays(x) <- c(al, as.list(assays(x)[setdiff(assayNames(x),name)]))
+  x
 }
 
 .resizeESE <- function(x, i=NULL, j=NULL, drop=FALSE){
@@ -176,7 +238,7 @@ getSignalMatrices <- function(x, assay=1L){
   if(!is.null(i)){
     al <- lapply(al, FUN=function(x){
       if(is(x[,1],"normalizedMatrix")){
-        x <- DataFrame(lapply(x, FUN=function(y) .resizeNmatrix(y,i)))
+        x <- .ml2assay(lapply(x, FUN=function(y) .resizeNmatrix(y,i)))
       }else{
         x <- x[i,]
       }
@@ -187,6 +249,5 @@ getSignalMatrices <- function(x, assay=1L){
     al <- lapply(al, FUN=function(x) x[,j,drop=FALSE])
     cd <- cd[j,]
   }
-  EnrichmentSE(SummarizedExperiment(assays=al, rowRanges=rr, colData=cd,
-                                    metadata=metadata(x)))
+  EnrichmentSE(assays=al, rowRanges=rr, colData=cd, metadata=metadata(x))
 }

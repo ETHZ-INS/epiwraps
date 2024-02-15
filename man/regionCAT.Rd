@@ -14,9 +14,8 @@ regionCAT(
 )
 }
 \arguments{
-\item{regions1}{A GRanges object}
-
-\item{regions2}{A GRanges object}
+\item{regions1, regions2}{A GRanges object with a `score` metadata column according to 
+which the regions will be ranked (descending).}
 
 \item{start}{The rank at which to start plotting (removes large variations
 at the beginning when very few regions are considered)}

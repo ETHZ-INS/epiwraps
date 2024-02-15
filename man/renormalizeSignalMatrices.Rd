@@ -8,7 +8,8 @@ renormalizeSignalMatrices(
   ml,
   method = c("border", "top", "manual"),
   trim = NULL,
-  assay = "input",
+  fromAssay = "input",
+  toAssay = NULL,
   nWindows = NULL,
   scaleFactors = NULL,
   ...
@@ -23,8 +24,12 @@ renormalizeSignalMatrices(
 \item{trim}{Quantiles trimmed at each extreme before calculating 
 normalization factors.}
 
-\item{assay}{Assay to use (ignored unless `ml` is an EnrichmentSE object),
-defaults to the first assay.}
+\item{fromAssay}{Assay to use (ignored unless `ml` is an EnrichmentSE 
+object), defaults to the first assay.}
+
+\item{toAssay}{Assay in which to store the normalized data (ignored unless 
+`ml` is an EnrichmentSE object). By default an assay name will be set based
+on the normalization method used.}
 
 \item{scaleFactors}{A numeric vector of same length as `ml`, 
 indicating the scaling factors by which to multiply each matrix.

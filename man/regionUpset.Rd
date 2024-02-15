@@ -38,7 +38,8 @@ compared sets of regions is unstranded.}
 A plot
 }
 \description{
-A wrapper around \code{\link[UpSetR]{upset}} for GRanges.
+A wrapper around \code{\link[UpSetR]{upset}} for comparing multiple sets of
+genomic ranges.
 }
 \examples{
 # random list of GRanges:
