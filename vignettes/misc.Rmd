@@ -65,7 +65,7 @@ we can also use the coverage in the random windows to computer their similarity
 Given one or more paired-end bam files, we can extract and plot the fragment 
 length distribution using:
 
-```{r fragSize, fig.width=4, fig.height=3}
+```{r fragSize, eval=FALSE}
 fragSizesDist(bam, what=100)
 ```
 

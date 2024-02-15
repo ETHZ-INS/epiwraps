@@ -109,7 +109,7 @@ We can use most arguments that are supported by
 `r BiocStyle::Biocpkg("ComplexHeatmap")`), for example:
 
 
-```{r heatmap1, fig.height=4, fig.width=4}
+```{r heatmap2, fig.height=4, fig.width=4}
 plotEnrichedHeatmaps(m, colors=c("white","darkred"), cluster_rows=TRUE,
                      show_row_dend=TRUE, top_annotation=FALSE, 
                      row_title="My list of cool regions")
