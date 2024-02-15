@@ -89,15 +89,15 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>While the package’s functions accept many input formats, much of the work usually done involving it uses bigwig files, and the package covers both the flexible <strong>generation</strong> of such files, as well as their use for extracting and plotting data, whether in a <strong>single region</strong> or <strong>across many regions</strong>.</p>
+<p>While the package’s functions accept many input formats, much of the work usually done involving it uses bigwig files, and the package covers both the flexible <a href="https://ethz-ins.github.io/epiwraps/articles/bam2bw.html">generation</a> of such files, as well as their use for extracting and plotting data, whether in a <a href="https://ethz-ins.github.io/epiwraps/articles/singleRegionPlot.html">single region</a> or <a href="https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html">across many regions</a>.</p>
 <p>This is exemplified in the following figure:</p>
 <p><img src="articles/example_bigwigs_hm.png" width="700"></p>
 <p>All columns are based on the same bam file, but select and/or summarize fragments differently. For example, the heatmap of insertion sites of nucleosome-free fragments was based on a bigwig file generated using:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/bam2bw.html">bam2bw</a></span><span class="op">(</span><span class="st">"aligned.bam"</span>, output_bw<span class="op">=</span><span class="st">"NF_cuts.bw"</span>, paired<span class="op">=</span><span class="cn">TRUE</span>, <span class="va">`shift=c(4L,-5L), </span></span>
 <span><span class="va">       binWidth=1L, minFragLength=25, maxFragLength=120, type="ends"`</span><span class="op">)</span></span></code></pre></div>
-<p>More information about bigwig file generation is available in the specific vignette.</p>
-<p>For information on the extraction of signal from such files (as well as other format) and plotting of such heatmaps, see the vignette to this effect.</p>
+<p>More information about bigwig file generation is available in the <a href="https://ethz-ins.github.io/epiwraps/articles/bam2bw.html">bam2bw vignette</a>.</p>
+<p>For information on the extraction of signal from such files (as well as other format) and plotting of such heatmaps, see the <a href="https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html">vignette to this effect</a>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="license">
