@@ -33,9 +33,10 @@ BiocManager::install("ETHZ-INS/epiwraps")
 
 While the package's functions accept many input formats, much of the work usually
 done involving it uses bigwig files, and the package covers both the flexible
-**generation** 
+[generation](https://ethz-ins.github.io/epiwraps/articles/bam2bw.html)
 of such files, as well as their use for extracting and plotting data, whether 
-in a **single region** or **across many regions**.
+in a [single region](https://ethz-ins.github.io/epiwraps/articles/singleRegionPlot.html)
+or [across many regions](https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html).
 
 This is exemplified in the following figure:
 
@@ -50,8 +51,10 @@ bam2bw("aligned.bam", output_bw="NF_cuts.bw", paired=TRUE, `shift=c(4L,-5L),
        binWidth=1L, minFragLength=25, maxFragLength=120, type="ends"`)
 ```
 
-More information about bigwig file generation is available in the specific vignette.
+More information about bigwig file generation is available in the 
+[bam2bw vignette](https://ethz-ins.github.io/epiwraps/articles/bam2bw.html).
 
 For information on the extraction of signal from such files (as well as other 
-format) and plotting of such heatmaps, see the vignette to this effect.
+format) and plotting of such heatmaps, see the 
+[vignette to this effect](https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html).
 
