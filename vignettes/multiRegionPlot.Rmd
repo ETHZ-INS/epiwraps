@@ -260,3 +260,12 @@ ggplot(d, aes(position, mean, colour=sample)) +
 Note that when the regions are clustered, the clusters can be passed to melt and
 aggregate separately the different clusters, e.g.:
 `d <- meltSignals(sm, splitBy=cl)`.
+
+<br/><br/>
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
+

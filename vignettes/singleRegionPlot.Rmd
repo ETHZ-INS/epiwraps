@@ -131,3 +131,12 @@ Also, in addition to passing filepaths or `GRanges`, any Gviz track(s) can be
 passed (i.e. objects inheriting the `GdObject` class) can be passed, enabling 
 full track customization when needed.
 
+
+<br/><br/>
+
+# Session info
+
+```{r}
+sessionInfo()
+```
+

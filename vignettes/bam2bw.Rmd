@@ -148,3 +148,13 @@ can see a nice footprint protected from the transposase by CTCF binding.
 If you use fragment files (preferably tabix-indexed) rather than bam files as 
 input, you can still perform most of the above tasks. See the `?frag2bw` 
 function for more information.
+
+<br/><br/>
+
+# Session information {-}
+
+
+```{r}
+sessionInfo()
+```
+

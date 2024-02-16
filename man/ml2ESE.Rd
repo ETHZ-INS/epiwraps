@@ -4,15 +4,15 @@
 \alias{ml2ESE}
 \title{Creates an EnrichmentSE from a list of normalizedMatrix objects}
 \usage{
-ml2ESE(ml, assayName = "input", rowRanges = NULL, addScore = FALSE, ...)
+ml2ESE(ml, rowRanges, assayName = "input", addScore = FALSE, ...)
 }
 \arguments{
 \item{ml}{A named list of normalizedMatrix objects with corresponding rows.}
 
-\item{assayName}{The name of the assay, defaults to 'input'}
-
 \item{rowRanges}{An optional GRanges object corresponding to the rows of each
 object of `ml`.}
+
+\item{assayName}{The name of the assay, defaults to 'input'}
 
 \item{addScore}{Logical; whether to add an enriched_score assay.}
 
@@ -20,4 +20,17 @@ object of `ml`.}
 }
 \description{
 Creates an EnrichmentSE from a list of normalizedMatrix objects
+}
+\examples{
+# for an example we first need a list of signal matrices. To this end, 
+# we first fetch the path to the example bigwig file:
+bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+# we load example regions:
+regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
+                                           package="epiwraps"))
+# we obtain the matrix of the signal around the regions, indicating that we
+# want the output as a list of signal matrices:
+m <- signal2Matrix(bw, regions, ret="list")
+# we can then transform this into an EnrichmentSE object:
+m <- ml2ESE(m)
 }

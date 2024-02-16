@@ -2,6 +2,7 @@
 % Please edit documentation in R/normalization.R
 \name{getNormFactors}
 \alias{getNormFactors}
+\alias{bwNormFactors}
 \title{getNormFactors}
 \usage{
 getNormFactors(
@@ -16,6 +17,8 @@ getNormFactors(
   verbose = TRUE,
   method = c("background", "SES", "MAnorm", "S3norm", "2cLinear")
 )
+
+bwNormFactors(x, ...)
 }
 \arguments{
 \item{x}{A vector of paths to bigwig files, to bam files, or alternatively a 
@@ -62,4 +65,16 @@ experiments. These methods then use linear scaling.
 The 'S3norm' (Xiang et al., NAR 2020) and '2cLinear' methods try to 
 normalize both simultaneously. S3norm does this in a log-linear fashion (as 
 in the publication), while '2cLinear' does it on the original scale.
+}
+\section{Functions}{
+\itemize{
+\item \code{bwNormFactors()}: deprecated in favor of getNormFactors
+
+}}
+\examples{
+# we get an example bigwig file, and use it twice:
+bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+bw <- c(sample1=bw, sample2=bw)
+# we indicate to use only chr1, because it's the only one in the example file
+getNormFactors(bw, useSeqLevels="1")
 }

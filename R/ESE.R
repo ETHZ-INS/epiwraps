@@ -16,7 +16,8 @@ EnrichmentSE <- function(assays, rowRanges=NULL, ...){
   }else{
     a <- SummarizedExperiment(assays, rowRanges=rowRanges, ...)
   }
-  .EnrichmentSE(a)
+  a@NAMES <- NULL
+  epiwraps:::.EnrichmentSE(a)
 }
 
 
@@ -75,6 +76,13 @@ setMethod("show", "EnrichmentSE", function(object){
 #'
 #' @return An invisible list of captions.
 #' @export
+#' @examples
+#' # we first create an EnrichmentSE object:
+#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+#' regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
+#'                                            package="epiwraps"))
+#' x <- signal2Matrix(bw, regions)
+#' showTrackInfo(x)
 showTrackInfo <- function(x, assay="input", doPrint=TRUE){
   if(is(x, "EnrichmentSE")) x <- getSignalMatrices(x, assay=assay)
   stopifnot(is(x,"list") & all(vapply(x, FUN.VALUE=logical(1), 
@@ -118,16 +126,29 @@ showTrackInfo <- function(x, assay="input", doPrint=TRUE){
 #' Creates an EnrichmentSE from a list of normalizedMatrix objects
 #' 
 #' @param ml A named list of normalizedMatrix objects with corresponding rows.
-#' @param assayName The name of the assay, defaults to 'input'
 #' @param rowRanges An optional GRanges object corresponding to the rows of each
 #'   object of `ml`.
+#' @param assayName The name of the assay, defaults to 'input'
 #' @param addScore Logical; whether to add an enriched_score assay.
 #' @param ... Passed to `SummarizedExperiment()`
 #'
 #' @importFrom SummarizedExperiment assays<- assay<- assays
 #' @export
-ml2ESE <- function(ml, assayName="input", rowRanges=NULL, addScore=FALSE, ...){
+#' @examples
+#' # for an example we first need a list of signal matrices. To this end, 
+#' # we first fetch the path to the example bigwig file:
+#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+#' # we load example regions:
+#' regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
+#'                                            package="epiwraps"))
+#' # we obtain the matrix of the signal around the regions, indicating that we
+#' # want the output as a list of signal matrices:
+#' m <- signal2Matrix(bw, regions, ret="list")
+#' # we can then transform this into an EnrichmentSE object:
+#' m <- ml2ESE(m)
+ml2ESE <- function(ml, rowRanges, assayName="input", addScore=FALSE, ...){
   a <- .ml2assay(ml)
+  stopifnot(is(rowRanges,"GRanges") && length(rowRanges)==nrow(a))
   fnames <- row.names(a)
   if(!is.null(rowRanges)){
     if(!is.null(names(rowRanges)) && !is.null(fnames)){
@@ -147,7 +168,7 @@ ml2ESE <- function(ml, assayName="input", rowRanges=NULL, addScore=FALSE, ...){
         stop("The matrices' features/rows do not match the 'rowRanges'.")
     }
   }
-  a <- EnrichmentSE(list(a), rowRanges=rowRanges, ...)
+  a <- EnrichmentSE(list(input=a), rowRanges=rowRanges, ...)
   if(addScore){
     es <- DataFrame(lapply(ml, enriched_score))
     dimnames(es) <- dimnames(a)
@@ -179,6 +200,14 @@ ml2ESE <- function(ml, assayName="input", rowRanges=NULL, addScore=FALSE, ...){
 #'
 #' @return A list of normalizedMatrix objects.
 #' @export
+#' @examples
+#' # we first create an EnrichmentSE object:
+#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+#' regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
+#'                                            package="epiwraps"))
+#' x <- signal2Matrix(bw, regions)
+#' # then we can extract the list of signal matrices:
+#' sm <- getSignalMatrices(x)
 getSignalMatrices <- function(x, assay=1L){
   stopifnot(is(x,"EnrichmentSE"))
   .ese2ml(x, assay=assay)
@@ -218,6 +247,16 @@ getSignalMatrices <- function(x, assay=1L){
 #'
 #' @return `x` with the added/updated assay.
 #' @export
+#' @examples
+#' # we first create an EnrichmentSE object:
+#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+#' regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
+#'                                            package="epiwraps"))
+#' x <- signal2Matrix(bw, regions)
+#' # then we will create a new assay which is simply sqrt-transformed, and add 
+#' # it back in the object
+#' newAssay <- lapply(getSignalMatrices(x), sqrt)
+#' x <- addAssayToESE(x, newAssay, named="sqrt")
 addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
   stopifnot(is(x,"EnrichmentSE"))
   if(is(a, "list")) a <- .ml2assay(a)
@@ -230,6 +269,7 @@ addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
   x
 }
 
+# called by the method
 .resizeESE <- function(x, i=NULL, j=NULL, drop=FALSE){
   stopifnot(is(x,"EnrichmentSE"))
   rr <- rowRanges(x)

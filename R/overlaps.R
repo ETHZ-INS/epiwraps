@@ -97,6 +97,12 @@ regionUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
 #' @importFrom ComplexHeatmap pheatmap
 #' @importFrom viridisLite plasma
 #' @export
+#' @examples
+#' # random list of GRanges:
+#' grl <- lapply(c(A=10,B=20,C=30), FUN=function(x){
+#'   GRanges("seq1", IRanges(runif(x,1,1000), width=20))
+#' })
+#' regionOverlaps(grl)
 regionOverlaps <- function(listOfRegions, ignore.strand=TRUE, 
                            cluster=length(listOfRegions)>2,
                            color=viridis::plasma(100),
@@ -153,6 +159,15 @@ regionOverlaps <- function(listOfRegions, ignore.strand=TRUE,
 #' @return A ggplot object, or a data.frame if `returnData=TRUE`.
 #' @export
 #' @importFrom GenomicRanges reduce
+#' @examples
+#' # we create two GRanges with scores, which have similar high-score peaks but
+#' # the rest random:
+#' gr1 <- GRanges("seq1", IRanges(runif(20,1,2000), width=20),
+#'                score=20:1)
+#' gr2 <- GRanges("seq1", c(head(ranges(gr1),5),
+#'                          IRanges(runif(15,1,2000), width=20)),
+#'                score=c(20:16, sample.int(15)))
+#' regionCAT(gr1,gr2)
 regionCAT <- function(regions1, regions2, start=5L,
                       concord.type=c("both","inTop","inAll"),
                       returnData=FALSE, ignore.strand=TRUE){

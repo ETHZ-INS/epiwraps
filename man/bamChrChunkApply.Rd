@@ -57,3 +57,9 @@ Runs a function on reads/fragments from chunks of (chromosomes) of an
 indexed bam file. This is especially used by other functions to avoid 
 loading all alignments into memory, or to parallelize reads processing.
 }
+\examples{
+# as an example we'll use the function to obtain fragment sizes:
+bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
+fragLen <- bamChrChunkApply(bam, paired=TRUE, FUN=function(x) width(x))
+quantile(unlist(fragLen))
+}

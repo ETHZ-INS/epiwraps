@@ -1,8 +1,8 @@
 #' estimateFragSize
 #'
 #' @param bam The path to one or more bam files
-#' @param ctrl Optional path to a control bam file (if `length(bam)>1`, the same
-#'   control will be used for all).
+#' @param ctrl Optional path to a control bam file (if `length(bam)>1`, the 
+#'   same control will be used for all).
 #' @param binSize Bin size. The precision of the reported fragment size is 
 #'   necessary lower than this. A higher bin size will improve the summit 
 #'   identification in low-coverage regions. We recommend leaving the default
@@ -17,7 +17,8 @@
 #' @param priorLength The prior fragment length (use for read extension to 
 #'   identify enriched regions)
 #' @param ret The type of return, either a 'table' of pairs of summits and their
-#'   properties, or a 'plot', or the median/mean/mode of the distance distribution.
+#'   properties, or a 'plot', or the median/mean/mode of the distance 
+#'   distribution.
 #' @param blacklist Optional `GRanges` of blacklisted regions to be excluded.
 #' @param BPPARAM A `BiocParallel` parameter object for multithreading. Only 
 #'   used if multiple files are given in `bam`.
@@ -29,13 +30,12 @@
 #' @examples
 #' # get an example bam file
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
-#' # create bigwig
-#' estimateFragSize(bam)
+#' suppressWarnings(estimateFragSize(bam))
 estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
                              minSummitCount=8L, useSeqLevels=NULL,
                              maxSize=2500L, priorLength=200L, blacklist=NULL, 
-                             ret=c("mode", "median", "mean", "tables", "plots", "distances"),
-                             BPPARAM=SerialParam()){
+                             ret=c("mode", "median", "mean", "tables", "plots", 
+                                   "distances"), BPPARAM=SerialParam()){
   ret <- match.arg(ret)
 
   if(is.list(bam)){
@@ -93,8 +93,8 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
   # identify mfold-based peaks for estimation
   regions <- slice(co$cov, mfold[1], mfold[2], rangesOnly=TRUE)
   # keep only regions larger than the median read size
-  regions <- GRanges(rep(factor(names(regions),names(regions)), lengths(regions)),
-                     unlist(regions))
+  regions <- GRanges(rep(factor(names(regions),names(regions)), 
+                         lengths(regions)), unlist(regions))
   regions <- regions[which(width(regions)>msize)]
   regions <- reduce(regions, min.gapwidth=msize)
   regions <- regions[width(regions)<=maxSize]
@@ -143,11 +143,14 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
 .strandedCovTable <- function(regions, co){
   regions <- regions[start(regions)>=1]
   vp <- Views(co$cop, regions)
-  vp <- Reduce("+",Reduce("c", lapply(vp[which(lengths(vp)>0L)], FUN=IntegerList)))
+  vp <- Reduce("+",Reduce("c", lapply(vp[which(lengths(vp)>0L)], 
+                                      FUN=IntegerList)))
   vn <- Views(co$con, regions)
-  vn <- Reduce("+",Reduce("c", lapply(vn[which(lengths(vn)>0L)], FUN=IntegerList)))
+  vn <- Reduce("+",Reduce("c", lapply(vn[which(lengths(vn)>0L)], 
+                                      FUN=IntegerList)))
   size <- length(vp)
-  data.frame(rel_pos=seq(from=-floor(size/2), to=ceiling(size/2), length.out=length(vp)),
+  data.frame(rel_pos=seq(from=-floor(size/2), to=ceiling(size/2), 
+                         length.out=length(vp)),
              count=c(vp,vn), strand=rep(c("+","-"),each=length(vp)))
 }
 
@@ -195,7 +198,8 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
   g
 }
 
-.getStrandedCoverages <- function(bam, keepSeqLvls=NULL, fragLength=100L, binSize=5L){
+.getStrandedCoverages <- function(bam, keepSeqLvls=NULL, fragLength=100L, 
+                                  binSize=5L){
   covs <- bamChrChunkApply(bam, keepSeqLvls=keepSeqLvls, FUN=function(x){
     msize <- median(width(x))
     x <- trim(suppressWarnings(resize(x, width=pmax(width(x),fragLength))))

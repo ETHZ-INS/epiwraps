@@ -34,3 +34,10 @@ A `Heatmap` showing the overlap coefficient as colors, and the
 A wrapper for visualizing pairwise-wise overlaps across multiple sets of
 genomic ranges.
 }
+\examples{
+# random list of GRanges:
+grl <- lapply(c(A=10,B=20,C=30), FUN=function(x){
+  GRanges("seq1", IRanges(runif(x,1,1000), width=20))
+})
+regionOverlaps(grl)
+}

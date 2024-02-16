@@ -18,3 +18,12 @@ A list of normalizedMatrix objects.
 \description{
 Extracts a list of signal matrices from an EnrichmentSE object.
 }
+\examples{
+# we first create an EnrichmentSE object:
+bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
+                                           package="epiwraps"))
+x <- signal2Matrix(bw, regions)
+# then we can extract the list of signal matrices:
+sm <- getSignalMatrices(x)
+}

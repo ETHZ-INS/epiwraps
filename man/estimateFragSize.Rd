@@ -22,8 +22,8 @@ estimateFragSize(
 \arguments{
 \item{bam}{The path to one or more bam files}
 
-\item{ctrl}{Optional path to a control bam file (if `length(bam)>1`, the same
-control will be used for all).}
+\item{ctrl}{Optional path to a control bam file (if `length(bam)>1`, the 
+same control will be used for all).}
 
 \item{binSize}{Bin size. The precision of the reported fragment size is 
 necessary lower than this. A higher bin size will improve the summit 
@@ -47,7 +47,8 @@ identify enriched regions)}
 \item{blacklist}{Optional `GRanges` of blacklisted regions to be excluded.}
 
 \item{ret}{The type of return, either a 'table' of pairs of summits and their
-properties, or a 'plot', or the median/mean/mode of the distance distribution.}
+properties, or a 'plot', or the median/mean/mode of the distance 
+distribution.}
 
 \item{BPPARAM}{A `BiocParallel` parameter object for multithreading. Only 
 used if multiple files are given in `bam`.}
@@ -62,6 +63,5 @@ estimateFragSize
 \examples{
 # get an example bam file
 bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
-# create bigwig
-estimateFragSize(bam)
+suppressWarnings(estimateFragSize(bam))
 }

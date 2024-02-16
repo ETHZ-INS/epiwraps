@@ -34,26 +34,26 @@ Imports:
     ggplot2,
     cowplot,
     edgeR,
-    UpSetR,
-    ComplexHeatmap,
     dplyr,
-    Biostrings,
     stats,
     pbapply,
-    SummarizedExperiment
+    methods,
 Suggests: 
     knitr,
     genomation,
     rmarkdown,
     BiocStyle,
+    UpSetR,
     testthat (>= 3.0.0)
 Description:
     A set of wrappers to facilitate working with epigenomics data.
     Includes in particular wrappers for producing multitrack single-regions plots,
-    enrichment heatmaps, bigwig generation, peak calling, and some extra functions.
+    enrichment heatmaps, bigwig generation, normalization, etc. The focus was 
+    put on a simple yet flexible interface.
 License: GPL-3
 VignetteBuilder: knitr
 Encoding: UTF-8
 Config/testthat/edition: 3
 RoxygenNote: 7.2.3
 URL: https://ethz-ins.github.io/epiwraps/
+BiocViews: Epigenetics, GeneRegulation, Visualization

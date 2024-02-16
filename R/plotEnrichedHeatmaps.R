@@ -69,7 +69,7 @@
 #' m <- signal2Matrix(bw, regions)
 #' plotEnrichedHeatmaps(m)
 #' # we could also just plot one with:
-#' # plotEnrichedHeatmaps(m[1])
+#' # plotEnrichedHeatmaps(m[,1])
 #' # or change the aesthetics, e.g.:
 #' plotEnrichedHeatmaps(m, trim=0.98, scale_title="RPKM", 
 #'                      colors=c("white","darkred"))

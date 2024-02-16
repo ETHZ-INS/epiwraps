@@ -26,6 +26,11 @@
 #'
 #' @return A list of whatever `FUN` returns
 #' @export
+#' @examples
+#' # as an example we'll use the function to obtain fragment sizes:
+#' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
+#' fragLen <- bamChrChunkApply(bam, paired=TRUE, FUN=function(x) width(x))
+#' quantile(unlist(fragLen))
 bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, nChunks=4,
                              strandMode=2, flgs=scanBamFlag(), exclude=NULL,
                              mapqFilter=NA_integer_, BPPARAM=SerialParam(), 

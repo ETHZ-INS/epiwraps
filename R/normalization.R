@@ -38,6 +38,12 @@
 #' @return A vector of normalization factors or, for methods 'S3norm' and 
 #'   '2cLinear', a matrix of per-sample normalization parameters.
 #' @export
+#' @examples
+#' # we get an example bigwig file, and use it twice:
+#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+#' bw <- c(sample1=bw, sample2=bw)
+#' # we indicate to use only chr1, because it's the only one in the example file
+#' getNormFactors(bw, useSeqLevels="1")
 getNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.01,
                           useSeqLevels=NULL, paired=NULL, ..., verbose=TRUE,
                           method=c("background","SES","MAnorm","S3norm",
@@ -124,14 +130,7 @@ getNormFactors <- function(x, wsize=10L, nwind=20000L, peaks=NULL, trim=0.01,
           wsize=wsize, ...)
 }
 
-#' bwNormFactors
-#' 
-#' This function is deprecated, see \code{\link{getNormFactors}}.
-#'
-#' @param x A vector of paths to bigwig files.
-#' @param ... Passed to \code{\link{getNormFactors}}
-#'
-#' @return A vector of normalization factors
+#' @describeIn getNormFactors deprecated in favor of getNormFactors
 #' @export
 bwNormFactors <- function(x, ...){
   .Deprecated(old="bwNormFactors", new="getNormFactors",
@@ -278,27 +277,8 @@ bwNormFactors <- function(x, ...){
   ref
 }
 
-
-#' renormalizeBorders
-#'
-#' This function is \strong{deprecated} and will be replaced by
-#' \code{\link{renormalizeMatrices}}.
-#' Renormalizes a list of signal matrices on the assumption that
-#' the left/right borders of the matrices represent background signal which 
-#' should be equal across samples.
-#' \strong{This is not a safe normalization procedure}: it will work only if 
-#' 1) the left/right borders of the matrices are sufficiently far from the 
-#' signal (e.g. peaks), and 2) the signal-to-noise ratio is comparable across 
-#' samples.
-#'
-#' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
-#' @param trim Quantiles trimmed at each extreme (for linear normalization)
-#' @param assay Assay to use (ignored unless `ml` is an ESE object), defaults to
-#'   the first assay.
-#'
-#' @return A renormalized list of signal matrices.
 #' @export
-#' @importFrom edgeR calcNormFactors
+#' @describeIn renormalizeSignalMatrices deprecated > renormalizeSignalMatrices
 renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
   .Deprecated(
     old="renormalizeBorders", new="renormalizeSignalMatrices",
@@ -347,6 +327,15 @@ renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
 #'   `EnrichmentSE` object, the same object with an additional normalized
 #'   assay automatically put at the front.
 #' @export
+#' @examples
+#' # we first get an EnrichmentSE object:
+#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+#' regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
+#'                                            package="epiwraps"))
+#' m <- signal2Matrix(c(sample1=bw, sample2=bw), regions)
+#' # we normalize them
+#' m <- renormalizeSignalMatrices(m, method="border")
+#' # see the `vignette("multiRegionPlot")` for more info on normalization.
 renormalizeSignalMatrices <- function(ml, method=c("border","top","manual"), 
                                       trim=NULL, fromAssay="input", toAssay=NULL,
                                       nWindows=NULL, scaleFactors=NULL, ...){
@@ -398,14 +387,13 @@ renormalizeSignalMatrices <- function(ml, method=c("border","top","manual"),
   ml
 }
 
-#' .applyMatricesScaling
-#' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
-#' @param scaleFactors A numeric vector of same length as `ml`, 
-#'   indicating the scaling factors by which to multiply each matrix.
-#'   Alternatively, a numeric matrix with a number of rows equal to the length 
-#'   of `ml`, and two columns indicating the alpha and beta arguments of a 
-#'   s3norm normalization.
-#' @return A renormalized list of signal matrices.
+# @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
+# @param scaleFactors A numeric vector of same length as `ml`, 
+#   indicating the scaling factors by which to multiply each matrix.
+#   Alternatively, a numeric matrix with a number of rows equal to the length 
+#   of `ml`, and two columns indicating the alpha and beta arguments of a 
+#   s3norm normalization.
+# @return A renormalized list of signal matrices.
 .applyMatricesScaling <- function(ml, scaleFactors, applyLinearly=NULL){
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
   if(is.matrix(scaleFactors)){

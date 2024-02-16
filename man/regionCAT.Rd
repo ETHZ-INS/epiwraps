@@ -43,3 +43,13 @@ The two concordance types are as follows:
   the other list (since this relationship is asymmetrical, the mean of both
   two directions is used).
 }
+\examples{
+# we create two GRanges with scores, which have similar high-score peaks but
+# the rest random:
+gr1 <- GRanges("seq1", IRanges(runif(20,1,2000), width=20),
+               score=20:1)
+gr2 <- GRanges("seq1", c(head(ranges(gr1),5),
+                         IRanges(runif(15,1,2000), width=20)),
+               score=c(20:16, sample.int(15)))
+regionCAT(gr1,gr2)
+}

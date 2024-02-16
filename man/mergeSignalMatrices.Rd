@@ -21,3 +21,14 @@ A single `normalizedMatrix` object.
 \description{
 mergeSignalMatrices
 }
+\examples{
+# we first get an EnrichmentSE object:
+bw <- system.file("extdata/example_atac.bw", package="epiwraps")
+regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
+                                           package="epiwraps"))
+m <- signal2Matrix(c(sample1=bw, sample2=bw), regions)
+# we merge the two tracks:
+merged <- mergeSignalMatrices(m)
+# we could then plot the merge (not run):
+# plotEnrichedHeatmaps(merged)
+}

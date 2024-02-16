@@ -91,3 +91,12 @@ The `GenomicRanges` package offers fast and powerful functions for overlapping
 genomic regions. `epiwraps` includes wrappers around those for common tasks, 
 such as calculating and visualizing overlaps across multiple sets of regions 
 (see `?regionUpset`, `?regionOverlaps`, and `?regionCAT`).
+
+<br/><br/>
+
+## Session information {-}
+
+```{r}
+sessionInfo()
+```
+
