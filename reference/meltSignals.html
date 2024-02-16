@@ -82,6 +82,28 @@ the first assay.</p></dd>
 <p>A data.frame.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># we first get an EnrichmentSE object:</span></span></span>
+<span class="r-in"><span><span class="va">bw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_atac.bw"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">import</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_peaks.bed"</span>, </span></span>
+<span class="r-in"><span>                                           package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="va">bw</span>, <span class="va">regions</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span>
+<span class="r-in"><span><span class="co"># we extract the means per position:</span></span></span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu">meltSignals</span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   position       sample       mean         SD          SE    median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    -2000 example_atac 0.04981133 0.03992983 0.002457511 0.0391084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    -1980 example_atac 0.04910767 0.03782264 0.002327823 0.0391084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    -1960 example_atac 0.04925580 0.03776375 0.002324198 0.0391084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    -1940 example_atac 0.04877435 0.03817225 0.002349340 0.0391084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    -1920 example_atac 0.04825587 0.03616234 0.002225638 0.0391084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    -1900 example_atac 0.04914470 0.03574233 0.002199788 0.0391084</span>
+<span class="r-in"><span><span class="co">## we could then plot for instance using ggplot:</span></span></span>
+<span class="r-in"><span><span class="co"># ggplot(d, aes(position, mean, colour=sample)) + geom_line(size=1.2)</span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 

@@ -46,16 +46,10 @@
     <loc>https://ethz-ins.github.io/epiwraps/reference/breakStrings.html</loc>
   </url>
   <url>
-    <loc>https://ethz-ins.github.io/epiwraps/reference/bwNormFactors.html</loc>
-  </url>
-  <url>
     <loc>https://ethz-ins.github.io/epiwraps/reference/callPeaks.html</loc>
   </url>
   <url>
     <loc>https://ethz-ins.github.io/epiwraps/reference/clusterSignalMatrices.html</loc>
-  </url>
-  <url>
-    <loc>https://ethz-ins.github.io/epiwraps/reference/dot-applyMatricesScaling.html</loc>
   </url>
   <url>
     <loc>https://ethz-ins.github.io/epiwraps/reference/estimateFragSize.html</loc>
@@ -128,9 +122,6 @@
   </url>
   <url>
     <loc>https://ethz-ins.github.io/epiwraps/reference/regionUpset.html</loc>
-  </url>
-  <url>
-    <loc>https://ethz-ins.github.io/epiwraps/reference/renormalizeBorders.html</loc>
   </url>
   <url>
     <loc>https://ethz-ins.github.io/epiwraps/reference/renormalizeSignalMatrices.html</loc>

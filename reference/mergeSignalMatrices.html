@@ -77,6 +77,21 @@ the first assay.</p></dd>
 <p>A single `normalizedMatrix` object.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># we first get an EnrichmentSE object:</span></span></span>
+<span class="r-in"><span><span class="va">bw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_atac.bw"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">import</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_peaks.bed"</span>, </span></span>
+<span class="r-in"><span>                                           package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sample1<span class="op">=</span><span class="va">bw</span>, sample2<span class="op">=</span><span class="va">bw</span><span class="op">)</span>, <span class="va">regions</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span>
+<span class="r-in"><span><span class="co"># we merge the two tracks:</span></span></span>
+<span class="r-in"><span><span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu">mergeSignalMatrices</span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># we could then plot the merge (not run):</span></span></span>
+<span class="r-in"><span><span class="co"># plotEnrichedHeatmaps(merged)</span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside></div>
 
