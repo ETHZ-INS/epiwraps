@@ -3,7 +3,7 @@
 \name{getNormFactors}
 \alias{getNormFactors}
 \alias{bwNormFactors}
-\title{getNormFactors}
+\title{getNormFactors : estimate normalization factors from genomic signal files}
 \usage{
 getNormFactors(
   x,

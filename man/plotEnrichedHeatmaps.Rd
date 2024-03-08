@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotEnrichedHeatmaps.R
 \name{plotEnrichedHeatmaps}
 \alias{plotEnrichedHeatmaps}
-\title{plotEnrichedHeatmaps}
+\title{plotEnrichedHeatmaps: Plots heatmaps of signals around a set of regions}
 \usage{
 plotEnrichedHeatmaps(
   ml,
@@ -92,7 +92,8 @@ image. Turned on by default if any of the matrix dimensions is greater than
 A HeatmapList object
 }
 \description{
-Plots enrichment heatmaps from the output of `signal2Matrix`. This is a 
+Plots enrichment heatmaps from the output of \code{\link{signal2Matrix}} 
+(i.e. an EnrichmentSE object or a list of signal matrices). This is a 
 convenience wrapper around \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 }
 \details{

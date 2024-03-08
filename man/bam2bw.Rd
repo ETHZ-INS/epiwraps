@@ -2,7 +2,7 @@
 % Please edit documentation in R/bam2bw.R
 \name{bam2bw}
 \alias{bam2bw}
-\title{bam2bw}
+\title{bam2bw: create a coverage bigwig file from an alignment bam file.}
 \usage{
 bam2bw(
   bamfile,
@@ -142,7 +142,7 @@ The bigwig filepath. Alternatively, if `output_bw=NA_character_`,
   the coverage data is not written to file but returned.
 }
 \description{
-Creates a coverage bigwig file from an alignment bam file.
+bam2bw: create a coverage bigwig file from an alignment bam file.
 }
 \details{
 * For single-end ChIPseq data, extend reads to the expected fragment size 

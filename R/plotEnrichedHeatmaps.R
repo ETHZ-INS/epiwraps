@@ -1,6 +1,7 @@
-#' plotEnrichedHeatmaps
+#' plotEnrichedHeatmaps: Plots heatmaps of signals around a set of regions
 #' 
-#' Plots enrichment heatmaps from the output of `signal2Matrix`. This is a 
+#' Plots enrichment heatmaps from the output of \code{\link{signal2Matrix}} 
+#' (i.e. an EnrichmentSE object or a list of signal matrices). This is a 
 #' convenience wrapper around \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 #'
 #' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.

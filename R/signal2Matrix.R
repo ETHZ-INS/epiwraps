@@ -1,6 +1,7 @@
-#' signal2Matrix
+#' signal2Matrix: reads the signals around a set of regions.
 #' 
-#' Reads the signals around (the centers of) a set of regions.
+#' Reads the signals from bam/bw files within and/or (the centers of) a given
+#' set of regions, and outputs an EnrichedSE object.
 #'
 #' @param filepaths A named vector of filepaths (e.g. to bigwig files; bam files
 #'   are also supported, but with limited functionalities). Can also be a named

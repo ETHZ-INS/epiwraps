@@ -2,7 +2,7 @@
 % Please edit documentation in R/signal2Matrix.R
 \name{signal2Matrix}
 \alias{signal2Matrix}
-\title{signal2Matrix}
+\title{signal2Matrix: reads the signals around a set of regions.}
 \usage{
 signal2Matrix(
   filepaths,
@@ -64,7 +64,8 @@ bam files. For example, this can be used to pass arguments to
 A list of `normalizeToMatrix` objects
 }
 \description{
-Reads the signals around (the centers of) a set of regions.
+Reads the signals from bam/bw files within and/or (the centers of) a given
+set of regions, and outputs an EnrichedSE object.
 }
 \examples{
 # we fetch the path to the example bigwig file:

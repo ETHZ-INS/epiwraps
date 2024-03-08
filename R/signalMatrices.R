@@ -58,7 +58,7 @@ meltSignals <- function(ml, fun=NULL, splitBy=NULL, trim=0.98, assay=1L){
   d
 }
 
-#' mergeSignalMatrices
+#' mergeSignalMatrices: aggregates two or more signal matrices.
 #'
 #' @param ml A named list of signal matrices or an EnrichmentSE object as 
 #'   produced by \code{\link{signal2Matrix}}
@@ -98,9 +98,10 @@ mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median"),
   y
 }
 
-#' clusterSignalMatrices
+#' clusterSignalMatrices: clusters the regions of a (set of) signal matrices.
 #'
-#' @param ml A list of signal matrices, as produced by \code{\link{signal2Matrix}}.
+#' @param ml A named list of signal matrices or an EnrichmentSE object as 
+#'   produced by \code{\link{signal2Matrix}}
 #' @param k The number of clusters to generate
 #' @param scaleRows Logical; whether to scale rows for clustering
 #' @param scaleCols Logical; whether to scale columns (i.e. signals/samples)

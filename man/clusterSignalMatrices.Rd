@@ -2,7 +2,7 @@
 % Please edit documentation in R/signalMatrices.R
 \name{clusterSignalMatrices}
 \alias{clusterSignalMatrices}
-\title{clusterSignalMatrices}
+\title{clusterSignalMatrices: clusters the regions of a (set of) signal matrices.}
 \usage{
 clusterSignalMatrices(
   ml,
@@ -18,7 +18,8 @@ clusterSignalMatrices(
 )
 }
 \arguments{
-\item{ml}{A list of signal matrices, as produced by \code{\link{signal2Matrix}}.}
+\item{ml}{A named list of signal matrices or an EnrichmentSE object as 
+produced by \code{\link{signal2Matrix}}}
 
 \item{k}{The number of clusters to generate}
 
@@ -50,5 +51,5 @@ If `k` is of length 1, a vector of cluster labels, corresponding to
   explained by clusters at each resolution.
 }
 \description{
-clusterSignalMatrices
+clusterSignalMatrices: clusters the regions of a (set of) signal matrices.
 }

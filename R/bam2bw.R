@@ -1,6 +1,4 @@
-#' bam2bw
-#' 
-#' Creates a coverage bigwig file from an alignment bam file.
+#' bam2bw: create a coverage bigwig file from an alignment bam file.
 #'
 #' @param bamfile The path to the signal bam file.
 #' @param output_bw The path to the output bigwig file

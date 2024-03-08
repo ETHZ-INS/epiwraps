@@ -1,4 +1,4 @@
-#' getNormFactors
+#' getNormFactors : estimate normalization factors from genomic signal files
 #' 
 #' Estimates normalization factors for a set of samples (i.e. bam/bigwig files).
 #'

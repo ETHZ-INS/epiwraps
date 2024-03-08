@@ -2,7 +2,7 @@
 % Please edit documentation in R/signalMatrices.R
 \name{mergeSignalMatrices}
 \alias{mergeSignalMatrices}
-\title{mergeSignalMatrices}
+\title{mergeSignalMatrices: aggregates two or more signal matrices.}
 \usage{
 mergeSignalMatrices(ml, aggregation = c("mean", "sum", "median"), assay = 1L)
 }
@@ -19,7 +19,7 @@ the first assay.}
 A single `normalizedMatrix` object.
 }
 \description{
-mergeSignalMatrices
+mergeSignalMatrices: aggregates two or more signal matrices.
 }
 \examples{
 # we first get an EnrichmentSE object:
