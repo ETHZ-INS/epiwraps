@@ -127,6 +127,15 @@ the respective `r BiocStyle::Biocpkg("Gviz")` function can be passed through the
 `AlignmentsTrack`, when plotting individual reads), or `tracks.params` (for any 
 other Gviz `DataTrack`).
 
+For example, if you wish to manually set the same y-axis range for all data 
+tracks, this can be done with:
+
+```{r}
+plotSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326",
+                 tracks.params=list(ylim=c(0,200)))
+```
+
+
 Also, in addition to passing filepaths or `GRanges`, any Gviz track(s) can be 
 passed (i.e. objects inheriting the `GdObject` class) can be passed, enabling 
 full track customization when needed.
