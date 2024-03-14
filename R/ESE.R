@@ -148,7 +148,13 @@ showTrackInfo <- function(x, assay="input", doPrint=TRUE){
 #' m <- ml2ESE(m)
 ml2ESE <- function(ml, rowRanges, assayName="input", addScore=FALSE, ...){
   a <- .ml2assay(ml)
-  stopifnot(is(rowRanges,"GRanges") && length(rowRanges)==nrow(a))
+  stopifnot(is(rowRanges,"GRanges"))
+  if(length(rowRanges)!=nrow(a)){
+    if(is.null(names(rowRanges)) || !all(row.names(a) %in% names(rowRanges)))
+      stop("length(rowRanges) is different from the number of signal rows,",
+           " and there are no matching names!")
+    rowRanges <- rowRanges[row.names(a)]
+  }
   fnames <- row.names(a)
   if(!is.null(rowRanges)){
     if(!is.null(names(rowRanges)) && !is.null(fnames)){
