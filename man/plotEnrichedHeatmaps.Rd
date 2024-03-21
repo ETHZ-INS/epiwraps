@@ -30,7 +30,8 @@ plotEnrichedHeatmaps(
 )
 }
 \arguments{
-\item{ml}{A named matrix list as produced by \code{\link{signal2Matrix}}.}
+\item{ml}{A named matrix list as produced by \code{\link{signal2Matrix}}, or
+an `EnrichmentSE` object.}
 
 \item{trim}{The quantile above which to trim values for the colorscale. If a
 numeric vector of length 2, will be used as lower and upper quantiles 
@@ -38,7 +39,9 @@ beyond which to trim.}
 
 \item{assay}{Assay to use (ignored unless `ml` is an ESE object)}
 
-\item{colors}{The heatmap colors to use.}
+\item{colors}{The heatmap colors to use, a vector of at least two colors 
+between which to interpolate. Can also be a list of such color scales, with
+as many slots as there are tracks in `ml`.}
 
 \item{scale_title}{The title of the scale.}
 

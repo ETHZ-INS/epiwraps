@@ -4,11 +4,14 @@
 #' (i.e. an EnrichmentSE object or a list of signal matrices). This is a 
 #' convenience wrapper around \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 #'
-#' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}.
+#' @param ml A named matrix list as produced by \code{\link{signal2Matrix}}, or
+#'  an `EnrichmentSE` object.
 #' @param trim The quantile above which to trim values for the colorscale. If a
 #' numeric vector of length 2, will be used as lower and upper quantiles 
 #' beyond which to trim.
-#' @param colors The heatmap colors to use.
+#' @param colors The heatmap colors to use, a vector of at least two colors 
+#'   between which to interpolate. Can also be a list of such color scales, with
+#'   as many slots as there are tracks in `ml`.
 #' @param scale_title The title of the scale.
 #' @param column_title_gp Graphic parameters of the column titles (see 
 #'   \code{\link[grid]{gpar}})
@@ -154,7 +157,18 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
     ml <- ml_trimmed # don't just trim the scale
     trim <- 1
   } 
-  col_fun <- .getColFun(ml, trim, colors=colors)
+  if(multiScale <- is.list(colors)){
+    if(length(colors)!=length(ml)){
+      stop("The number of input color scales should either be one or the ",
+           "number of tracks.")
+    }
+    col_fun <- lapply(seq_along(ml), FUN=function(i){
+      .getColFun(ml[[i]], trim, colors=colors[[i]])
+    })
+  }else{
+    col_fun <- .getColFun(ml, trim, colors=colors)
+    col_fun <- lapply(seq_along(ml), FUN=function(i) col_fun)
+  }
 
   ymin <- min(c(0,unlist(lapply(ml,FUN=min))))
   ymax <- max(unlist(lapply(ml, FUN=function(x){
@@ -230,14 +244,19 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
       if(is.data.frame(ra))
         ra <- rowAnnotation(df=ra, annotation_name_side="bottom")
     }
-    if(is.null(column_title)) column_title <- m
-    hl <- hl + EnrichedHeatmap( ml[[m]], ...,
-     col=col_fun, column_title=column_title, column_title_gp=column_title_gp,
-     cluster_rows=cluster_rows, row_order=row_order, row_split=row_split,
-     show_heatmap_legend=isLast && show_heatmap_legend,
-     left_annotation=la, right_annotation=ra,
-     top_annotation=TA, axis_name=axis_name, use_raste=use_raster,
-     name=ifelse(isLast,scale_title,paste(scale_title,m)) )
+    if(multiScale){
+      hmname <- m
+    }else{
+      hmname <- ifelse(isLast,scale_title,paste(scale_title,m,sep="\n"))
+    }
+    clt <- ifelse(is.null(column_title),m,column_title)
+    hl <- hl + EnrichedHeatmap( ml[[m]], ..., col=col_fun[[i]], 
+       column_title=clt, column_title_gp=column_title_gp,
+       cluster_rows=cluster_rows, row_order=row_order, row_split=row_split,
+       show_heatmap_legend=(multiScale || isLast) && show_heatmap_legend,
+       left_annotation=la, right_annotation=ra,
+       top_annotation=TA, axis_name=axis_name, use_raste=use_raster,
+       name=hmname )
   }
   hl
 }
