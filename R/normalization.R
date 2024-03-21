@@ -366,7 +366,7 @@ renormalizeSignalMatrices <- function(ml, method=c("border","top","manual"),
                      x[,seq(from=ncol(x)-nWindows+1L,to=ncol(x))]))
   }))
   if(is.null(trim)) trim <- (sum(b!=0)/length(b))/10
-  if(method=="linear"){
+  if(method=="border"){
     nf <- apply(b, 2, FUN=function(x){
       y <- mean(x, trim=trim)
       if(y==0) y <- mean(x)
