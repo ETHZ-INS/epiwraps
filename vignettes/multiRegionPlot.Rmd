@@ -145,13 +145,13 @@ It is also possible to have different colorscales for different tracks, which is
 especially useful when comparing very different signals. For example, this would
 put each of the two tracks (here identical) on its own color scale:
 
-```{r heatmap1, fig.height=4, fig.width=4}
+```{r heatmap1ms, fig.height=4, fig.width=4}
 plotEnrichedHeatmaps(m, multiScale=TRUE)
 ```
 
 One could also specify colors separately by providing them as a list:
 
-```{r heatmap1, fig.height=4, fig.width=4}
+```{r heatmap1ms2, fig.height=4, fig.width=4}
 plotEnrichedHeatmaps(m, multiScale=TRUE,
                      colors=list(c("white","darkred"),
                                  c("darkblue")))
