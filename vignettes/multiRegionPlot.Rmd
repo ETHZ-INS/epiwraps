@@ -139,6 +139,25 @@ the opposite: so much is trimmed that many points reach the top of the
 colorscale, resulting in a an 'over-exposed' heatmap. In practice, it is 
 advisable to use minimal trimming (e.g. the default is `c(0.02,0.98)`).
 
+#### Different colorscales for different tracks
+
+It is also possible to have different colorscales for different tracks, which is
+especially useful when comparing very different signals. For example, this would
+put each of the two tracks (here identical) on its own color scale:
+
+```{r heatmap1, fig.height=4, fig.width=4}
+plotEnrichedHeatmaps(m, multiScale=TRUE)
+```
+
+One could also specify colors separately by providing them as a list:
+
+```{r heatmap1, fig.height=4, fig.width=4}
+plotEnrichedHeatmaps(m, multiScale=TRUE,
+                     colors=list(c("white","darkred"),
+                                 c("darkblue")))
+```
+
+
 
 ## Normalization
 
@@ -181,7 +200,7 @@ a result, it will work only if 1) the left/right borders of the matrices are
 sufficiently far from the signal (e.g. peaks) to be chiefly noise, and 2) the 
 signal-to-noise ratio is comparable across tracks/samples.
 * `method="top"` instead works on the assumption that the highest signal (after
-some trimming of the extremes) should be the same across tracks/samples.
+some eventual trimming of the extremes) should be the same across tracks/samples.
 
 To illustrate these, we will first introduce some difference between our two 
 tracks using arbitrary factors:
