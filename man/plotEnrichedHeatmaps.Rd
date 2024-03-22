@@ -11,6 +11,7 @@ plotEnrichedHeatmaps(
   colors = inferno(100),
   scale_title = "density",
   column_title = NULL,
+  multiScale = NULL,
   column_title_gp = gpar(fontsize = 11),
   row_order = NULL,
   cluster_rows = FALSE,
@@ -43,7 +44,10 @@ beyond which to trim.}
 between which to interpolate. Can also be a list of such color scales, with
 as many slots as there are tracks in `ml`.}
 
-\item{scale_title}{The title of the scale.}
+\item{scale_title}{The title of the scale. Ignored if `multiScale=TRUE`.}
+
+\item{multiScale}{Logical; whether to use a different scale for each track.
+Defaults to TRUE is `colors` is a list, otherwise FALSE.}
 
 \item{column_title_gp}{Graphic parameters of the column titles (see 
 \code{\link[grid]{gpar}})}

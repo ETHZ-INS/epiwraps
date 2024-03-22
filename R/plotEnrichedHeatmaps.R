@@ -12,7 +12,9 @@
 #' @param colors The heatmap colors to use, a vector of at least two colors 
 #'   between which to interpolate. Can also be a list of such color scales, with
 #'   as many slots as there are tracks in `ml`.
-#' @param scale_title The title of the scale.
+#' @param multiScale Logical; whether to use a different scale for each track.
+#'   Defaults to TRUE is `colors` is a list, otherwise FALSE.
+#' @param scale_title The title of the scale. Ignored if `multiScale=TRUE`.
 #' @param column_title_gp Graphic parameters of the column titles (see 
 #'   \code{\link[grid]{gpar}})
 #' @param row_order Optional order of the rows.
@@ -82,7 +84,7 @@
 #' plotEnrichedHeatmaps(m, row_title="My regions of interest")
 plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, 
                                  colors=inferno(100), scale_title="density",
-                                 column_title=NULL,
+                                 column_title=NULL, multiScale=NULL,
                                  column_title_gp=gpar(fontsize=11), 
                                  row_order=NULL, cluster_rows=FALSE, 
                                  row_split=NULL, axis_name=NULL, minRowVal=0, 
@@ -114,7 +116,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   }
   ml <- .comparableMatrices(ml)
   if(is.null(use_raster))
-    use_raster <- any(unlist(lapply(ml, dim))>2000)
+    use_raster <- any(unlist(lapply(ml, dim))>1500)
   stopifnot(length(trim) %in% 1:2 && all(trim>=0 & trim <=1))
   stopifnot(length(scale_rows)==1)
   if(!is.null(row_split)) stopifnot(length(row_split)==nrow(ml[[1]]))
@@ -151,23 +153,31 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
     }
   }
   
-  ml_trimmed <- .applyTrimming(ml, trim)
-
-  if(isTRUE(mean_trim)){
-    ml <- ml_trimmed # don't just trim the scale
-    trim <- 1
-  } 
-  if(multiScale <- is.list(colors)){
-    if(length(colors)!=length(ml)){
+  if(is.null(multiScale)) multiScale <- is.list(colors)
+  if(is.list(colors) && length(colors)!=length(ml))
       stop("The number of input color scales should either be one or the ",
            "number of tracks.")
+  if(multiScale){
+    if(!is.list(colors)){
+      colors <- lapply(seq_along(ml), FUN=function(i) colors)
+    }else{
+      colors <- lapply(colors, FUN=function(x){
+        if(length(x)==1) x <- c("white",x)
+        x
+      })
     }
+    ml_trimmed <- lapply(ml, trim=trim, FUN=.applyTrimming)
     col_fun <- lapply(seq_along(ml), FUN=function(i){
       .getColFun(ml[[i]], trim, colors=colors[[i]])
     })
   }else{
+    ml_trimmed <- .applyTrimming(ml, trim)
     col_fun <- .getColFun(ml, trim, colors=colors)
     col_fun <- lapply(seq_along(ml), FUN=function(i) col_fun)
+  }
+  if(isTRUE(mean_trim)){
+    ml <- ml_trimmed # don't just trim the scale
+    trim <- 1
   }
 
   ymin <- min(c(0,unlist(lapply(ml,FUN=min))))
@@ -211,8 +221,12 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
     isLast <- m==rev(names(ml))[1]
     TA <- NULL
     if(hasMean){
-      TA <- .prepAnnoEnrich(meanPars, isFirst=isFirst, isLast, gp=mean_gp,
-                            ylim=c(ymin, ymax), mean_scale_side=mean_scale_side)
+      if(multiScale){
+        TA <- .prepAnnoEnrich(meanPars, isFirst=TRUE, FALSE, gp=mean_gp)
+      }else{
+        TA <- .prepAnnoEnrich(meanPars, isFirst=isFirst, isLast, gp=mean_gp,
+                              ylim=c(ymin, ymax), mean_scale_side=mean_scale_side)
+      }
       if(is.null(top_annotation)){
         TA <- HeatmapAnnotation(enriched=do.call(anno_enriched, TA))
       }else{
@@ -269,18 +283,20 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 }
 
 # get range beyond which to trim
-.getTrimPoints <- function(ml, trim){
-  stopifnot(is.numeric(trim) & all(trim>=0) & all(trim<=1))
-  if(length(trim)==1) trim <- c(0,trim)
-  trim <- sort(trim)
+.getTrimPoints <- function(ml, trimQ){
+  stopifnot(is.numeric(trimQ) & all(trimQ>=0) & all(trimQ<=1))
+  if(length(trimQ)==1) trimQ <- c(0,trimQ)
+  trimQ <- sort(trimQ)
+  if(!is.list(ml)) ml <- list(ml)
   tryCatch({
-    r <- c( min(unlist(lapply(ml,prob=trim[1],na.rm=TRUE,FUN=quantile))),
-            max(unlist(lapply(ml,prob=trim[2],na.rm=TRUE,FUN=quantile))) )
+    r <- c( min(unlist(lapply(ml,prob=trimQ[1],na.rm=TRUE,FUN=quantile))),
+            max(unlist(lapply(ml,prob=trimQ[2],na.rm=TRUE,FUN=quantile))) )
     if(r[[1]]==r[[2]]) r <- range(unlist(lapply(ml,range)))
     if(r[[1]]==r[[2]]){
       warning("There appears to be no signal in the data!")
       r[[2]] <- r[[1]]+1
     }
+    r
   }, error=function(e){
     stop("Unable to apply trimming - this typically happens when the input ",
          "contains less non-zero values than the trimmed range.\nDouble-check ",
@@ -291,13 +307,16 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
 
 # trim values beyond trim range in signal matrices
 .applyTrimming <- function(ml, trim){
-  if(!is.list(ml)) ml <- list(ml)
+  if(singleM <- !is.list(ml)){
+    ml <- list(ml)
+  }
   br <- .getTrimPoints(ml, trim)
   ml <- lapply(ml, FUN=function(x){
     x[which(x>br[2])] <- br[2]
     x[which(x<br[1])] <- br[1]
     x
   })
+  if(singleM) ml <- ml[[1]]
   ml
 }
 
