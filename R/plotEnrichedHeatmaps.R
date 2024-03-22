@@ -11,7 +11,8 @@
 #' beyond which to trim.
 #' @param colors The heatmap colors to use, a vector of at least two colors 
 #'   between which to interpolate. Can also be a list of such color scales, with
-#'   as many slots as there are tracks in `ml`.
+#'   as many slots as there are tracks in `ml`. If a list of single colors, a
+#'   color scale from white to that color will be used for each track.
 #' @param multiScale Logical; whether to use a different scale for each track.
 #'   Defaults to TRUE is `colors` is a list, otherwise FALSE.
 #' @param scale_title The title of the scale. Ignored if `multiScale=TRUE`.
@@ -222,7 +223,8 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
     TA <- NULL
     if(hasMean){
       if(multiScale){
-        TA <- .prepAnnoEnrich(meanPars, isFirst=TRUE, FALSE, gp=mean_gp)
+        TA <- .prepAnnoEnrich(meanPars, isFirst=TRUE, FALSE, gp=mean_gp,
+                              axis=FALSE)
       }else{
         TA <- .prepAnnoEnrich(meanPars, isFirst=isFirst, isLast, gp=mean_gp,
                               ylim=c(ymin, ymax), mean_scale_side=mean_scale_side)
@@ -320,7 +322,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   ml
 }
 
-.prepAnnoEnrich <- function(par, isFirst, isLast, ...,
+.prepAnnoEnrich <- function(par, isFirst, isLast, axis=NULL, ...,
                             mean_scale_side=c("both","left","right","none")){
   if(is.null(par) || isFALSE(par)) return(NULL)
   if(is(par, "HeatmapAnnotation")) return(par)
@@ -328,12 +330,14 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   stopifnot(is.list(par))
   mean_scale_side <- match.arg(mean_scale_side)
   side <- "right"
-  if( (!isFirst && !isLast) || mean_scale_side=="none"){
-    axis <- FALSE
-  }else{
-    axis <- (mean_scale_side!="left" && isLast) ||
-              (mean_scale_side!="right" && isFirst)
-    if(isFirst) side <- "left"
+  if(is.null(axis)){
+    if( (!isFirst && !isLast) || mean_scale_side=="none"){
+      axis <- FALSE
+    }else{
+      axis <- (mean_scale_side!="left" && isLast) ||
+                (mean_scale_side!="right" && isFirst)
+      if(isFirst) side <- "left"
+    }
   }
   defPars <- list(show_error=TRUE, axis=axis, axis_param=list(side=side), ...)
   c(defPars[setdiff(names(defPars), names(par))], par)
