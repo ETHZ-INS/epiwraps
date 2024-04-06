@@ -90,8 +90,9 @@ bigwig file. In this process, information about individual reads is
 lost, but the produced signals are considerably more lightweight and
 amenable to visualization. The bigwig format is readily queried from R
 or compatible with a variety of tools, including genome browsers.</p>
+<p><br></p>
 <div class="section level3">
-<h3 id="many-way-of-compiling-coverage">Many way of compiling coverage<a class="anchor" aria-label="anchor" href="#many-way-of-compiling-coverage"></a>
+<h3 id="many-ways-of-compiling-coverage">Many ways of compiling coverage<a class="anchor" aria-label="anchor" href="#many-ways-of-compiling-coverage"></a>
 </h3>
 <p>To introduce the different variations on coverage, let’s assume
 you’ve go the following single-end reads:</p>
@@ -107,8 +108,8 @@ you’ve go the following single-end reads:</p>
 <code class="sourceCode R"><span><span class="va">bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bam"</span><span class="op">)</span> <span class="co"># temp file name</span></span>
 <span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="va">gr</span>, <span class="va">bam</span>, format<span class="op">=</span><span class="st">"bam"</span><span class="op">)</span></span>
 <span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">indexBam</a></span><span class="op">(</span><span class="va">bam</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##       /tmp/Rtmpd1H7kT/file1a451a462293.bam </span></span>
-<span><span class="co">## "/tmp/Rtmpd1H7kT/file1a451a462293.bam.bai"</span></span></code></pre>
+<pre><code><span><span class="co">##       /tmp/RtmpX2a2or/file34f156f018bd.bam </span></span>
+<span><span class="co">## "/tmp/RtmpX2a2or/file34f156f018bd.bam.bai"</span></span></code></pre>
 <p>Using these example reads, we can illustrate different ways of
 computing coverages.</p>
 <p>First, we can save coverage at different resolutions, from full
@@ -150,9 +151,9 @@ to change this:</p>
 <span>                 region<span class="op">=</span><span class="st">"chr1:1:180"</span>, extend<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="bam2bw_files/figure-html/unnamed-chunk-5-1.png" width="432"></p>
 <p>In most cases, single-end reads are just the beginning of the DNA
-fragments obtained, and in most cases we know the average size of the
-fragments (if not, see the <code>estimateFragSize</code> function, or
-the simpler <code>estimate.mean.fraglen</code> function of the <em><a href="https://bioconductor.org/packages/3.18/chipseq" class="external-link">chipseq</a></em>
+fragments obtained, and we know the average size of the fragments from
+library prep QC (if not, see the <code>estimateFragSize</code> function,
+or the simpler <code>estimate.mean.fraglen</code> function of the <em><a href="https://bioconductor.org/packages/3.18/chipseq" class="external-link">chipseq</a></em>
 package). It is therefore common to extend reads to this size when
 computing coverage, so as to obtain the number of fragments (rather than
 reads) coverage each position. This can be done as follows:</p>
@@ -168,6 +169,9 @@ reads) coverage each position. This can be done as follows:</p>
 <span>                      <span class="st">"read extension"</span><span class="op">=</span><span class="va">cov_full_ext</span><span class="op">)</span>,</span>
 <span>                 region<span class="op">=</span><span class="st">"chr1:1:190"</span>, extend<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="bam2bw_files/figure-html/unnamed-chunk-6-1.png" width="432"></p>
+<p>Taking into account read extension shows better the peak at the
+center, which is indicative of the fact that this is the region that was
+the most enriched in the captured fragments.</p>
 <p>Instead of computing coverage, we could compute the number of reads
 starting, ending, or being centered at each position:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
@@ -187,10 +191,11 @@ starting, ending, or being centered at each position:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>reads<span class="op">=</span><span class="va">gr</span>, <span class="st">"type=full"</span><span class="op">=</span><span class="va">cov_full_bw1</span>, </span>
 <span>                      <span class="st">"type=start"</span><span class="op">=</span><span class="va">cov_start</span>, <span class="st">"type=center"</span><span class="op">=</span><span class="va">cov_center</span><span class="op">)</span>,</span>
 <span>                 region<span class="op">=</span><span class="st">"chr1:1:190"</span>, extend<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></code></pre></div>
-<p><img src="bam2bw_files/figure-html/unnamed-chunk-7-1.png" width="432">
-Note that when extending reads, as in this case, the position
+<p><img src="bam2bw_files/figure-html/unnamed-chunk-7-1.png" width="432"></p>
+<p>Note that when extending reads, as in this case, the position
 (e.g. “center”) are relative to the extended read (i.e. extension is
 applied first).</p>
+<p><br></p>
 </div>
 <div class="section level3">
 <h3 id="example-heatmaps-created-using-different-bigwig-generation-procedures">Example heatmaps created using different bigwig generation
@@ -212,16 +217,23 @@ mono-nucleosomes, resizing fragments from their centers. The exact
 arguments used were
 <code>shift=c(4L,-5L), minFragLength=147, maxFragLength=230, type="center", extend=10L</code>.
 Using this we can see nucleosomes well-positioned at some distance from
-CTCF binding sites, but not nucleosome at the bound site itself.</li>
+CTCF binding sites, but a relative depletion of nucleosomes at the bound
+site itself.</li>
 <li>The third shows the coverage of nucleosome-free fragments, in this
-case it was used with
-<code>shift=c(4L,-5L), maxFragLength=120</code>.</li>
+case it was used with <code>shift=c(4L,-5L), maxFragLength=120</code>.
+These are indicative of TF binding, and indeed we only see and
+enrichment in the center.</li>
 <li>The fourth shows where the transposase inserted itself, and was
 generated with
 <code>shift=c(4L,-5L), binWidth=1L, maxFragLength=120, type="ends"</code>.
 Using this we can see a nice footprint protected from the transposase by
 CTCF binding.</li>
 </ul>
+<p>ATAC fragment sizes convey rich information, but they are not
+perfect. For example, regions of DNA bound by multiple TFs can sometimes
+be captured as longer fragments which we would mistakenly classify as
+mono-nucleosome containing.</p>
+<p><br></p>
 </div>
 </div>
 <div class="section level2">
@@ -268,21 +280,21 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">## [13] BiocStyle_2.30.0           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##   [1] RColorBrewer_1.1-3       rstudioapi_0.15.0        jsonlite_1.8.8          </span></span>
+<span><span class="co">##   [1] RColorBrewer_1.1-3       rstudioapi_0.16.0        jsonlite_1.8.8          </span></span>
 <span><span class="co">##   [4] shape_1.4.6.1            magrittr_2.0.3           GenomicFeatures_1.54.4  </span></span>
 <span><span class="co">##   [7] rmarkdown_2.26           GlobalOptions_0.1.2      fs_1.6.3                </span></span>
 <span><span class="co">##  [10] BiocIO_1.12.0            zlibbioc_1.48.2          ragg_1.3.0              </span></span>
 <span><span class="co">##  [13] vctrs_0.6.5              memoise_2.0.1            Rsamtools_2.18.0        </span></span>
-<span><span class="co">##  [16] RCurl_1.98-1.14          base64enc_0.1-3          htmltools_0.5.7         </span></span>
+<span><span class="co">##  [16] RCurl_1.98-1.14          base64enc_0.1-3          htmltools_0.5.8.1       </span></span>
 <span><span class="co">##  [19] S4Arrays_1.2.1           progress_1.2.3           curl_5.2.1              </span></span>
 <span><span class="co">##  [22] SparseArray_1.2.4        Formula_1.2-5            sass_0.4.9              </span></span>
-<span><span class="co">##  [25] bslib_0.6.1              htmlwidgets_1.6.4        desc_1.4.3              </span></span>
+<span><span class="co">##  [25] bslib_0.7.0              htmlwidgets_1.6.4        desc_1.4.3              </span></span>
 <span><span class="co">##  [28] plyr_1.8.9               Gviz_1.46.1              cachem_1.0.8            </span></span>
 <span><span class="co">##  [31] GenomicAlignments_1.38.2 lifecycle_1.0.4          iterators_1.0.14        </span></span>
 <span><span class="co">##  [34] pkgconfig_2.0.3          Matrix_1.6-5             R6_2.5.1                </span></span>
 <span><span class="co">##  [37] fastmap_1.1.1            GenomeInfoDbData_1.2.11  clue_0.3-65             </span></span>
 <span><span class="co">##  [40] digest_0.6.35            colorspace_2.1-0         AnnotationDbi_1.64.1    </span></span>
-<span><span class="co">##  [43] textshaping_0.3.7        Hmisc_5.1-2              RSQLite_2.3.5           </span></span>
+<span><span class="co">##  [43] textshaping_0.3.7        Hmisc_5.1-2              RSQLite_2.3.6           </span></span>
 <span><span class="co">##  [46] filelock_1.0.3           fansi_1.0.6              httr_1.4.7              </span></span>
 <span><span class="co">##  [49] abind_1.4-5              compiler_4.3.3           bit64_4.0.5             </span></span>
 <span><span class="co">##  [52] doParallel_1.0.17        backports_1.4.1          htmlTable_2.4.2         </span></span>
@@ -292,19 +304,19 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">##  [64] foreign_0.8-86           nnet_7.3-19              glue_1.7.0              </span></span>
 <span><span class="co">##  [67] restfulr_0.0.15          checkmate_2.3.1          cluster_2.1.6           </span></span>
 <span><span class="co">##  [70] generics_0.1.3           gtable_0.3.4             BSgenome_1.70.2         </span></span>
-<span><span class="co">##  [73] ensembldb_2.26.0         data.table_1.15.2        hms_1.1.3               </span></span>
+<span><span class="co">##  [73] ensembldb_2.26.0         data.table_1.15.4        hms_1.1.3               </span></span>
 <span><span class="co">##  [76] xml2_1.3.6               utf8_1.2.4               XVector_0.42.0          </span></span>
 <span><span class="co">##  [79] foreach_1.5.2            pillar_1.9.0             stringr_1.5.1           </span></span>
-<span><span class="co">##  [82] circlize_0.4.16          dplyr_1.1.4              BiocFileCache_2.10.1    </span></span>
+<span><span class="co">##  [82] circlize_0.4.16          dplyr_1.1.4              BiocFileCache_2.10.2    </span></span>
 <span><span class="co">##  [85] lattice_0.22-5           deldir_2.0-4             rtracklayer_1.62.0      </span></span>
 <span><span class="co">##  [88] bit_4.0.5                biovizBase_1.50.0        tidyselect_1.2.1        </span></span>
 <span><span class="co">##  [91] locfit_1.5-9.9           pbapply_1.7-2            Biostrings_2.70.3       </span></span>
 <span><span class="co">##  [94] knitr_1.45               gridExtra_2.3            bookdown_0.38           </span></span>
-<span><span class="co">##  [97] ProtGenerics_1.34.0      xfun_0.42                stringi_1.8.3           </span></span>
+<span><span class="co">##  [97] ProtGenerics_1.34.0      xfun_0.43                stringi_1.8.3           </span></span>
 <span><span class="co">## [100] lazyeval_0.2.2           yaml_2.3.8               evaluate_0.23           </span></span>
 <span><span class="co">## [103] codetools_0.2-19         interp_1.1-6             GenomicFiles_1.38.0     </span></span>
 <span><span class="co">## [106] tibble_3.2.1             BiocManager_1.30.22      cli_3.6.2               </span></span>
-<span><span class="co">## [109] rpart_4.1.23             systemfonts_1.0.6        munsell_0.5.0           </span></span>
+<span><span class="co">## [109] rpart_4.1.23             systemfonts_1.0.6        munsell_0.5.1           </span></span>
 <span><span class="co">## [112] jquerylib_0.1.4          dichromat_2.0-0.1        Rcpp_1.0.12             </span></span>
 <span><span class="co">## [115] dbplyr_2.5.0             png_0.1-8                XML_3.99-0.16.1         </span></span>
 <span><span class="co">## [118] parallel_4.3.3           pkgdown_2.0.7            ggplot2_3.5.0           </span></span>
