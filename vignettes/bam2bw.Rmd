@@ -30,7 +30,9 @@ individual reads is lost, but the produced signals are considerably more
 lightweight and amenable to visualization. The bigwig format is readily queried
 from R or compatible with a variety of tools, including genome browsers.
 
-## Many way of compiling coverage
+<br/>
+
+## Many ways of compiling coverage
 
 To introduce the different variations on coverage, let's assume you've go the 
 following single-end reads:
@@ -83,8 +85,8 @@ plotSignalTracks(list(reads=gr, "binWidth=1"=cov_full_bw1,
 ```
 
 In most cases, single-end reads are just the beginning of the DNA fragments 
-obtained, and in most cases we know the average size of the fragments (if not, 
-see the `estimateFragSize` function, or the simpler `estimate.mean.fraglen` 
+obtained, and we know the average size of the fragments from library prep QC 
+(if not, see the `estimateFragSize` function, or the simpler `estimate.mean.fraglen` 
 function of the `r BiocStyle::Biocpkg("chipseq")` package). It is therefore 
 common to extend reads to this size when computing coverage, so as to obtain
 the number of fragments (rather than reads) coverage each position. This can be
@@ -99,6 +101,10 @@ plotSignalTracks(list(reads=gr, "no extension"=cov_full_bw1,
                  region="chr1:1:190", extend=0)
 
 ```
+
+Taking into account read extension shows better the peak at the center, which is
+indicative of the fact that this is the region that was the most enriched in
+the captured fragments.
 
 Instead of computing coverage, we could compute the number of reads starting, 
 ending, or being centered at each position:
@@ -115,9 +121,11 @@ plotSignalTracks(list(reads=gr, "type=full"=cov_full_bw1,
                  region="chr1:1:190", extend=0)
 
 ```
+
 Note that when extending reads, as in this case, the position (e.g. "center") are
 relative to the extended read (i.e. extension is applied first).
 
+<br/>
 
 ## Example heatmaps created using different bigwig generation procedures
 
@@ -135,13 +143,21 @@ is the fragment coverage (i.e. how many fragments overlap any given location).
 resizing fragments from their centers. The exact arguments used were 
 `shift=c(4L,-5L), minFragLength=147, maxFragLength=230, type="center", extend=10L`.
 Using this we can see nucleosomes well-positioned at some distance from CTCF 
-binding sites, but not nucleosome at the bound site itself.
+binding sites, but a relative depletion of nucleosomes at the bound site itself.
 * The third shows the coverage of nucleosome-free fragments, in this case it 
-was used with `shift=c(4L,-5L), maxFragLength=120`.
+was used with `shift=c(4L,-5L), maxFragLength=120`. These are indicative of TF
+binding, and indeed we only see and enrichment in the center.
 * The fourth shows where the transposase inserted itself, and was 
 generated with 
 `shift=c(4L,-5L), binWidth=1L, maxFragLength=120, type="ends"`. Using this we 
 can see a nice footprint protected from the transposase by CTCF binding.
+
+ATAC fragment sizes convey rich information, but they are not perfect. For 
+example, regions of DNA bound by multiple TFs can sometimes be captured as 
+longer fragments which we would mistakenly classify as mono-nucleosome
+containing.
+
+<br/>
 
 # Working with fragment files as an input
 
