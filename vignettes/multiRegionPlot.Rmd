@@ -3,8 +3,8 @@ title: "Visualizing signals across many regions"
 author: 
 - name: Pierre-Luc Germain
   affiliation:
-    - D-HEST Institute for Neuroscience, ETH
-    - Lab of Statistical Bioinformatics, UZH
+    - "Lab of Statistical Bioinformatics, University of Zürich; "
+    - "D-HEST Institute for Neuroscience, ETH Zürich, Switzerland"
 package: epiwraps
 output:
   BiocStyle::html_document
