@@ -159,7 +159,8 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
   param <- .getBamChunkParams(bamfile, flgs=flgs, keepSeqLvls=keepSeqLvls, 
                               nChunks=splitByChr)
   seqs <- seqs[.checkMissingSeqLevels(seqs, keepSeqLvls)]
-  
+  if(!is.null(forceSeqlevelsStyle)) seqs <- NULL
+
   if(verbose) message("Reading in signal...")
   
   # obtain coverage (and total count)
