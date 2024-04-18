@@ -1,12 +1,12 @@
 pandoc: 3.1.11
-pkgdown: 2.0.7
+pkgdown: 2.0.8
 pkgdown_sha: ~
 articles:
   bam2bw: bam2bw.html
   misc: misc.html
   multiRegionPlot: multiRegionPlot.html
   singleRegionPlot: singleRegionPlot.html
-last_built: 2024-04-06T08:55Z
+last_built: 2024-04-18T12:58Z
 urls:
   reference: https://ethz-ins.github.io/epiwraps/reference
   article: https://ethz-ins.github.io/epiwraps/articles
