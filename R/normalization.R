@@ -284,7 +284,7 @@ renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
     old="renormalizeBorders", new="renormalizeSignalMatrices",
     msg=paste('renormalizeBorders is deprecated, please gradually',
               'switch to `renormalizeSignalMatrices(..., method="border"`.'))
-  renormalizeSignalMatrices(ml, trim=trim, assay=assay, nWindows=nWindwos,
+  renormalizeSignalMatrices(ml, trim=trim, assay=assay, nWindows=nWindows,
                             method="border")
 }
 
