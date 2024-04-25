@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.85</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.87</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,6 +65,12 @@ produced by <code><a href="signal2Matrix.html">signal2Matrix</a></code></p></dd>
 <dd><p>An optional custom aggregation function (or named list thereof).</p></dd>
 
 
+<dt>splitBy</dt>
+<dd><p>A vector of values (factor or character of length equal to 
+`nrow(ml)`) by which to split the aggregation. Can also be the name of a
+column of `rowData(ml)`.</p></dd>
+
+
 <dt>trim</dt>
 <dd><p>The quantile above which to trim values. If a numeric vector of 
 length 2, will be used as lower and upper quantiles beyond which to trim.</p></dd>
@@ -94,12 +100,12 @@ the first assay.</p></dd>
 <span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu">meltSignals</span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   position       sample       mean         SD          SE    median</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    -2000 example_atac 0.04981133 0.03992983 0.002457511 0.0391084</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    -1980 example_atac 0.04910767 0.03782264 0.002327823 0.0391084</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    -1960 example_atac 0.04925580 0.03776375 0.002324198 0.0391084</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    -1940 example_atac 0.04877435 0.03817225 0.002349340 0.0391084</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    -1920 example_atac 0.04825587 0.03616234 0.002225638 0.0391084</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    -1900 example_atac 0.04914470 0.03574233 0.002199788 0.0391084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    -2000 example_atac 0.04591160 0.03762221 0.002315487 0.0391084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    -1980 example_atac 0.04599492 0.03727908 0.002294369 0.0391084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    -1960 example_atac 0.04530238 0.03711421 0.002284222 0.0391084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    -1940 example_atac 0.04508943 0.03550587 0.002185236 0.0391084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    -1920 example_atac 0.04492277 0.03411740 0.002099781 0.0391084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    -1900 example_atac 0.04493203 0.03260965 0.002006985 0.0391084</span>
 <span class="r-in"><span><span class="co">## we could then plot for instance using ggplot:</span></span></span>
 <span class="r-in"><span><span class="co"># ggplot(d, aes(position, mean, colour=sample)) + geom_line(size=1.2)</span></span></span>
 </code></pre></div>

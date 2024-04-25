@@ -14,7 +14,7 @@ convenience wrapper around EnrichedHeatmap."><!-- mathjax --><script src="https:
     
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.85</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.87</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,7 @@ convenience wrapper around <code><a href="https://rdrr.io/pkg/EnrichedHeatmap/ma
 <span>  <span class="va">ml</span>,</span>
 <span>  trim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.02</span>, <span class="fl">0.98</span><span class="op">)</span>,</span>
 <span>  assay <span class="op">=</span> <span class="fl">1L</span>,</span>
-<span>  colors <span class="op">=</span> <span class="fu">inferno</span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>,</span>
+<span>  colors <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale_title <span class="op">=</span> <span class="st">"density"</span>,</span>
 <span>  column_title <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  multiScale <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -104,7 +104,9 @@ beyond which to trim.</p></dd>
 <dt>colors</dt>
 <dd><p>The heatmap colors to use, a vector of at least two colors 
 between which to interpolate. Can also be a list of such color scales, with
-as many slots as there are tracks in `ml`.</p></dd>
+as many slots as there are tracks in `ml`. If a list of single colors, a
+color scale from white to that color will be used for each track. Defaults
+to the 'inferno' viridis palette.</p></dd>
 
 
 <dt>scale_title</dt>
@@ -126,11 +128,17 @@ Defaults to TRUE is `colors` is a list, otherwise FALSE.</p></dd>
 
 
 <dt>cluster_rows</dt>
-<dd><p>Whether to cluster rows.</p></dd>
+<dd><p>Logical; whether to cluster rows. Alternatively, 
+`cluster_rows="sort"` will sort rows using the angle on an MDS based on the
+<code><a href="https://rdrr.io/pkg/EnrichedHeatmap/man/enriched_score.html" class="external-link">enriched_score</a></code> of the signals (can be very
+long to compute on large matrices). `cluster_rows=FALSE` (default) results 
+in the traditional sorting by decreasing `enriched_score`.</p></dd>
 
 
 <dt>row_split</dt>
-<dd><p>Splitting of rows.</p></dd>
+<dd><p>Variable according to which the rows should be split. This 
+should either be the name of a column of `rowData(ml)`, or a factor/
+character vector of length equal to the number of regions in `ml`.</p></dd>
 
 
 <dt>axis_name</dt>
@@ -176,6 +184,10 @@ colors for each cluster. Can also be a `gpar` object.</p></dd>
 plots. Either "both" (default), "left", "right", or "none".</p></dd>
 
 
+<dt>mean_trim</dt>
+<dd><p>Logical; whether to apply the trimming also to the mean plot.</p></dd>
+
+
 <dt>show_heatmap_legend</dt>
 <dd><p>Logical, whether to show the heatmap legend</p></dd>
 
@@ -189,10 +201,6 @@ image. Turned on by default if any of the matrix dimensions is greater than
 <dt>...</dt>
 <dd><p>Passed to <code><a href="https://rdrr.io/pkg/EnrichedHeatmap/man/EnrichedHeatmap.html" class="external-link">EnrichedHeatmap</a></code></p></dd>
 
-
-<dt>Logical;</dt>
-<dd><p>whether to apply the trimming also to the mean plot.</p></dd>
-
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -203,7 +211,8 @@ image. Turned on by default if any of the matrix dimensions is greater than
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>When plotting large matrices, the heatmap body will be rasterized to keep its
-memory footprint decent. Depending on your settings, if the heatmap is very
+memory footprint decent. For this to work well, make sure the `magick` 
+package is installed. Depending on your settings, if the heatmap is very
 big you might hit the preset limits of `magick` base rasterization, which
 could result in an error such as 'Image must have at least 1 frame to write a 
 bitmap'. In such cases, you might have to degrade to a lower-quality 
@@ -213,28 +222,18 @@ rasterization using the additional arguments
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># we first fetch the path to the example bigwig file:</span></span></span>
-<span class="r-in"><span><span class="va">bw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_atac.bw"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># Since we only have one, we'll use the same and pretend they're 2 samples:</span></span></span>
-<span class="r-in"><span><span class="va">bw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sample1<span class="op">=</span><span class="va">bw</span>, sample2<span class="op">=</span><span class="va">bw</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># we next load regions of interest (either GRanges or path to a bed file):</span></span></span>
-<span class="r-in"><span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_peaks.bed"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># we obtain the matrix of the signal around the regions:</span></span></span>
-<span class="r-in"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="va">bw</span>, <span class="va">regions</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span>
-<span class="r-in"><span><span class="fu">plotEnrichedHeatmaps</span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># we first load an example EnrichmentSE, as produced by signal2Matrix:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">plotEnrichedHeatmaps</span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plotEnrichedHeatmaps-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># we could also just plot one with:</span></span></span>
-<span class="r-in"><span><span class="co"># plotEnrichedHeatmaps(m[,1])</span></span></span>
+<span class="r-in"><span><span class="co"># plotEnrichedHeatmaps(exampleESEm[,1])</span></span></span>
 <span class="r-in"><span><span class="co"># or change the aesthetics, e.g.:</span></span></span>
-<span class="r-in"><span><span class="fu">plotEnrichedHeatmaps</span><span class="op">(</span><span class="va">m</span>, trim<span class="op">=</span><span class="fl">0.98</span>, scale_title<span class="op">=</span><span class="st">"RPKM"</span>, </span></span>
-<span class="r-in"><span>                     colors<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>,<span class="st">"darkred"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">plotEnrichedHeatmaps</span><span class="op">(</span><span class="va">exampleESE</span>, trim<span class="op">=</span><span class="fl">0.98</span>, scale_title<span class="op">=</span><span class="st">"RPKM"</span>, </span></span>
+<span class="r-in"><span>                     colors<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>,<span class="st">"darkred"</span><span class="op">)</span>, row_title<span class="op">=</span><span class="st">"My regions"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plotEnrichedHeatmaps-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># any argument accepted by `EnrichedHeatmap` (and hence by </span></span></span>
-<span class="r-in"><span><span class="co"># `ComplexHeatmap::Heatmap`) can be used, e.g.: </span></span></span>
-<span class="r-in"><span><span class="fu">plotEnrichedHeatmaps</span><span class="op">(</span><span class="va">m</span>, row_title<span class="op">=</span><span class="st">"My regions of interest"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="plotEnrichedHeatmaps-3.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="co"># `ComplexHeatmap::Heatmap`) can be used.</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
