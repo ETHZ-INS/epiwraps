@@ -5,6 +5,9 @@
 #' @param ml A named list of signal matrices or an EnrichmentSE object as 
 #'   produced by \code{\link{signal2Matrix}}
 #' @param fun An optional custom aggregation function (or named list thereof).
+#' @param splitBy A vector of values (factor or character of length equal to 
+#'   `nrow(ml)`) by which to split the aggregation. Can also be the name of a
+#'   column of `rowData(ml)`.
 #' @param trim The quantile above which to trim values. If a numeric vector of 
 #'   length 2, will be used as lower and upper quantiles beyond which to trim.
 #' @param assay Assay to use (ignored unless `ml` is an ESE object), defaults to
@@ -25,7 +28,13 @@
 #' ## we could then plot for instance using ggplot:
 #' # ggplot(d, aes(position, mean, colour=sample)) + geom_line(size=1.2)
 meltSignals <- function(ml, fun=NULL, splitBy=NULL, trim=0.98, assay=1L){
-  if(is(ml, "EnrichmentSE")) ml <- .ese2ml(ml, assay=assay)
+  if(is(ml, "EnrichmentSE")){
+    if(!is.null(splitBy) && length(splitBy)==1){
+      stopifnot(splitBy %in% colnames(rowData(ml)))
+      splitBy <- rowData(ml)[,splitBy]
+    }
+    ml <- .ese2ml(ml, assay=assay)
+  } 
   stopifnot(is.list(ml))
   ml <- .comparableMatrices(ml, checkAttributes=TRUE)
   ml <- .applyTrimming(ml, trim)

@@ -12,15 +12,22 @@
 #' @param colors The heatmap colors to use, a vector of at least two colors 
 #'   between which to interpolate. Can also be a list of such color scales, with
 #'   as many slots as there are tracks in `ml`. If a list of single colors, a
-#'   color scale from white to that color will be used for each track.
+#'   color scale from white to that color will be used for each track. Defaults
+#'   to the 'inferno' viridis palette.
 #' @param multiScale Logical; whether to use a different scale for each track.
 #'   Defaults to TRUE is `colors` is a list, otherwise FALSE.
 #' @param scale_title The title of the scale. Ignored if `multiScale=TRUE`.
 #' @param column_title_gp Graphic parameters of the column titles (see 
 #'   \code{\link[grid]{gpar}})
 #' @param row_order Optional order of the rows.
-#' @param row_split Splitting of rows.
-#' @param cluster_rows Whether to cluster rows.
+#' @param row_split Variable according to which the rows should be split. This 
+#'   should either be the name of a column of `rowData(ml)`, or a factor/
+#'   character vector of length equal to the number of regions in `ml`.
+#' @param cluster_rows Logical; whether to cluster rows. Alternatively, 
+#'   `cluster_rows="sort"` will sort rows using the angle on an MDS based on the
+#'   \code{\link[EnrichedHeatmap]{enriched_score}} of the signals (can be very
+#'   long to compute on large matrices). `cluster_rows=FALSE` (default) results 
+#'   in the traditional sorting by decreasing `enriched_score`.
 #' @param ... Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}
 #' @param top_annotation Either a logical indicating whether or not to plot the
 #' summary profile at the top of each heatmap, a named list of parameters to be 
@@ -43,14 +50,15 @@
 #'   colors for each cluster. Can also be a `gpar` object.
 #' @param mean_scale_side The side on which to show the y-axis scale of the mean
 #'   plots. Either "both" (default), "left", "right", or "none".
-#' @param  Logical; whether to apply the trimming also to the mean plot.
+#' @param mean_trim Logical; whether to apply the trimming also to the mean plot.
 #' @param use_raster Logical; whether to render the heatmap body as a raster 
 #'   image. Turned on by default if any of the matrix dimensions is greater than
 #'   2000.
 #' 
 #' @details 
 #' When plotting large matrices, the heatmap body will be rasterized to keep its
-#' memory footprint decent. Depending on your settings, if the heatmap is very
+#' memory footprint decent. For this to work well, make sure the `magick` 
+#' package is installed. Depending on your settings, if the heatmap is very
 #' big you might hit the preset limits of `magick` base rasterization, which
 #' could result in an error such as 'Image must have at least 1 frame to write a 
 #' bitmap'. In such cases, you might have to degrade to a lower-quality 
@@ -66,25 +74,18 @@
 #' @importFrom SummarizedExperiment rowRanges
 #' @export
 #' @examples 
-#' # we first fetch the path to the example bigwig file:
-#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-#' # Since we only have one, we'll use the same and pretend they're 2 samples:
-#' bw <- c(sample1=bw, sample2=bw)
-#' # we next load regions of interest (either GRanges or path to a bed file):
-#' regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
-#' # we obtain the matrix of the signal around the regions:
-#' m <- signal2Matrix(bw, regions)
-#' plotEnrichedHeatmaps(m)
+#' # we first load an example EnrichmentSE, as produced by signal2Matrix:
+#' data(exampleESE)
+#' plotEnrichedHeatmaps(exampleESE)
 #' # we could also just plot one with:
-#' # plotEnrichedHeatmaps(m[,1])
+#' # plotEnrichedHeatmaps(exampleESEm[,1])
 #' # or change the aesthetics, e.g.:
-#' plotEnrichedHeatmaps(m, trim=0.98, scale_title="RPKM", 
-#'                      colors=c("white","darkred"))
+#' plotEnrichedHeatmaps(exampleESE, trim=0.98, scale_title="RPKM", 
+#'                      colors=c("white","darkred"), row_title="My regions")
 #' # any argument accepted by `EnrichedHeatmap` (and hence by 
-#' # `ComplexHeatmap::Heatmap`) can be used, e.g.: 
-#' plotEnrichedHeatmaps(m, row_title="My regions of interest")
+#' # `ComplexHeatmap::Heatmap`) can be used.
 plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L, 
-                                 colors=inferno(100), scale_title="density",
+                                 colors=NULL, scale_title="density",
                                  column_title=NULL, multiScale=NULL,
                                  column_title_gp=gpar(fontsize=11), 
                                  row_order=NULL, cluster_rows=FALSE, 
@@ -110,11 +111,19 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
     top_annotation <- NULL
   }
   if(is(ml, "EnrichmentSE")){
+    if(is.null(colors) && !isFALSE(multiScale) && !is.null(ml$hmcolors) &&
+       is.list((ml$hmcolors))) colors <- ml$hmcolors
     left_annotation <- .parseRowAnn(ml, left_annotation)
     right_annotation <- .parseRowAnn(ml, right_annotation)
     top_annotation <- .parseTopAnn(ml, top_annotation)
+    if(!is.null(row_split) && is.character(row_split) && length(row_split)==1){
+      if(!(row_split %in% colnames(rowData(ml))))
+        stop("`row_split` value not found in the rowData columns.")
+      row_split <- rowData(ml)[,row_split]
+    }
     ml <- .ese2ml(ml, assay=assay)
   }
+  if(is.null(colors)) colors <- inferno(100)
   ml <- .comparableMatrices(ml)
   if(is.null(use_raster))
     use_raster <- any(unlist(lapply(ml, dim))>1500)
@@ -190,9 +199,16 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   })))
   if(isTRUE(cluster_rows)){
     cluster_rows <- hclust(dist(do.call(cbind, ml_trimmed)))
-  }else if(is.null(row_order)){
-    row_order <- order(-rowMeans(do.call(cbind, lapply(ml_trimmed, enriched_score))))
+  }else{
+    es <- do.call(cbind, lapply(ml_trimmed, enriched_score))
+    if(cluster_rows=="sort"){
+      row_order <- .mdsSortRows(es)
+    }else{
+      row_order <- order(-rowMeans(es))
+    }
+    cluster_rows <- FALSE
   }
+  
   a <- attributes(ml[[1]])
   neededAxisLabs <- ifelse(length(a$target_index)==0,3,4)
   if(is.null(axis_name) || length(axis_name)<neededAxisLabs){

@@ -8,7 +8,7 @@ plotEnrichedHeatmaps(
   ml,
   trim = c(0.02, 0.98),
   assay = 1L,
-  colors = inferno(100),
+  colors = NULL,
   scale_title = "density",
   column_title = NULL,
   multiScale = NULL,
@@ -42,7 +42,9 @@ beyond which to trim.}
 
 \item{colors}{The heatmap colors to use, a vector of at least two colors 
 between which to interpolate. Can also be a list of such color scales, with
-as many slots as there are tracks in `ml`.}
+as many slots as there are tracks in `ml`. If a list of single colors, a
+color scale from white to that color will be used for each track. Defaults
+to the 'inferno' viridis palette.}
 
 \item{scale_title}{The title of the scale. Ignored if `multiScale=TRUE`.}
 
@@ -54,9 +56,15 @@ Defaults to TRUE is `colors` is a list, otherwise FALSE.}
 
 \item{row_order}{Optional order of the rows.}
 
-\item{cluster_rows}{Whether to cluster rows.}
+\item{cluster_rows}{Logical; whether to cluster rows. Alternatively, 
+`cluster_rows="sort"` will sort rows using the angle on an MDS based on the
+\code{\link[EnrichedHeatmap]{enriched_score}} of the signals (can be very
+long to compute on large matrices). `cluster_rows=FALSE` (default) results 
+in the traditional sorting by decreasing `enriched_score`.}
 
-\item{row_split}{Splitting of rows.}
+\item{row_split}{Variable according to which the rows should be split. This 
+should either be the name of a column of `rowData(ml)`, or a factor/
+character vector of length equal to the number of regions in `ml`.}
 
 \item{axis_name}{A vector of length 3 giving the labels to put respectively
 on the left, center and right of the x axis of each heatmap.}
@@ -85,6 +93,8 @@ colors for each cluster. Can also be a `gpar` object.}
 \item{mean_scale_side}{The side on which to show the y-axis scale of the mean
 plots. Either "both" (default), "left", "right", or "none".}
 
+\item{mean_trim}{Logical; whether to apply the trimming also to the mean plot.}
+
 \item{show_heatmap_legend}{Logical, whether to show the heatmap legend}
 
 \item{use_raster}{Logical; whether to render the heatmap body as a raster 
@@ -92,8 +102,6 @@ image. Turned on by default if any of the matrix dimensions is greater than
 2000.}
 
 \item{...}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}}
-
-\item{Logical;}{whether to apply the trimming also to the mean plot.}
 }
 \value{
 A HeatmapList object
@@ -105,7 +113,8 @@ convenience wrapper around \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}.
 }
 \details{
 When plotting large matrices, the heatmap body will be rasterized to keep its
-memory footprint decent. Depending on your settings, if the heatmap is very
+memory footprint decent. For this to work well, make sure the `magick` 
+package is installed. Depending on your settings, if the heatmap is very
 big you might hit the preset limits of `magick` base rasterization, which
 could result in an error such as 'Image must have at least 1 frame to write a 
 bitmap'. In such cases, you might have to degrade to a lower-quality 
@@ -113,21 +122,14 @@ rasterization using the additional arguments
 `raster_by_magick=FALSE, raster_device="CairoJPEG"` .
 }
 \examples{
-# we first fetch the path to the example bigwig file:
-bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-# Since we only have one, we'll use the same and pretend they're 2 samples:
-bw <- c(sample1=bw, sample2=bw)
-# we next load regions of interest (either GRanges or path to a bed file):
-regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
-# we obtain the matrix of the signal around the regions:
-m <- signal2Matrix(bw, regions)
-plotEnrichedHeatmaps(m)
+# we first load an example EnrichmentSE, as produced by signal2Matrix:
+data(exampleESE)
+plotEnrichedHeatmaps(exampleESE)
 # we could also just plot one with:
-# plotEnrichedHeatmaps(m[,1])
+# plotEnrichedHeatmaps(exampleESEm[,1])
 # or change the aesthetics, e.g.:
-plotEnrichedHeatmaps(m, trim=0.98, scale_title="RPKM", 
-                     colors=c("white","darkred"))
+plotEnrichedHeatmaps(exampleESE, trim=0.98, scale_title="RPKM", 
+                     colors=c("white","darkred"), row_title="My regions")
 # any argument accepted by `EnrichedHeatmap` (and hence by 
-# `ComplexHeatmap::Heatmap`) can be used, e.g.: 
-plotEnrichedHeatmaps(m, row_title="My regions of interest")
+# `ComplexHeatmap::Heatmap`) can be used.
 }

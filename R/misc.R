@@ -406,3 +406,21 @@ views2Matrix <- function(v, padVal=NA_integer_){
   }
   frags
 }
+
+.mdsSortRows <- function(x, scale=FALSE){
+  x <- as.matrix(x)
+  if(ncol(x)==1) return(order(x))
+  if(scale){
+    x <- t(x)
+    sds <- matrixStats::colSds(x,na.rm=TRUE)
+    sds[is.na(sds)] <- 1
+    x <- t((x-colMeans(x,na.rm=TRUE))/sds)
+  }
+  emb <- stats::cmdscale(dist(x), k=2L)
+  # taken from package seriation:
+  alpha <- atan2(emb[,1], emb[,2])
+  o <- order(alpha)
+  cut <- which.max(abs(diff(c(alpha[o], alpha[o[1]] + 2 * pi))))
+  if(cut != length(o)) o <- o[c((cut + 1):length(o), 1:(cut))]
+  o
+}

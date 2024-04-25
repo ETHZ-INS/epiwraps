@@ -365,8 +365,8 @@ renormalizeSignalMatrices <- function(ml, method=c("border","top","manual"),
     as.numeric(cbind(x[,seq_len(nWindows)],
                      x[,seq(from=ncol(x)-nWindows+1L,to=ncol(x))]))
   }))
-  if(is.null(trim)) trim <- (sum(b!=0)/length(b))/10
   if(method=="border"){
+    if(is.null(trim)) trim <- (sum(b!=0)/length(b))/10
     nf <- apply(b, 2, FUN=function(x){
       y <- mean(x, trim=trim)
       if(y==0) y <- mean(x)
@@ -374,6 +374,7 @@ renormalizeSignalMatrices <- function(ml, method=c("border","top","manual"),
     })
     nf <- nf/median(nf)
   }else if(method=="top"){
+    if(is.null(trim)) trim <- 0.005
     nf <- apply(b, 2, FUN=function(x){
       y <- quantile(x, 1-trim)
       if(y==0) y <- max(x)

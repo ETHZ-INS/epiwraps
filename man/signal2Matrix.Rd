@@ -11,7 +11,7 @@ signal2Matrix(
   w = NULL,
   scaledBins = 50L,
   type = c("center", "scaled"),
-  binMethod = c("max", "mean", "min"),
+  binMethod = c("mean", "max", "min"),
   BPPARAM = 1L,
   ret = c("EnrichmentSE", "list"),
   verbose = TRUE,

@@ -1,3 +1,16 @@
+#' @rdname exampleESE
+#' @name exampleESE
+#' @aliases exampleESE
+#'
+#' @title Example EnrichmentSE object
+#'
+#' @description
+#' Small sample signal from ENCODE ChIP-seq for H3K27ac, H3K4me3 and p300, 
+#' around some p300 binding sites and TSS in mESC.
+#'
+#' @return a named character vector of length 1.
+NULL
+
 #' @import methods
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment RangedSummarizedExperiment
 .EnrichmentSE <- setClass("EnrichmentSE",
@@ -286,7 +299,7 @@ addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
       if(is(x[,1],"normalizedMatrix")){
         x <- .ml2assay(lapply(x, FUN=function(y) .resizeNmatrix(y,i)))
       }else{
-        x <- x[i,]
+        x <- x[i,,drop=FALSE]
       }
     })
     rr <- rr[i]
@@ -297,3 +310,9 @@ addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
   }
   EnrichmentSE(assays=al, rowRanges=rr, colData=cd, metadata=metadata(x))
 }
+
+
+#' @export
+setMethod("score", "EnrichmentSE", function(x,...){
+  sapply(getSignalMatrices(x), FUN=EnrichedHeatmap::enriched_score)
+})

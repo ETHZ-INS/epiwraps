@@ -12,6 +12,10 @@ produced by \code{\link{signal2Matrix}}}
 
 \item{fun}{An optional custom aggregation function (or named list thereof).}
 
+\item{splitBy}{A vector of values (factor or character of length equal to 
+`nrow(ml)`) by which to split the aggregation. Can also be the name of a
+column of `rowData(ml)`.}
+
 \item{trim}{The quantile above which to trim values. If a numeric vector of 
 length 2, will be used as lower and upper quantiles beyond which to trim.}
 

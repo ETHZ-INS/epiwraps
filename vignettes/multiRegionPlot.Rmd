@@ -49,7 +49,7 @@ bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
 regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
 # we obtain the matrix of the signal around the regions. For the purpose of this
 # example, we'll read twice from the same:
-m <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L, binMethod = "mean")
+m <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L)
 m
 ```
 
@@ -115,6 +115,15 @@ plotEnrichedHeatmaps(m, colors=c("white","darkred"), cluster_rows=TRUE,
                      row_title="My list of cool regions")
 ```
 
+
+It is often useful to subset to regions with a high enrichment, which we can do
+with the `score` function:
+
+```{r heatmap2b, fig.height=3, fig.width=4}
+plotEnrichedHeatmaps(m[head(order(-rowMeans(score(m))),50),])
+```
+
+
 #### Color-scale trimming
 
 By default, the colorscale is trimmed to prevent most of it being driven by rare
@@ -142,21 +151,34 @@ advisable to use minimal trimming (e.g. the default is `c(0.02,0.98)`).
 #### Different colorscales for different tracks
 
 It is also possible to have different colorscales for different tracks, which is
-especially useful when comparing very different signals. For example, this would
-put each of the two tracks (here identical) on its own color scale:
+especially useful when comparing very different signals. To illustrate this, 
+let's load an example with different tracks:
+
+```{r}
+data(exampleESE)
+exampleESE
+```
+
+We can put each of the three tracks on its own color scale:
 
 ```{r heatmap1ms, fig.height=4, fig.width=4}
-plotEnrichedHeatmaps(m, multiScale=TRUE)
+plotEnrichedHeatmaps(exampleESE, multiScale=TRUE)
 ```
 
 One could also specify colors separately by providing them as a list:
 
 ```{r heatmap1ms2, fig.height=4, fig.width=4}
-plotEnrichedHeatmaps(m, multiScale=TRUE,
-                     colors=list(c("white","darkred"),
-                                 c("darkblue")))
+plotEnrichedHeatmaps(exampleESE,
+                     colors=list(c("white","darkblue"), "darkgreen", "darkred"))
 ```
 
+This information can also be stored in the object, rather than specified 
+everytime:
+
+```{r}
+exampleESE$hmcolors <- list(viridisLite::inferno(100),  "darkgreen", "darkred")
+plotEnrichedHeatmaps(exampleESE)
+```
 
 
 ## Normalization
@@ -220,29 +242,40 @@ plotEnrichedHeatmaps(sm)
 
 And we've recovered comparable signal across the two tracks/samples.
 
-### Clustering
+### Sorting and clustering
 
 The traditional ranking by decreasing overall enrichment can easily hide 
-patterns in the data, which are instead revealed by clustering. While 
-hierarchical clustering can be performed in the plotting function itself, this
-is based on the whole enrichment profiles and seldom provides good results in 
-practice. For this reason, we provide a function that clusters the rows based on
-the distance-weighted enrichment scores. For example:
+patterns in the data, which are instead revealed by clustering. One approach is
+to use hierarchical clustering of the rows:
 
-```{r, eval=FALSE}
-# not run - would fail here due to the absence of variability between tracks
-cl <- clusterSignalMatrices(sm, k=3, scaleRows=TRUE)
-# we could store this in the rowData of the object:
-rowData(sm)$cluster <- cl
-mycolors <- c("1"="red", "2"="blue", "3"="darkgreen")
-plotEnrichedHeatmaps(sm, row_split=rowData(sm)$cluster, mean_color=mycolors)
+```{r}
+plotEnrichedHeatmaps(exampleESE, cluster_rows=TRUE)
+```
+
+In this example, this already reveals important patterns in the data, namely the
+fact that p300 binding is associated with H3K27ac and tends to be mutually 
+exclusive with the promoter-associated H3K4me3 mark.
+
+The hierarchical clustering is based on the whole enrichment profile, can easily
+be led astray by patterns in individual signals, and seldom provides good 
+results in practice. An alternative is to use enrichment score weighted by 
+distance to the center, eventually row-normalized, to cluster the regions. We 
+provide a function to this end:
+
+
+```{r}
+# we cluster the regions using 2 clusters, and store the cluster labels in the 
+# rowData of the object: 
+rowData(exampleESE)$cluster <- clusterSignalMatrices(exampleESE, k=2, scaleRows=TRUE)
+# we additionally label the clusters with colors:
+plotEnrichedHeatmaps(exampleESE, row_split="cluster",
+                     mean_color=c("1"="red", "2"="blue"))
 ```
 
 Note that here we are splitting into 3 clusters, you can also provide a range
 of values (e.g. `k=2:8`) and the function will also return cluster quality 
 metrics for each.
 
-[include proper example... Creb family]
 
 ## Plotting aggregated signals
 
@@ -253,18 +286,11 @@ deviation, standard error and median at each position relative to the center,
 for each sample/matrix:
 
 ```{r}
-d <- meltSignals(sm)
+d <- meltSignals(exampleESE)
 head(d)
 ```
 
-This can then be used for plotting. For this example, since it consists of twice the same file, we'll first create a fake difference:
-
-```{r}
-# create a fake difference so that there's something to visualize in this example:
-d$mean[d$sample=="atac2"] <- 0.06+(d$mean[d$sample=="atac2"]-0.06)*0.6
-```
-
-Then we can plot normally with `ggplot`:
+This can then be used for plotting, simply with `ggplot`:
 
 ```{r aggPlot, fig.width=4, fig.height=3}
 library(ggplot2)
@@ -275,10 +301,17 @@ ggplot(d, aes(position, mean, colour=sample)) +
   theme_bw() + labs(x="relative position", y="mean RPKM")
 ```
 
+We could also include cluster information:
 
-Note that when the regions are clustered, the clusters can be passed to melt and
-aggregate separately the different clusters, e.g.:
-`d <- meltSignals(sm, splitBy=cl)`.
+```{r}
+d <- meltSignals(exampleESE, splitBy = "cluster")
+ggplot(d, aes(position, mean, colour=sample)) +
+  geom_vline(xintercept=0, linetype="dashed") +
+  geom_ribbon(aes(position, ymin=mean-SE, ymax=mean+SE, fill=sample), alpha=0.4, colour=NA) + 
+  geom_line(size=1.2) + facet_wrap(~split) +
+  theme_bw() + labs(x="relative position", y="mean RPKM")
+```
+
 
 <br/><br/>
 

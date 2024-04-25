@@ -61,7 +61,7 @@
 #' plotEnrichedHeatmaps(m)
 signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
                           scaledBins=50L, type=c("center","scaled"),
-                          binMethod=c("max","mean","min"), BPPARAM=1L, 
+                          binMethod=c("mean","max","min"), BPPARAM=1L, 
                           ret=c("EnrichmentSE","list"), verbose=TRUE, ...){
   type <- match.arg(type)
   ret <- match.arg(ret)
