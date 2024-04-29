@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.87</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.89</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -27,6 +27,7 @@
     <a class="dropdown-item" href="../articles/bam2bw.html">Generating bigwig tracks with bam2bw</a>
     <a class="dropdown-item" href="../articles/misc.html">Miscellaneous epiwraps functions</a>
     <a class="dropdown-item" href="../articles/multiRegionPlot.html">Visualizing signals across many regions</a>
+    <a class="dropdown-item" href="../articles/normalization.html">Normalizing genomic signals</a>
     <a class="dropdown-item" href="../articles/singleRegionPlot.html">Visualizing signals in a single region</a>
   </div>
 </li>
@@ -53,15 +54,15 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">getNormFactors</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
+<span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"background"</span>, <span class="st">"SES"</span>, <span class="st">"enriched"</span>, <span class="st">"top"</span>, <span class="st">"MAnorm"</span>, <span class="st">"S3norm"</span>, <span class="st">"2cLinear"</span><span class="op">)</span>,</span>
 <span>  wsize <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  nwind <span class="op">=</span> <span class="fl">20000L</span>,</span>
 <span>  peaks <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  trim <span class="op">=</span> <span class="fl">0.01</span>,</span>
+<span>  trim <span class="op">=</span> <span class="fl">0.02</span>,</span>
 <span>  useSeqLevels <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  paired <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"background"</span>, <span class="st">"SES"</span>, <span class="st">"MAnorm"</span>, <span class="st">"S3norm"</span>, <span class="st">"2cLinear"</span><span class="op">)</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">bwNormFactors</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
@@ -72,6 +73,10 @@
     <dl><dt>x</dt>
 <dd><p>A vector of paths to bigwig files, to bam files, or alternatively a 
 list of coverages in RleList format. (Mixed formats are not supported)</p></dd>
+
+
+<dt>method</dt>
+<dd><p>Normalization method (see details below).</p></dd>
 
 
 <dt>wsize</dt>
@@ -88,16 +93,12 @@ windows.</p></dd>
 
 <dt>peaks</dt>
 <dd><p>A list of peaks (GRanges) for each experiment in `x`, or a
-vector of paths to such files, or a single GRanges of peaks to use for 
-MAnorm</p></dd>
+vector of paths to such files, or a single GRanges of unified peaks to use 
+(e.g. for top/MAnorm).</p></dd>
 
 
 <dt>trim</dt>
-<dd><p>Amount of trimming when calculating means</p></dd>
-
-
-<dt>method</dt>
-<dd><p>Normalization method (see details)</p></dd>
+<dd><p>Amount of trimming when calculating means.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -114,19 +115,39 @@ MAnorm</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The 'background' or 'SES' normalization method (they are synonyms here)
+    <p>The function computes per-sample (bigwig or bam file) normalization factors
+using one of the following methods:
+* The 'background' or 'SES' normalization method (they are synonyms here)
 (Diaz et al., Stat Appl Gen et Mol Biol, 2012) assumes that the background
 noise should on average be the same across experiments, an assumption that 
 works well in practice when there are not very large differences in 
 signal-to-noise ratio. The implementation uses the trimmed mean number of 
 reads in random windows with non-zero counts.
-The 'MAnorm' approach (Shao et al., Genome Biology 
-2012) assumes that regions that are commonly enriched (i.e. common peaks) in 
-two experiments should on average have the same signal in the two 
-experiments. These methods then use linear scaling.
-The 'S3norm' (Xiang et al., NAR 2020) and '2cLinear' methods try to 
-normalize both simultaneously. S3norm does this in a log-linear fashion (as 
-in the publication), while '2cLinear' does it on the original scale.</p>
+* The 'MAnorm' approach (Shao et al., Genome Biology 2012) assumes that 
+regions that are commonly enriched (i.e. common peaks) in two experiments 
+should on average have the same signal in the two experiments. If the data is
+strictly positive (e.g. counts or CPMs), TMM normalization (Robinson et al.,
+Genome Biology 2010) is then employed on the common peaks. When done on more 
+than two samples, the sample with the highest number of overlaps with other
+samples is used as a reference.
+* The 'enriched' approach assumes that enriched regions are on average 
+similarly enriched across samples. Contrarily to 'MAnorm', these regions do 
+not need to be in common across samples/experiments. Note that trimming via
+the `trim` parameter is performed before calculating means.
+* The 'top' approach assumes that the maximum enrichment (after trimming 
+according to the `trim` parameter) in peaks is the same across 
+samples/experiments.
+* The 'S3norm' (Xiang et al., NAR 2020) and '2cLinear' methods try to 
+normalize both enrichment and background simultaneously. S3norm does this in 
+a log-linear fashion (as in the publication), while '2cLinear' does it on 
+the original scale.</p>
+<p>Several of the methods rely on random regions to estimate background levels.
+This means that they will not be entirely deterministic, although normally 
+quite reproducible with experiments that are not very sparse. For fully 
+reproducible results, be sure to set the random seed.</p>
+<p>When the data is very sparse (e.g. low sequencing depth, or compiling single
+nucleotide hits rather than fragment coverage), it might be necessary to 
+increase the `wsize` and `nwind` to get more robust estimates.</p>
     </div>
     <div class="section level2">
     <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a></h2>

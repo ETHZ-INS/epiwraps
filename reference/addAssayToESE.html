@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.87</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.89</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -27,6 +27,7 @@
     <a class="dropdown-item" href="../articles/bam2bw.html">Generating bigwig tracks with bam2bw</a>
     <a class="dropdown-item" href="../articles/misc.html">Miscellaneous epiwraps functions</a>
     <a class="dropdown-item" href="../articles/multiRegionPlot.html">Visualizing signals across many regions</a>
+    <a class="dropdown-item" href="../articles/normalization.html">Normalizing genomic signals</a>
     <a class="dropdown-item" href="../articles/singleRegionPlot.html">Visualizing signals in a single region</a>
   </div>
 </li>
@@ -84,17 +85,14 @@ name is given a suffix.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># we first create an EnrichmentSE object:</span></span></span>
-<span class="r-in"><span><span class="va">bw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_atac.bw"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">import</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_peaks.bed"</span>, </span></span>
-<span class="r-in"><span>                                           package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="va">bw</span>, <span class="va">regions</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># we first get an EnrichmentSE object:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># then we will create a new assay which is simply sqrt-transformed, and add </span></span></span>
 <span class="r-in"><span><span class="co"># it back in the object</span></span></span>
 <span class="r-in"><span><span class="va">newAssay</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="getSignalMatrices.html">getSignalMatrices</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="va">sqrt</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu">addAssayToESE</span><span class="op">(</span><span class="va">x</span>, <span class="va">newAssay</span>, named<span class="op">=</span><span class="st">"sqrt"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in addAssayToESE(x, newAssay, named = "sqrt"):</span> unused argument (named = "sqrt")</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in h(simpleError(msg, call)):</span> error in evaluating the argument 'X' in selecting a method for function 'lapply': object 'x' not found</span>
+<span class="r-in"><span><span class="va">exampleESE</span> <span class="op">&lt;-</span> <span class="fu">addAssayToESE</span><span class="op">(</span><span class="va">exampleESE</span>, <span class="va">newAssay</span>, named<span class="op">=</span><span class="st">"sqrt"</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in addAssayToESE(exampleESE, newAssay, named = "sqrt"):</span> unused argument (named = "sqrt")</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

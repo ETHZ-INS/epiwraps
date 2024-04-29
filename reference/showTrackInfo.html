@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.87</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.89</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -27,6 +27,7 @@
     <a class="dropdown-item" href="../articles/bam2bw.html">Generating bigwig tracks with bam2bw</a>
     <a class="dropdown-item" href="../articles/misc.html">Miscellaneous epiwraps functions</a>
     <a class="dropdown-item" href="../articles/multiRegionPlot.html">Visualizing signals across many regions</a>
+    <a class="dropdown-item" href="../articles/normalization.html">Normalizing genomic signals</a>
     <a class="dropdown-item" href="../articles/singleRegionPlot.html">Visualizing signals in a single region</a>
   </div>
 </li>
@@ -78,15 +79,16 @@ produced by <code><a href="signal2Matrix.html">signal2Matrix</a></code></p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># we first create an EnrichmentSE object:</span></span></span>
-<span class="r-in"><span><span class="va">bw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_atac.bw"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">import</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_peaks.bed"</span>, </span></span>
-<span class="r-in"><span>                                           package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="va">bw</span>, <span class="va">regions</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span>
-<span class="r-in"><span><span class="fu">showTrackInfo</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> example_atac ( 264x200 ) :</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   -2000/+2000bp (100 windows each)</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">showTrackInfo</span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> H3K27ac ( 150x80 ) :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   -2000/+2000bp (40 windows each)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   around the centers of given regions </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> H3K4me3 ( 150x80 ) :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   -2000/+2000bp (40 windows each)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   around the centers of given regions </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> p300 ( 150x80 ) :</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   -2000/+2000bp (40 windows each)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   around the centers of given regions </span>
 </code></pre></div>
     </div>

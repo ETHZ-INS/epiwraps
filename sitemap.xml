@@ -19,6 +19,9 @@
     <loc>https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html</loc>
   </url>
   <url>
+    <loc>https://ethz-ins.github.io/epiwraps/articles/normalization.html</loc>
+  </url>
+  <url>
     <loc>https://ethz-ins.github.io/epiwraps/articles/singleRegionPlot.html</loc>
   </url>
   <url>
@@ -62,9 +65,6 @@
   </url>
   <url>
     <loc>https://ethz-ins.github.io/epiwraps/reference/fragSizesDist.html</loc>
-  </url>
-  <url>
-    <loc>https://ethz-ins.github.io/epiwraps/reference/getBinSignalFromBam.html</loc>
   </url>
   <url>
     <loc>https://ethz-ins.github.io/epiwraps/reference/getCovStats.html</loc>
