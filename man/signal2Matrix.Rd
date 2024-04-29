@@ -2,13 +2,14 @@
 % Please edit documentation in R/signal2Matrix.R
 \name{signal2Matrix}
 \alias{signal2Matrix}
-\title{signal2Matrix: reads the signals around a set of regions.}
+\title{signal2Matrix: reads the signals in/around a set of genomic regions.}
 \usage{
 signal2Matrix(
   filepaths,
   regions,
   extend = 2000,
   w = NULL,
+  scaling = TRUE,
   scaledBins = 50L,
   type = c("center", "scaled"),
   binMethod = c("mean", "max", "min"),
@@ -26,7 +27,9 @@ For `GRanges` objects, the `score` column will be used (absolute coverage
 mode).}
 
 \item{regions}{A `GRanges` of the regions/positions around which to plot, or
-the path to a bed file of such regions.}
+the path to a bed file of such regions. If `type="scaled"`, `regions` can 
+also be a `GRangesList`, in which case the coverage of the subregions will 
+be stiched together (e.g. for plotting exonic signal over transcripts).}
 
 \item{extend}{Number of basepair to extend on either side of the regions. 
 Must be a multiple of `w`. Can also be an integer of length 2, indicating 
@@ -46,9 +49,9 @@ bin.}
 
 \item{BPPARAM}{A \code{\link[BiocParallel]{BiocParallelParam}} object, or 
 the number of threads to use to read and prepare the data. Note that the 
-  rate-limiting process is reading from disk, so unless you have an unusually
-  fast disk, using multi-threading is actually likely to slow down rather 
-  than speed up the process.}
+rate-limiting process is reading from disk, so unless you have an unusually
+fast disk, using multi-threading is actually likely to slow down rather 
+than speed up the process.}
 
 \item{ret}{The type of output to return, either an "EnrichmentSE" object 
 (default), or a simple list of signal matrices ("list").}
@@ -56,16 +59,16 @@ the number of threads to use to read and prepare the data. Note that the
 \item{verbose}{Logical; whether to print processing information}
 
 \item{...}{Passed to \code{\link[EnrichedHeatmap]{as.normalizedMatrix}} when
-reading bigwig files, or to \code{\link{getBinSignalFromBam}} when reading
-bam files. For example, this can be used to pass arguments to 
+reading bigwig files, or to \code{\link{bam2bw}} when reading bam files. 
+For example, this can be used to pass arguments to 
 `normalizeToMatrix` such as `smooth=TRUE`.}
 }
 \value{
 A list of `normalizeToMatrix` objects
 }
 \description{
-Reads the signals from bam/bw files within and/or (the centers of) a given
-set of regions, and outputs an EnrichedSE object.
+Reads the signals from bam/bigwig files within and/or around (the centers of)
+a set of regions, and outputs an EnrichmentSE object.
 }
 \examples{
 # we fetch the path to the example bigwig file:

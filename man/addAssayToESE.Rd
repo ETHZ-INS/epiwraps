@@ -25,13 +25,10 @@ name is given a suffix.}
 Adds an assay of signal matrices to an existing `EnrichmentSE` object.
 }
 \examples{
-# we first create an EnrichmentSE object:
-bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
-                                           package="epiwraps"))
-x <- signal2Matrix(bw, regions)
+# we first get an EnrichmentSE object:
+data(exampleESE)
 # then we will create a new assay which is simply sqrt-transformed, and add 
 # it back in the object
 newAssay <- lapply(getSignalMatrices(x), sqrt)
-x <- addAssayToESE(x, newAssay, named="sqrt")
+exampleESE <- addAssayToESE(exampleESE, newAssay, named="sqrt")
 }

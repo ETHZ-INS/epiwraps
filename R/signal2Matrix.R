@@ -1,7 +1,7 @@
-#' signal2Matrix: reads the signals around a set of regions.
+#' signal2Matrix: reads the signals in/around a set of genomic regions.
 #' 
-#' Reads the signals from bam/bw files within and/or (the centers of) a given
-#' set of regions, and outputs an EnrichedSE object.
+#' Reads the signals from bam/bigwig files within and/or around (the centers of)
+#' a set of regions, and outputs an EnrichmentSE object.
 #'
 #' @param filepaths A named vector of filepaths (e.g. to bigwig files; bam files
 #'   are also supported, but with limited functionalities). Can also be a named
@@ -9,7 +9,9 @@
 #'   For `GRanges` objects, the `score` column will be used (absolute coverage
 #'   mode).
 #' @param regions A `GRanges` of the regions/positions around which to plot, or
-#' the path to a bed file of such regions.
+#'   the path to a bed file of such regions. If `type="scaled"`, `regions` can 
+#'   also be a `GRangesList`, in which case the coverage of the subregions will 
+#'   be stiched together (e.g. for plotting exonic signal over transcripts).
 #' @param extend Number of basepair to extend on either side of the regions. 
 #'   Must be a multiple of `w`. Can also be an integer of length 2, indicating 
 #'   the extension upstream and downstream.
@@ -22,7 +24,7 @@
 #' @param binMethod Whether to compute the 'max' (default), 'mean' or 'min' per
 #'   bin.
 #' @param BPPARAM A \code{\link[BiocParallel]{BiocParallelParam}} object, or 
-#' the number of threads to use to read and prepare the data. Note that the 
+#'   the number of threads to use to read and prepare the data. Note that the 
 #'   rate-limiting process is reading from disk, so unless you have an unusually
 #'   fast disk, using multi-threading is actually likely to slow down rather 
 #'   than speed up the process.
@@ -30,9 +32,9 @@
 #' @param ret The type of output to return, either an "EnrichmentSE" object 
 #'   (default), or a simple list of signal matrices ("list").
 #' @param ... Passed to \code{\link[EnrichedHeatmap]{as.normalizedMatrix}} when
-#'   reading bigwig files, or to \code{\link{getBinSignalFromBam}} when reading
-#'   bam files. For example, this can be used to pass arguments to 
-#'   `normalizeToMatrix` such as `smooth=TRUE`. 
+#'   reading bigwig files, or to \code{\link{bam2bw}} when reading bam files. 
+#'   For example, this can be used to pass arguments to 
+#'   `normalizeToMatrix` such as `smooth=TRUE`.
 #'
 #' @return A list of `normalizeToMatrix` objects
 #' @export
@@ -59,7 +61,7 @@
 #' # use bigger bins:
 #' m <- signal2Matrix(bw, regions, extend=2000, w=20)
 #' plotEnrichedHeatmaps(m)
-signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
+signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
                           scaledBins=50L, type=c("center","scaled"),
                           binMethod=c("mean","max","min"), BPPARAM=1L, 
                           ret=c("EnrichmentSE","list"), verbose=TRUE, ...){
@@ -68,12 +70,10 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   binMethod <- match.arg(binMethod)
   
   if(!all(unlist(lapply(filepaths, FUN=function(x){
-    is(x, "GRanges") || file.exists(x) }))))
-    stop("Some of the files given do not exist, check the paths provided.")
-  if(type!="center" && any(unlist(lapply(filepaths, FUN=function(x){
-    !is(x, "GRanges") && grepl("\\.bam$",x,ignore.case=TRUE)}))))
-    stop("Only `type='center'` can be used for BAM files.")
-  
+    is(x, "GRanges") || is(x,"RleList") || file.exists(x) }))))
+    stop("Some of the files given do not exist, or your are trying to pass an",
+         " unsupported object type. check the paths provided.")
+
   if(is.null(w) || is.na(w)) w <- round(max(1,mean(extend)/100))
   w <- as.integer(w)
   stopifnot(w>0)
@@ -112,6 +112,9 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   }else{
     regions2 <- regions
   }
+  # we will read only the relevant portions of the bam files;
+  # it's faster to have fewer larger regions
+  readRegions <- reduce(regions, min.gapwidth=max(extend)+5000L)
   
   if(is(regions2, "GRanges")){
     # ensure that the regions are on represented seqnames
@@ -127,6 +130,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   
   ff <- function(filename, ...){
              
+    co <- NULL
     filepath <- filepaths[[filename]]
     if(is(filepath, "GRanges")){
       if(verbose) message("Computing signal from GRanges '", filename, "'...")
@@ -154,52 +158,70 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     }else if(grepl("\\.bam$",filepath,ignore.case=TRUE)){
       
       ####### BAM INPUT
-      
-      mat <- getBinSignalFromBam(filepath, regions2, ...)
-      if(w!=1){
-        nwin <- round(sum(extend)/w)
-        if(nwin %% 2 != 0) nwin <- nwin+1
-        mat <- sapply(split(seq_len(ncol(mat)),cut(seq_len(ncol(mat)),nwin)), 
-                      FUN=function(x) rowMeans(mat[,x]) )
-        extend <- floor(ncol(mat)/2)
+      ll <- list(...)
+      ll$bamfile <- filepath
+      if(scaling){
+        ll$output_bw <- NA
+        ll$binWidth <- 1L
+        ll$scaling <- TRUE
+        # we read the full file to get the library size
+        co <- do.call(bam2bw, ll)
+      }else{
+        strandflag <- ll$strand
+        if(is.null(strandflag)) strandflag <- "*"
+        flgs <- scanBamFlag(
+          isDuplicate=ifelse(isFALSE(ll$includeDuplicates),FALSE,NA), 
+          isSecondaryAlignment=ifelse(isFALSE(ll$includeSecondary),FALSE,NA),
+          isMinusStrand=switch(strandflag, "*"=NA, "+"=FALSE, "-"=TRUE),
+          isNotPassingQualityControls=FALSE)
+        ll$paired <- .parsePairedArg(bamfile, paired=ll$paired, verbose=verbose)
+        co <- coverage(do.call(.bam2bwGetReads, c(ll, list(
+                param=Rsamtools::ScanBamParam(which=readRegions, flag=flgs)))))
       }
-      mat <- EnrichedHeatmap::as.normalizedMatrix( 
-        unclass(mat), extend=extend, signal_name=filename, k_target=0, 
-        k_upstream=extend[1]/w, k_downstream=extend[2]/w+(w==1))
-      
       ####### END BAM INPUT
       
     }else if(grepl("\\.bw$|\\.bigwig$", filepath, ignore.case=TRUE)){
 
       ####### BIGWIG INPUT
       
+      co <- rtracklayer::import(filepath, format="BigWig", as="RleList",
+                                selection=BigWigSelection(readRegions))
+      
+    }else if(is(filepath, "RleList")){
+      co <- filepath
+    }else{
+      stop("Unknown file format")
+    }
+     
+    if(!is.null(co)){
+      
+      ####### BIGWIG OR COVERAGE INPUT
+      
       if(type=="scaled"){
-        co <- rtracklayer::import(filepath, format="BigWig", 
-                                  selection=BigWigSelection(reduce(regions)))
-        co <- coverage(co, weight=co$score)
         upstream <- .getBinSignalFromBW(co, upstream, w=w, 
                                         method=binMethod, verbose=verbose)
         downstream <- .getBinSignalFromBW(co, downstream, w=w, 
                                           method=binMethod, verbose=verbose)
-        mat <- .getScaledSignalFromBW(co, regions, nBins=scaledBins, 
+        mat <- .getScaledSignalFromBW(co, regions2, nBins=scaledBins, 
                                       method=binMethod, verbose=verbose)
         mat <- cbind(upstream, mat, downstream)
+        row.names(mat) <- names(regions2)
         mat <- EnrichedHeatmap::as.normalizedMatrix(unclass(mat), extend=extend,
                   signal_name=filename, k_target=scaledBins, ...,
                   k_upstream=extend[[1]]/w, k_downstream=extend[[2]]/w )
       }else{
-        mat <- .getBinSignalFromBW(filepath, regions2, w=w, 
+        mat <- .getBinSignalFromBW(co, regions2, w=w, 
                                    method=binMethod, verbose=verbose)
         mat <- EnrichedHeatmap::as.normalizedMatrix(unclass(mat), extend=extend,
                   signal_name=filename, k_target=0L, ...,
                   k_upstream=extend[[1]]/w, k_downstream=extend[[2]]/w )
       }
-
-      ####### END BIGWIG INPUT
-      
-    }else{
-      stop("Unknown file format")
     }
+
+    rm(co)
+    gc(FALSE)
+    ####### END BIGWIG INPUT
+      
     mat <- tryCatch({
         if(is.null(row.names(mat)) || any(is.na(row.names(mat))))
           row.names(mat) <- row.names(regions)
@@ -224,7 +246,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
     ml
   })
   if(ret=="EnrichmentSE"){
-    ml <- tryCatch(ml2ESE(ml, rowRanges=regions, addScore=TRUE),
+    ml <- tryCatch(ml2ESE(ml, rowRanges=regions, addScore=FALSE),
                    error=function(e){
       if(verbose)
         warning("Could not create EnrichmentSE object (list returned):", e)
@@ -289,22 +311,22 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   }
   regions2 <- .filterRegions(regions2, sqlvls, verbose=verbose)
   if(is(regions2, "GRangesList")){
-    strands <- unique(strand(regions2))
+    strands <- unlist(unique(strand(regions2)))
     # join exons coverages
-    v <- lapply(split(granges(regions2), runValue(seqnames(regions)), drop=TRUE),
+    v <- lapply(split(regions2, runValue(seqnames(regions2)), drop=TRUE),
            FUN=function(r){
       v <- Views(co[[as.character(seqnames(r[[1]])[1])]], ranges(unlist(r)))
       .mergeRleListItems(RleList(v), rep(factor(names(r)), lengths(r)))
     })
-    v <- unlist(v, recursive=FALSE, use.names=FALSE)
-    mat <- do.call(rbind, lapply(v, FUN=function(x){
-      t(sapply(x, FUN=function(x){
+    v <- lapply(v, FUN=function(onechr){
+      t(sapply(onechr, FUN=function(x){
         x <- as.numeric(x)
         x <- rep(x,each=max(1L,ceiling(nBins/length(x))))
         x <- splitAsList(x, cut(seq_along(x), breaks=nBins, labels=FALSE))
-        switch(method, max=max(x), min=min(x), mean=mean(x))
+        switch(method, max=max(x), min=min(x), mean=IRanges::mean(x))
       }))
-    }))
+    })
+    mat <- do.call(rbind, v)
   }else{
     strands <- strand(regions2)
     mat <- .getBinSignal(co[seqlevels(regions2)], regions2, k=nBins,
@@ -312,49 +334,6 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL,
   }
   wRev <- which(as.factor(strands)=="-")
   if(length(wRev)>0) mat[wRev,] <- mat[wRev,seq(from=ncol(mat), to=1L)]
-  mat
-}
-
-#' getBinSignalFromBam
-#'
-#' This is a wrapper around \code{\link[genomation]{ScoreMatrix}} to enable BAM
-#' support in \code{\link{signal2Matrix}}.
-#'
-#' @param filepath The path to the (indexed) bam file
-#' @param regions A `GRanges` of the regions/positions around which to plot
-#' @param cuts Whether to count cuts (e.g. beginning/end of fragments) rather
-#' than coverage (ignored unless the input are bam files)
-#' @param RPM Whether to perform RPM normalization (for bam input)
-#' @param paired Whether to consider whole fragments
-#' @param flgs Flags for bam reading
-#'
-#' @return A matrix
-#' @export
-getBinSignalFromBam <- function(filepath, regions, cuts=FALSE, RPM=TRUE, 
-                                paired=TRUE, ...,
-                                flgs=scanBamFlag(isDuplicate=FALSE,
-                                                 isSecondaryAlignment=FALSE)){
-  if(!suppressWarnings(requireNamespace("genomation", quietly=TRUE)))
-    stop("Please install the 'genomation' package to enable plotting 
-             directly from bam files.")
-  libsize <- NULL
-  if(is.null(RPM) || RPM)
-    libsize <- Rsamtools::countBam(filepath, 
-                                   param=ScanBamParam(flag=flgs))$records
-  if(cuts){
-    params <- Rsamtools::ScanBamParam(which=regions, flag=flgs)
-    bam <- GenomicAlignments::readGAlignmentPairs(filepath, param=params)
-    bam <- coverage(.align2cuts(bam))
-    
-    mat <- genomation:::ScoreMatrix(bam, windows=regions, ...,
-                                   strand.aware=FALSE, library.size=libsize)
-    rm(bam)
-    if(is.null(RPM) || RPM) mat <- mat*1000000/libsize
-  }else{
-    mat <- genomation:::ScoreMatrix(filepath, regions, bam.paired.end=paired, 
-                                   unique=TRUE, library.size=libsize, ...)
-    if(is.null(RPM) || RPM) mat <- mat*1000000/libsize
-  }
   mat
 }
 
@@ -366,9 +345,11 @@ getBinSignalFromBam <- function(filepath, regions, cuts=FALSE, RPM=TRUE,
   norder <- names(regions)
   regions <- sort(regions)
   v <- Views(co, makeWindows(regions, w=w, k=k, short.keep=short.keep))
-  v <- switch(method, min=viewMins(v), max=viewMaxs(v), mean=viewMeans(v))
+  v <- switch(method, min=viewMins(v, na.rm=TRUE), max=viewMaxs(v, na.rm=TRUE),
+              mean=viewMeans(v, na.rm=TRUE))
   v <- v[lengths(v)>0]
   v <- unlist(v)
+  v[is.nan(v)] <- 0L
   if(all(w <- is.infinite(v))){
     finiteMin <- 0L
   }else{
@@ -386,7 +367,7 @@ getBinSignalFromBam <- function(filepath, regions, cuts=FALSE, RPM=TRUE,
      !all(unique(lengths(seqlvls <- unique(seqnames(regions))))==1L))
     stop("Some elements of 'regions' contain GRanges from more than one ",
          "strand and/or seqlevel.")
-  x <- GRanges(seqlvls, strand=strands,
+  x <- GRanges(unlist(seqlvls), strand=unlist(strands),
                ranges=IRanges(min(start(regions)), max(end(regions))))
   mcols(x) <- mcols(regions)
   x

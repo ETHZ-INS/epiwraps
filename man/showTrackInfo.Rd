@@ -21,10 +21,6 @@ An invisible list of captions.
 Provide some information about the relative signal ranges of each track.
 }
 \examples{
-# we first create an EnrichmentSE object:
-bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
-                                           package="epiwraps"))
-x <- signal2Matrix(bw, regions)
-showTrackInfo(x)
+data(exampleESE)
+showTrackInfo(exampleESE)
 }

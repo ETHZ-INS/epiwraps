@@ -32,7 +32,7 @@ bam2bw(
   zeroCap = TRUE,
   forceSeqlevelsStyle = NULL,
   verbose = TRUE,
-  binSummarization = c("max", "min", "mean"),
+  binSummarization = c("mean", "max", "min"),
   ...
 )
 }

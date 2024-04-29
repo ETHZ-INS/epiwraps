@@ -18,12 +18,9 @@
 #' @importFrom matrixStats colMedians
 #' @examples
 #' # we first get an EnrichmentSE object:
-#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-#' regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
-#'                                            package="epiwraps"))
-#' m <- signal2Matrix(bw, regions)
+#' data(exampleESE)
 #' # we extract the means per position:
-#' d <- meltSignals(m)
+#' d <- meltSignals(exampleESE)
 #' head(d)
 #' ## we could then plot for instance using ggplot:
 #' # ggplot(d, aes(position, mean, colour=sample)) + geom_line(size=1.2)
@@ -79,12 +76,9 @@ meltSignals <- function(ml, fun=NULL, splitBy=NULL, trim=0.98, assay=1L){
 #' @export
 #' @examples
 #' # we first get an EnrichmentSE object:
-#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-#' regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
-#'                                            package="epiwraps"))
-#' m <- signal2Matrix(c(sample1=bw, sample2=bw), regions)
+#' data(exampleESE)
 #' # we merge the two tracks:
-#' merged <- mergeSignalMatrices(m)
+#' merged <- mergeSignalMatrices(exampleESE)
 #' # we could then plot the merge (not run):
 #' # plotEnrichedHeatmaps(merged)
 mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median"),

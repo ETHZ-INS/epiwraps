@@ -69,11 +69,8 @@ factors, for instance obtained through \code{\link{getNormFactors}}.
 }}
 \examples{
 # we first get an EnrichmentSE object:
-bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
-                                           package="epiwraps"))
-m <- signal2Matrix(c(sample1=bw, sample2=bw), regions)
+data(exampleESE)
 # we normalize them
-m <- renormalizeSignalMatrices(m, method="border")
+m <- renormalizeSignalMatrices(m)
 # see the `vignette("multiRegionPlot")` for more info on normalization.
 }

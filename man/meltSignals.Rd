@@ -30,12 +30,9 @@ Aggregates and melts a list of signal matrices, for plotting (with ggplot).
 }
 \examples{
 # we first get an EnrichmentSE object:
-bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
-                                           package="epiwraps"))
-m <- signal2Matrix(bw, regions)
+data(exampleESE)
 # we extract the means per position:
-d <- meltSignals(m)
+d <- meltSignals(exampleESE)
 head(d)
 ## we could then plot for instance using ggplot:
 # ggplot(d, aes(position, mean, colour=sample)) + geom_line(size=1.2)

@@ -115,7 +115,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
                    minFragLength=1L, maxFragLength=5000L, keepSeqLvls=NULL, 
                    splitByChr=3, pseudocount=1L, localBackground=1L, only=NULL,
                    zeroCap=TRUE, forceSeqlevelsStyle=NULL, verbose=TRUE, 
-                   binSummarization=c("max","min","mean"), ...){
+                   binSummarization=c("mean","max","min"), ...){
   # check inputs
   stopifnot(length(bamfile)==1 && file.exists(bamfile))
   if(!is.null(exclude)) stopifnot(is(exclude,"GRanges"))
@@ -125,6 +125,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
   }
   stopifnot(length(output_bw)==1 &&
               (is.character(output_bw) || is.na(output_bw)))
+  binSummarization <- match.arg(binSummarization)
   compType <- match.arg(compType)
   strand <- match.arg(strand)
   type <- match.arg(type)
@@ -133,14 +134,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
   stopifnot(length(shift) %in% 1:2)
   stopifnot(extend>=0L)
   stopifnot(length(binWidth)==1 && binWidth>=1)
-  if(is.null(paired)){
-    if(verbose) message("`paired` not specified, assuming single-end reads. ",
-                        "Set to paired='auto' to automatically detect.")
-    paired <- FALSE
-  }else if(paired=="auto"){
-    paired <- testPairedEndBam(bamfile)
-    if(verbose) message("Detected ", ifelse(paired,"paired","unpaired")," data")
-  }
+  paired <- .parsePairedArg(bamfile, paired, verbose=verbose)
   if(paired && !(type %in% c("center","ends")) && verbose)
     message("`extend` argument ignored.")
   if(type=="ends" && !paired){
@@ -242,6 +236,17 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
   as(res, "RleList")
 }
 
+.parsePairedArg <- function(bamfile, paired, verbose=TRUE){
+  if(is.null(paired)){
+    if(verbose) message("`paired` not specified, assuming single-end reads. ",
+                        "Set to paired='auto' to automatically detect.")
+    paired <- FALSE
+  }else if(paired=="auto"){
+    paired <- testPairedEndBam(bamfile)
+    if(verbose) message("Detected ", ifelse(paired,"paired","unpaired")," data")
+  }
+  paired
+}
 
 #' frag2bw
 #' 
@@ -395,9 +400,9 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
 
 
 # reads reads from bam file.
-.bam2bwGetReads <- function(bamfile, paired, param, type, extend, shift=0L,
-                            minFragL, maxFragL, forceStyle=NULL, si=NULL,
-                            only=NULL, exclude=NULL, strandMode=0){
+.bam2bwGetReads <- function(bamfile, paired, param, type="full", extend=0L,
+                            shift=0L, minFragL=0, maxFragL=Inf, forceStyle=NULL,
+                            si=NULL, only=NULL, exclude=NULL, strandMode=0){
   if(paired){
     bam <- readGAlignmentPairs(bamfile, param=param, strandMode=strandMode)
     bam <- as(bam[isProperPair(bam)], "GRanges")

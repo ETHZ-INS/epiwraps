@@ -209,31 +209,13 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
     cluster_rows <- FALSE
   }
   
-  a <- attributes(ml[[1]])
-  neededAxisLabs <- ifelse(length(a$target_index)==0,3,4)
-  if(is.null(axis_name) || length(axis_name)<neededAxisLabs){
-    e <- a$extend
-    if(all((e %% 1000)==0)){
-      e <- paste0(c("-","+"),round(e/1000),"kb")
-    }else{
-      e <- paste0(c("-","+"),e,"bp")
-    }
-    if(length(a$target_index)>0){
-      if(is.null(axis_name)) axis_name <- c("start","end")
-      axis_name <- head(axis_name,2)
-      axis_name <- c(axis_name,c("start","end")[-seq_along(axis_name)])
-    }else{
-      axis_name <- ifelse(is.null(axis_name),"center",axis_name)
-    }
-    axis_name <- c(e[1], axis_name, e[2])
-  }
-  
   hasAnno <- !(is.null(top_annotation) && is.null(left_annotation) &&
                  is.null(right_annotation) && is.null(row_split))
   if(is.null(mean_scale_side)) mean_scale_side <- ifelse(hasAnno,"left","both")
   hl <- NULL
   for(i in seq_along(ml)){
     m <- names(ml)[i]
+    axisLabels <- .getAxisLabels(ml[[i]], axis_name=axis_name)
     isFirst <- i==1
     isLast <- m==rev(names(ml))[1]
     TA <- NULL
@@ -287,10 +269,32 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
        cluster_rows=cluster_rows, row_order=row_order, row_split=row_split,
        show_heatmap_legend=(multiScale || isLast) && show_heatmap_legend,
        left_annotation=la, right_annotation=ra,
-       top_annotation=TA, axis_name=axis_name, use_raste=use_raster,
+       top_annotation=TA, axis_name=axisLabels, use_raste=use_raster,
        name=hmname )
   }
   hl
+}
+
+.getAxisLabels <- function(m, axis_name=NULL){
+  a <- attributes(m)
+  neededAxisLabs <- ifelse(length(a$target_index)==0,3,4)
+  if(is.null(axis_name) || length(axis_name)<neededAxisLabs){
+    e <- a$extend
+    if(all((e %% 1000)==0)){
+      e <- paste0(c("-","+"),round(e/1000),"kb")
+    }else{
+      e <- paste0(c("-","+"),e,"bp")
+    }
+    if(length(a$target_index)>0){
+      if(is.null(axis_name)) axis_name <- c("start","end")
+      axis_name <- head(axis_name,2)
+      axis_name <- c(axis_name,c("start","end")[-seq_along(axis_name)])
+    }else{
+      axis_name <- ifelse(is.null(axis_name),"center",axis_name)
+    }
+    axis_name <- c(e[1], axis_name, e[2])
+  }
+  axis_name
 }
 
 .getColFun <- function(ml, trim, colors){

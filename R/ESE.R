@@ -90,12 +90,8 @@ setMethod("show", "EnrichmentSE", function(object){
 #' @return An invisible list of captions.
 #' @export
 #' @examples
-#' # we first create an EnrichmentSE object:
-#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-#' regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
-#'                                            package="epiwraps"))
-#' x <- signal2Matrix(bw, regions)
-#' showTrackInfo(x)
+#' data(exampleESE)
+#' showTrackInfo(exampleESE)
 showTrackInfo <- function(x, assay="input", doPrint=TRUE){
   if(is(x, "EnrichmentSE")) x <- getSignalMatrices(x, assay=assay)
   stopifnot(is(x,"list") & all(vapply(x, FUN.VALUE=logical(1), 
@@ -220,13 +216,10 @@ ml2ESE <- function(ml, rowRanges, assayName="input", addScore=FALSE, ...){
 #' @return A list of normalizedMatrix objects.
 #' @export
 #' @examples
-#' # we first create an EnrichmentSE object:
-#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-#' regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
-#'                                            package="epiwraps"))
-#' x <- signal2Matrix(bw, regions)
+#' # we first get an EnrichmentSE object:
+#' data(exampleESE)
 #' # then we can extract the list of signal matrices:
-#' sm <- getSignalMatrices(x)
+#' sm <- getSignalMatrices(exampleESE)
 getSignalMatrices <- function(x, assay=1L){
   stopifnot(is(x,"EnrichmentSE"))
   .ese2ml(x, assay=assay)
@@ -267,15 +260,12 @@ getSignalMatrices <- function(x, assay=1L){
 #' @return `x` with the added/updated assay.
 #' @export
 #' @examples
-#' # we first create an EnrichmentSE object:
-#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-#' regions <- rtracklayer::import(system.file("extdata/example_peaks.bed", 
-#'                                            package="epiwraps"))
-#' x <- signal2Matrix(bw, regions)
+#' # we first get an EnrichmentSE object:
+#' data(exampleESE)
 #' # then we will create a new assay which is simply sqrt-transformed, and add 
 #' # it back in the object
 #' newAssay <- lapply(getSignalMatrices(x), sqrt)
-#' x <- addAssayToESE(x, newAssay, named="sqrt")
+#' exampleESE <- addAssayToESE(exampleESE, newAssay, named="sqrt")
 addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
   stopifnot(is(x,"EnrichmentSE"))
   if(is(a, "list")) a <- .ml2assay(a)
