@@ -92,6 +92,7 @@ publication), while '2cLinear' does it on the original scale.
 The normalization factors can be computed using `getNormFactors()` :
 
 ```{r, warning=FALSE}
+suppressPackageStartupMessages(library(epiwraps))
 # we fetch the path to the example bigwig file:
 bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
 # we'll just double it to create a fake multi-sample dataset:
