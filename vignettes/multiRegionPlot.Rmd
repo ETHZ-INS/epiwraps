@@ -57,7 +57,7 @@ The result is an object of class `EnrichmentSE`, which inherits from a
 `r BiocStyle::Biocpkg("SummarizedExperiment","RangedSummarizedExperiment")`, and
 therefore affords all the manipulations that the latter offers. Each region is
 stored as a row, and each sample or signal track as a column of the object. So 
-we can see that we have signal for 264 rows/regions from two tracks.
+we can see that we have signal for `r nrow(m)` rows/regions from two tracks.
 
 We could subset to the first 50 regions as follows:
 
@@ -111,7 +111,7 @@ normalized using various methods. For an overview of these methods, see the
 Once the signal has been read and the object prepared, (and eventually 
 normalized, see the section below), we can plot heatmaps based on them as follows:
 
-```{r heatmap1, fig.height=4, fig.width=4}
+```{r heatmap1, fig.height=3, fig.width=4}
 plotEnrichedHeatmaps(m)
 ```
 We can use most arguments that are supported by 
@@ -119,7 +119,7 @@ We can use most arguments that are supported by
 `r BiocStyle::Biocpkg("ComplexHeatmap")`), for example:
 
 
-```{r heatmap2, fig.height=4, fig.width=4}
+```{r heatmap2, fig.height=3, fig.width=4}
 plotEnrichedHeatmaps(m, colors=c("white","darkred"), cluster_rows=TRUE,
                      show_row_dend=TRUE, top_annotation=FALSE, 
                      row_title="My list of cool regions")
@@ -171,13 +171,13 @@ exampleESE
 
 We can put each of the three tracks on its own color scale:
 
-```{r heatmap1ms, fig.height=4, fig.width=4}
+```{r heatmap1ms, fig.height=4, fig.width=4.5}
 plotEnrichedHeatmaps(exampleESE, multiScale=TRUE)
 ```
 
 One could also specify colors separately by providing them as a list:
 
-```{r heatmap1ms2, fig.height=4, fig.width=4}
+```{r heatmap1ms2, fig.height=4, fig.width=4.5}
 plotEnrichedHeatmaps(exampleESE,
                      colors=list(c("white","darkblue"), "darkgreen", "darkred"))
 ```
@@ -185,7 +185,7 @@ plotEnrichedHeatmaps(exampleESE,
 This information can also be stored in the object, rather than specified 
 everytime:
 
-```{r}
+```{r, fig.height=4, fig.width=4.5}
 exampleESE$hmcolors <- list(viridisLite::inferno(100),  "darkgreen", "darkred")
 plotEnrichedHeatmaps(exampleESE)
 ```

@@ -53,7 +53,7 @@
 #' @param mean_trim Logical; whether to apply the trimming also to the mean plot.
 #' @param use_raster Logical; whether to render the heatmap body as a raster 
 #'   image. Turned on by default if any of the matrix dimensions is greater than
-#'   2000.
+#'   1500.
 #' 
 #' @details 
 #' When plotting large matrices, the heatmap body will be rasterized to keep its

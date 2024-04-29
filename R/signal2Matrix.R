@@ -62,7 +62,7 @@
 #' m <- signal2Matrix(bw, regions, extend=2000, w=20)
 #' plotEnrichedHeatmaps(m)
 signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
-                          scaledBins=50L, type=c("center","scaled"),
+                          scaledBins=round(max(extend)/w), type=c("center","scaled"),
                           binMethod=c("mean","max","min"), BPPARAM=1L, 
                           ret=c("EnrichmentSE","list"), verbose=TRUE, ...){
   type <- match.arg(type)
@@ -100,21 +100,15 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
     }
   }
   rnames <- names(regions)
-  regions <- sort(regions)
+  regions2 <- regions <- sort(regions)
 
   if(is(regions, "GRangesList")){
     if(type=="center") stop("A GRangesList cannot be used with type='center'.")
-    regions2 <- regions
     regions <- .grlBounds(regions)
   }else if(type=="center"){
     regions2 <- resize(regions, fix="center", width=sum(extend))
     regions2 <- shift(regions2, round((extend[2]-extend[1])/2))
-  }else{
-    regions2 <- regions
   }
-  # we will read only the relevant portions of the bam files;
-  # it's faster to have fewer larger regions
-  readRegions <- reduce(regions, min.gapwidth=max(extend)+5000L)
   
   if(is(regions2, "GRanges")){
     # ensure that the regions are on represented seqnames
@@ -123,10 +117,17 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
     regions2 <- regions2[names(regions2)]
   }
 
+  # we will read only the relevant portions of the bam files;
+  # it's faster to have fewer larger regions
   if(type=="scaled"){
     upstream <- flank(regions, extend[[1]], start=TRUE)
     downstream <- flank(regions, extend[[2]], start=FALSE)
+    readRegions <- reduce(sort(c(regions,upstream,downstream)),
+                          min.gapwidth=5000L)
+  }else{
+    readRegions <- reduce(regions, min.gapwidth=max(extend)+5000L)
   }
+  
   
   ff <- function(filename, ...){
              

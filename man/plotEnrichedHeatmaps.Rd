@@ -99,7 +99,7 @@ plots. Either "both" (default), "left", "right", or "none".}
 
 \item{use_raster}{Logical; whether to render the heatmap body as a raster 
 image. Turned on by default if any of the matrix dimensions is greater than
-2000.}
+1500.}
 
 \item{...}{Passed to \code{\link[EnrichedHeatmap]{EnrichedHeatmap}}}
 }
