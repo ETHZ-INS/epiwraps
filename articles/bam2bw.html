@@ -110,8 +110,8 @@ you’ve go the following single-end reads:</p>
 <code class="sourceCode R"><span><span class="va">bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bam"</span><span class="op">)</span> <span class="co"># temp file name</span></span>
 <span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="va">gr</span>, <span class="va">bam</span>, format<span class="op">=</span><span class="st">"bam"</span><span class="op">)</span></span>
 <span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">indexBam</a></span><span class="op">(</span><span class="va">bam</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##       /tmp/RtmpastzCQ/file1aaf6edf2726.bam </span></span>
-<span><span class="co">## "/tmp/RtmpastzCQ/file1aaf6edf2726.bam.bai"</span></span></code></pre>
+<pre><code><span><span class="co">##       /tmp/RtmpnnYW9H/file1bce205d56f7.bam </span></span>
+<span><span class="co">## "/tmp/RtmpnnYW9H/file1bce205d56f7.bam.bai"</span></span></code></pre>
 <p>Using these example reads, we can illustrate different ways of
 computing coverages.</p>
 <p>First, we can save coverage at different resolutions, from full
@@ -289,7 +289,7 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">##  [13] vctrs_0.6.5              memoise_2.0.1            Rsamtools_2.19.4        </span></span>
 <span><span class="co">##  [16] RCurl_1.98-1.14          base64enc_0.1-3          htmltools_0.5.8.1       </span></span>
 <span><span class="co">##  [19] S4Arrays_1.3.7           progress_1.2.3           curl_5.2.1              </span></span>
-<span><span class="co">##  [22] SparseArray_1.3.5        Formula_1.2-5            sass_0.4.9              </span></span>
+<span><span class="co">##  [22] SparseArray_1.3.7        Formula_1.2-5            sass_0.4.9              </span></span>
 <span><span class="co">##  [25] bslib_0.7.0              htmlwidgets_1.6.4        desc_1.4.3              </span></span>
 <span><span class="co">##  [28] plyr_1.8.9               Gviz_1.47.1              httr2_1.0.1             </span></span>
 <span><span class="co">##  [31] cachem_1.0.8             GenomicAlignments_1.39.5 lifecycle_1.0.4         </span></span>
