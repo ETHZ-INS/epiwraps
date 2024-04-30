@@ -279,12 +279,7 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   a <- attributes(m)
   neededAxisLabs <- ifelse(length(a$target_index)==0,3,4)
   if(is.null(axis_name) || length(axis_name)<neededAxisLabs){
-    e <- a$extend
-    if(all((e %% 1000)==0)){
-      e <- paste0(c("-","+"),round(e/1000),"kb")
-    }else{
-      e <- paste0(c("-","+"),e,"bp")
-    }
+    e <- paste0(c("-","+"), formatGenomicDist(a$extend))
     if(length(a$target_index)>0){
       if(is.null(axis_name)) axis_name <- c("start","end")
       axis_name <- head(axis_name,2)
@@ -296,6 +291,8 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   }
   axis_name
 }
+
+
 
 .getColFun <- function(ml, trim, colors){
   stopifnot(length(colors)>1)

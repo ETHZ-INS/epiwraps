@@ -424,3 +424,36 @@ views2Matrix <- function(v, padVal=NA_integer_){
   if(cut != length(o)) o <- o[c((cut + 1):length(o), 1:(cut))]
   o
 }
+
+#' formatGenomicDist
+#'
+#' @param e An integer vector of genomic sizes/distances to be formatted
+#' @param allowFraction Whether to allow decimals; can be either logical or a
+#'   number of decimals allowed (defaults to TRUE / 1)
+#' @param sameUnits Logical; whether all values should get the same unit.
+#' @param head0 Logical; whether to keep heading zero
+#' @param units The units to use.
+#'
+#' @return A character vector.
+#' @export
+formatGenomicDist <- function(e, allowFraction=TRUE, sameUnits=TRUE, head0=TRUE,
+                              units=c("mb"=1000000,"kb"=1000,"bp"=1)){
+  stopifnot(is.numeric(e))
+  stopifnot(length(allowFraction)==1L && (is.logical(allowFraction) || 
+                (is.numeric(allowFraction) && allowFraction>=1 )))
+  if(!sameUnits)
+    return(vapply(e, FUN.VALUE=character(1L), FUN=formatGenomicDist,
+                  allowFraction=allowFraction, head0=head0, units=units))
+  f <- 1L
+  if(allowFraction) f <- ifelse(is.numeric(allowFraction) && allowFraction>0,
+                                10^round(allowFraction), 10)
+  e <- e*f
+  for(u in names(units)){
+    if(all((e %% units[[u]])==0)){
+      e <- paste0(round(e/units[[u]],1)/f,u)
+      if(!head0) e <- gsub("^0\\.",".",e)
+      return(e)
+    }
+  }
+  e/f
+}

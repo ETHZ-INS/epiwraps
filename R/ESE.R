@@ -101,7 +101,9 @@ showTrackInfo <- function(x, assay="input", doPrint=TRUE){
     downstream_index = attr(x, "upstream_index")
     target_index_len = length(attr(x, "target_index"))
     extend = attr(x, "extend")
-    out <- paste0("  -",extend[1],"/+",extend[2],"bp (")
+    out <- paste0("  ", 
+                  paste0(c("-","+"), formatGenomicDist(extend),collapse="/"),
+                  " (")
     if(length(upstream_index)==length(downstream_index)){
       out <- paste0(out, length(upstream_index), " windows each")
     }else{
