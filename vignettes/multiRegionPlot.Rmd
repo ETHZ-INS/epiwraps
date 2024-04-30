@@ -305,18 +305,18 @@ library(ggplot2)
 ggplot(d, aes(position, mean, colour=sample)) +
   geom_vline(xintercept=0, linetype="dashed") +
   geom_ribbon(aes(position, ymin=mean-SE, ymax=mean+SE, fill=sample), alpha=0.4, colour=NA) + 
-  geom_line(size=1.2) + 
+  geom_line(linewidth=1.2) + 
   theme_bw() + labs(x="relative position", y="mean RPKM")
 ```
 
 We could also include cluster information:
 
-```{r}
+```{r aggPlot2, fig.width=6, fig.height=3}
 d <- meltSignals(exampleESE, splitBy = "cluster")
 ggplot(d, aes(position, mean, colour=sample)) +
   geom_vline(xintercept=0, linetype="dashed") +
   geom_ribbon(aes(position, ymin=mean-SE, ymax=mean+SE, fill=sample), alpha=0.4, colour=NA) + 
-  geom_line(size=1.2) + facet_wrap(~split) +
+  geom_line(linewidth=1.2) + facet_wrap(~split) +
   theme_bw() + labs(x="relative position", y="mean RPKM")
 ```
 
