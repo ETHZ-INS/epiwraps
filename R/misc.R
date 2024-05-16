@@ -273,6 +273,8 @@ head(paste(missingLvls, collapse=", "), 3))
     if(is.list(tracks)) tracks <- tracks[[1]]
     if(is(tracks, "GRanges")){
       sl <- seqlengths(tracks)
+    }else if(is(tracks, "RleList")){
+      sl <- lengths(tracks)
     }else if(.parseFiletypeFromName(tracks)=="bw"){
       sl <- seqlengths(BigWigFile(tracks))
     }else if(.parseFiletypeFromName(tracks)=="bam"){

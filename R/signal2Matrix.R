@@ -135,7 +135,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
     filepath <- filepaths[[filename]]
     if(is(filepath, "GRanges")){
       if(verbose) message("Computing signal from GRanges '", filename, "'...")
-    }else{
+    }else if(!is(filepath, "RleList")){
       if(verbose) message("Reading ", filepath)
       if(grepl("\\.rds$",filepath,ignore.case=TRUE))
         filepath <- readRDS(filepath)
@@ -144,7 +144,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
     if(is(filepath, "GRanges")){
       
       ####### GRanges INPUT
-      if(type=="scale"){
+      if(type=="scaled"){
         target_ratio <- w*scaledBins/sum(extend)
         mat <- normalizeToMatrix(filepath, regions, w=w, extend=extend, 
                                  value_column="score", mean_mode="absolute", 
@@ -156,6 +156,8 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
       }
       ####### END GRanges INPUT
       
+    }else if(is(filepath, "RleList")){
+      co <- filepath
     }else if(grepl("\\.bam$",filepath,ignore.case=TRUE)){
       
       ####### BAM INPUT
@@ -188,8 +190,6 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
       co <- rtracklayer::import(filepath, format="BigWig", as="RleList",
                                 selection=BigWigSelection(readRegions))
       
-    }else if(is(filepath, "RleList")){
-      co <- filepath
     }else{
       stop("Unknown file format")
     }
