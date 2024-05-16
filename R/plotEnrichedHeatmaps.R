@@ -199,15 +199,15 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
   })))
   if(isTRUE(cluster_rows)){
     cluster_rows <- hclust(dist(do.call(cbind, ml_trimmed)))
-  }else{
+  }else if(is.null(row_order)){
     es <- do.call(cbind, lapply(ml_trimmed, enriched_score))
     if(cluster_rows=="sort"){
       row_order <- .mdsSortRows(es)
     }else{
       row_order <- order(-rowMeans(es))
     }
-    cluster_rows <- FALSE
   }
+  if(!is.null(row_order)) cluster_rows <- FALSE
   
   hasAnno <- !(is.null(top_annotation) && is.null(left_annotation) &&
                  is.null(right_annotation) && is.null(row_split))
