@@ -190,10 +190,11 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
     trim <- 1
   }
 
-  ymin <- min(c(0,unlist(lapply(ml,FUN=min))))
+  ymin <- min(c(0,unlist(lapply(ml, na.rm=TRUE, FUN=min))))
   ymax <- max(unlist(lapply(ml, FUN=function(x){
     max(unlist(lapply(split(seq_along(rs), rs), FUN=function(i){
       x2 <- unclass(x)[i,,drop=FALSE]
+      x2[is.na(x2)] <- 0
       max(colMeans(x2)+matrixStats::colSds(x2)/sqrt(nrow(x2)))
     })))
   })))
