@@ -283,8 +283,6 @@ the `score` method:
 head(score(exampleESE))
 ```
 
-
-
 # Plotting aggregated signals
 
 It is also possible to plot only the average signals across regions. To do this,
@@ -319,6 +317,60 @@ ggplot(d, aes(position, mean, colour=sample)) +
   geom_line(linewidth=1.2) + facet_wrap(~split) +
   theme_bw() + labs(x="relative position", y="mean RPKM")
 ```
+
+
+
+# Visualizing DNAme and sparse signals
+
+Nucleotide-resolution DNA methylation (as obtained from bisulfite sequencing) 
+signal differs from the signals used throughout this vignette in that it is 
+not continuous across the genome, but specifically at C or CpG nucleotides which 
+have a variable density throughout the genome. As a consequence, it is likely 
+that some of the plotting bins do not contain a CpG, in which case they get
+assigned a value of 0, even though they could be in a completely methylated 
+region. For this reason, it is advisable to smooth DNA methylation signals for 
+the purpose of visualization.
+
+As an example, let's look at the gene bodies of some active genes from chr8 of
+the A549 cell lines:
+
+```{r}
+data("exampleDNAme")
+head(exampleDNAme)
+```
+
+As is typical of DNAme data, the object is a GRanges object (or more 
+specifically a GPos object, since all ranges have a width of 1 nucleotide) with,
+in the score column, the percentage of DNA methylation. Let's see what happens
+if we plot a heatmap of this signal, with and without smoothing (we use 
+`type="scaled"` to scale the gene bodies to the same size, since these can have 
+very different sizes) :
+
+```{r}
+o1 <- signal2Matrix(list(noSmooth=exampleDNAme), geneBodies, type="scaled")
+o2 <- signal2Matrix(list(smoothed=exampleDNAme), geneBodies, type="scaled", 
+                    smooth=TRUE)
+o <- cbind(o1,o2)
+plotEnrichedHeatmaps(o, scale_title="%\nmethylation", axis_name=c("TSS","TES"))
+```
+
+Both heatmaps show a very clear absence of DNA methylation at the promoter of 
+these genes (upstream of the TSS) an predominantly methylated gene bodies. 
+However they disagree substantially on the methylation levels upstream the 
+promoter and downstream the transcription end sites (TES). This is because of 
+the density of these regions in (covered) CpG nucleotides. Since most genes are
+rather long, most of the bins in the heatmap contain a CpG, leading to an actual
+methylation signal. In the flanking regions, however, this is not necessarily 
+the case, and the non-smoothed heatmap does not distinguish bins that are 
+unmethylated form bins for which there is no information. Instead, the smoothed
+heatmap on the right uses neighborhing bins to estimate the methylation status 
+of each bin, effectively filling out the gaps. In doing so it provides the 
+truthful representation, i.e. that the regions downstream of the genes and 
+upstream of the promoters are, most of the time, as methylated as the gene 
+bodies.
+
+Smoothing is performed by `r BiocStyle::Biocpkg("EnrichedHeatmap")`; see
+`?EnrichedHeatmap::normalizeToMatrix` for more information/customization.
 
 
 <br/><br/>

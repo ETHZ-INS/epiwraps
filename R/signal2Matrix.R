@@ -31,10 +31,10 @@
 #' @param verbose Logical; whether to print processing information
 #' @param ret The type of output to return, either an "EnrichmentSE" object 
 #'   (default), or a simple list of signal matrices ("list").
-#' @param ... Passed to \code{\link[EnrichedHeatmap]{as.normalizedMatrix}} when
-#'   reading bigwig files, or to \code{\link{bam2bw}} when reading bam files. 
-#'   For example, this can be used to pass arguments to 
-#'   `normalizeToMatrix` such as `smooth=TRUE`.
+#' @param ... Passed to \code{\link[EnrichedHeatmap]{normalizeToMatrix}} or
+#'   \code{\link[EnrichedHeatmap]{as.normalizedMatrix}}, or to 
+#'   \code{\link{bam2bw}} when reading bam files. For example, this can be used 
+#'   to pass arguments to `normalizeToMatrix` such as `smooth=TRUE`.
 #'
 #' @return A list of `normalizeToMatrix` objects
 #' @export
