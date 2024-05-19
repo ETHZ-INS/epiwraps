@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.92</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.93</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -422,12 +422,77 @@ relative to the center, for each sample/matrix:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth<span class="op">=</span><span class="fl">1.2</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">split</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x<span class="op">=</span><span class="st">"relative position"</span>, y<span class="op">=</span><span class="st">"mean RPKM"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/aggPlot2-1.png" width="576"></p>
+</div>
+<div class="section level2">
+<h2 id="visualizing-dname-and-sparse-signals">Visualizing DNAme and sparse signals<a class="anchor" aria-label="anchor" href="#visualizing-dname-and-sparse-signals"></a>
+</h2>
+<p>Nucleotide-resolution DNA methylation (as obtained from bisulfite
+sequencing) signal differs from the signals used throughout this
+vignette in that it is not continuous across the genome, but
+specifically at C or CpG nucleotides which have a variable density
+throughout the genome. As a consequence, it is likely that some of the
+plotting bins do not contain a CpG, in which case they get assigned a
+value of 0, even though they could be in a completely methylated region.
+For this reason, it is advisable to smooth DNA methylation signals for
+the purpose of visualization.</p>
+<p>As an example, let’s look at the gene bodies of some active genes
+from chr8 of the A549 cell lines:</p>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"exampleDNAme"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">exampleDNAme</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## UnstitchedGPos object with 6 positions and 1 metadata column:</span></span>
+<span><span class="co">##       seqnames       pos strand |     score</span></span>
+<span><span class="co">##          &lt;Rle&gt; &lt;integer&gt;  &lt;Rle&gt; | &lt;integer&gt;</span></span>
+<span><span class="co">##   [1]     chr9   4791172      + |        96</span></span>
+<span><span class="co">##   [2]     chr9   4791391      + |        96</span></span>
+<span><span class="co">##   [3]     chr9   4791398      + |       100</span></span>
+<span><span class="co">##   [4]     chr9   4791422      + |        92</span></span>
+<span><span class="co">##   [5]     chr9   4791437      + |        82</span></span>
+<span><span class="co">##   [6]     chr9   4791627      + |        93</span></span>
+<span><span class="co">##   -------</span></span>
+<span><span class="co">##   seqinfo: 5 sequences from an unspecified genome; no seqlengths</span></span></code></pre>
+<p>As is typical of DNAme data, the object is a GRanges object (or more
+specifically a GPos object, since all ranges have a width of 1
+nucleotide) with, in the score column, the percentage of DNA
+methylation. Let’s see what happens if we plot a heatmap of this signal,
+with and without smoothing (we use <code>type="scaled"</code> to scale
+the gene bodies to the same size, since these can have very different
+sizes) :</p>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">o1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>noSmooth<span class="op">=</span><span class="va">exampleDNAme</span><span class="op">)</span>, <span class="va">geneBodies</span>, type<span class="op">=</span><span class="st">"scaled"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Computing signal from GRanges 'noSmooth'...</span></span></code></pre>
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">o2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>smoothed<span class="op">=</span><span class="va">exampleDNAme</span><span class="op">)</span>, <span class="va">geneBodies</span>, type<span class="op">=</span><span class="st">"scaled"</span>, </span>
+<span>                    smooth<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Computing signal from GRanges 'smoothed'...</span></span></code></pre>
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">o</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">o1</span>,<span class="va">o2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">o</span>, scale_title<span class="op">=</span><span class="st">"%\nmethylation"</span>, axis_name<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TSS"</span>,<span class="st">"TES"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-16-1.png" width="700"></p>
+<p>Both heatmaps show a very clear absence of DNA methylation at the
+promoter of these genes (upstream of the TSS) an predominantly
+methylated gene bodies. However they disagree substantially on the
+methylation levels upstream the promoter and downstream the
+transcription end sites (TES). This is because of the density of these
+regions in (covered) CpG nucleotides. Since most genes are rather long,
+most of the bins in the heatmap contain a CpG, leading to an actual
+methylation signal. In the flanking regions, however, this is not
+necessarily the case, and the non-smoothed heatmap does not distinguish
+bins that are unmethylated form bins for which there is no information.
+Instead, the smoothed heatmap on the right uses neighborhing bins to
+estimate the methylation status of each bin, effectively filling out the
+gaps. In doing so it provides the truthful representation, i.e. that the
+regions downstream of the genes and upstream of the promoters are, most
+of the time, as methylated as the gene bodies.</p>
+<p>Smoothing is performed by <em><a href="https://bioconductor.org/packages/3.19/EnrichedHeatmap" class="external-link">EnrichedHeatmap</a></em>;
+see <code><a href="https://rdrr.io/pkg/EnrichedHeatmap/man/normalizeToMatrix.html" class="external-link">?EnrichedHeatmap::normalizeToMatrix</a></code> for more
+information/customization.</p>
 <p><br><br></p>
 </div>
 <div class="section level2">
 <h2 class="unnumbered" id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.4.0 (2024-04-24)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
@@ -451,7 +516,7 @@ relative to the center, for each sample/matrix:</p>
 <span><span class="co">## [8] methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] ggplot2_3.5.1               epiwraps_0.99.92           </span></span>
+<span><span class="co">##  [1] ggplot2_3.5.1               epiwraps_0.99.93           </span></span>
 <span><span class="co">##  [3] EnrichedHeatmap_1.34.0      ComplexHeatmap_2.20.0      </span></span>
 <span><span class="co">##  [5] SummarizedExperiment_1.34.0 Biobase_2.64.0             </span></span>
 <span><span class="co">##  [7] GenomicRanges_1.56.0        GenomeInfoDb_1.40.0        </span></span>
@@ -462,7 +527,7 @@ relative to the center, for each sample/matrix:</p>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##   [1] RColorBrewer_1.1-3       rstudioapi_0.16.0        jsonlite_1.8.8          </span></span>
 <span><span class="co">##   [4] shape_1.4.6.1            magrittr_2.0.3           magick_2.8.3            </span></span>
-<span><span class="co">##   [7] GenomicFeatures_1.56.0   farver_2.1.2             rmarkdown_2.26          </span></span>
+<span><span class="co">##   [7] GenomicFeatures_1.56.0   farver_2.1.2             rmarkdown_2.27          </span></span>
 <span><span class="co">##  [10] GlobalOptions_0.1.2      fs_1.6.4                 BiocIO_1.14.0           </span></span>
 <span><span class="co">##  [13] zlibbioc_1.50.0          ragg_1.3.2               vctrs_0.6.5             </span></span>
 <span><span class="co">##  [16] memoise_2.0.1            Rsamtools_2.20.0         RCurl_1.98-1.14         </span></span>
@@ -470,7 +535,7 @@ relative to the center, for each sample/matrix:</p>
 <span><span class="co">##  [22] progress_1.2.3           curl_5.2.1               SparseArray_1.4.3       </span></span>
 <span><span class="co">##  [25] Formula_1.2-5            sass_0.4.9               bslib_0.7.0             </span></span>
 <span><span class="co">##  [28] htmlwidgets_1.6.4        desc_1.4.3               plyr_1.8.9              </span></span>
-<span><span class="co">##  [31] Gviz_1.48.0              httr2_1.0.1              cachem_1.0.8            </span></span>
+<span><span class="co">##  [31] Gviz_1.48.0              httr2_1.0.1              cachem_1.1.0            </span></span>
 <span><span class="co">##  [34] GenomicAlignments_1.40.0 lifecycle_1.0.4          iterators_1.0.14        </span></span>
 <span><span class="co">##  [37] pkgconfig_2.0.3          Matrix_1.7-0             R6_2.5.1                </span></span>
 <span><span class="co">##  [40] fastmap_1.2.0            GenomeInfoDbData_1.2.12  clue_0.3-65             </span></span>
