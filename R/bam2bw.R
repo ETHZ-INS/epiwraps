@@ -388,7 +388,7 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
   # get reads/fragments from chunk
   bam <- .bam2bwGetReads(bamfile, param=param, si=si, only=only,
                          forceStyle=forceStyle, ...)
-  if(keepStrand != "*") bam <- bam[which(strand(bam)==keepStrand)]
+  if(keepStrand != "*") bam <- bam[IRanges::which(strand(bam)==keepStrand)]
   # compute coverages
   co <- tileRle(coverage(bam), bs=binWidth, method=binSummarization)
   # save library size for later normalization
