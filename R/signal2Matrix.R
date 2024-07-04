@@ -15,7 +15,8 @@
 #' @param extend Number of basepair to extend on either side of the regions. 
 #'   Must be a multiple of `w`. Can also be an integer of length 2, indicating 
 #'   the extension upstream and downstream.
-#' @param w Bin size
+#' @param w Bin width in number of nucleotides. Defaults to a width producing
+#'   200 bins over the whole extended range.
 #' @param scaledBins The number of bins for the scale region (ignored if 
 #'   `type="center"`) 
 #' @param type Either 'center' (plots fixed-size region around the centers of 
@@ -225,7 +226,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
       
     mat <- tryCatch({
         if(is.null(row.names(mat)) || any(is.na(row.names(mat))))
-          row.names(mat) <- row.names(regions)
+          row.names(mat) <- names(regions)
         mat[rnames,]
       }, error=function(e){
         if(verbose) warning(e)
