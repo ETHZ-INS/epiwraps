@@ -148,19 +148,20 @@ plotEnrichedHeatmaps <- function(ml, trim=c(0.02,0.98), assay=1L,
       ml <- lapply(ml, FUN=function(x) t(scale(t(x))))
     }
   }
-  mean_gp <- gpar(col="red")
+  
   if(is.null(row_split)){
     rs <- rep(1L, nrow(ml[[1]]))
   }else{
     rs <- row_split <- as.factor(row_split)
-    if(is(mean_color, "gpar")){
-      mean_gp <- mean_color
-    }else if(length(mean_color)>1){
-      if(is.null(names(mean_color)))
-        stop("When clustering rows, provide the names of the clusters in `mean_color`.")
-      stopifnot(all(levels(row_split) %in% names(mean_color)))
-      mean_gp <- gpar(col=mean_color[levels(row_split)])
-    }
+  }
+  mean_gp <- gpar(col="red")
+  if(is(mean_color, "gpar")){
+    mean_gp <- mean_color
+  }else if(length(mean_color)>1){
+    if(is.null(names(mean_color)))
+      stop("When clustering rows, provide the names of the clusters in `mean_color`.")
+    stopifnot(all(levels(row_split) %in% names(mean_color)))
+    mean_gp <- gpar(col=mean_color[levels(row_split)])
   }
   
   if(is.null(multiScale)) multiScale <- is.list(colors)
