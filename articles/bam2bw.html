@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.94</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.95</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -110,8 +110,8 @@ you’ve go the following single-end reads:</p>
 <code class="sourceCode R"><span><span class="va">bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bam"</span><span class="op">)</span> <span class="co"># temp file name</span></span>
 <span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="va">gr</span>, <span class="va">bam</span>, format<span class="op">=</span><span class="st">"bam"</span><span class="op">)</span></span>
 <span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">indexBam</a></span><span class="op">(</span><span class="va">bam</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##       /tmp/RtmpcQcmk4/file33bb6ce3ddd4.bam </span></span>
-<span><span class="co">## "/tmp/RtmpcQcmk4/file33bb6ce3ddd4.bam.bai"</span></span></code></pre>
+<pre><code><span><span class="co">##       /tmp/RtmpTg58ZB/file195e4318ed18.bam </span></span>
+<span><span class="co">## "/tmp/RtmpTg58ZB/file195e4318ed18.bam.bai"</span></span></code></pre>
 <p>Using these example reads, we can illustrate different ways of
 computing coverages.</p>
 <p>First, we can save coverage at different resolutions, from full
@@ -273,7 +273,7 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">## [8] methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] epiwraps_0.99.94            EnrichedHeatmap_1.34.0     </span></span>
+<span><span class="co">##  [1] epiwraps_0.99.95            EnrichedHeatmap_1.34.0     </span></span>
 <span><span class="co">##  [3] ComplexHeatmap_2.20.0       SummarizedExperiment_1.34.0</span></span>
 <span><span class="co">##  [5] Biobase_2.64.0              GenomicRanges_1.56.1       </span></span>
 <span><span class="co">##  [7] GenomeInfoDb_1.40.1         IRanges_2.38.0             </span></span>
