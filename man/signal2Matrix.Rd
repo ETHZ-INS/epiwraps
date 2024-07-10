@@ -35,7 +35,8 @@ be stiched together (e.g. for plotting exonic signal over transcripts).}
 Must be a multiple of `w`. Can also be an integer of length 2, indicating 
 the extension upstream and downstream.}
 
-\item{w}{Bin size}
+\item{w}{Bin width in number of nucleotides. Defaults to a width producing
+200 bins over the whole extended range.}
 
 \item{scaledBins}{The number of bins for the scale region (ignored if 
 `type="center"`)}
@@ -58,10 +59,10 @@ than speed up the process.}
 
 \item{verbose}{Logical; whether to print processing information}
 
-\item{...}{Passed to \code{\link[EnrichedHeatmap]{as.normalizedMatrix}} when
-reading bigwig files, or to \code{\link{bam2bw}} when reading bam files. 
-For example, this can be used to pass arguments to 
-`normalizeToMatrix` such as `smooth=TRUE`.}
+\item{...}{Passed to \code{\link[EnrichedHeatmap]{normalizeToMatrix}} or
+\code{\link[EnrichedHeatmap]{as.normalizedMatrix}}, or to 
+\code{\link{bam2bw}} when reading bam files. For example, this can be used 
+to pass arguments to `normalizeToMatrix` such as `smooth=TRUE`.}
 }
 \value{
 A list of `normalizeToMatrix` objects

@@ -63,7 +63,9 @@
 #' could result in an error such as 'Image must have at least 1 frame to write a 
 #' bitmap'. In such cases, you might have to degrade to a lower-quality 
 #' rasterization using the additional arguments 
-#' `raster_by_magick=FALSE, raster_device="CairoJPEG"` .
+#' `raster_by_magick=FALSE, raster_device="CairoJPEG"` . Alternatively, the best
+#' solution is to increase the size and memory limits in the `policy.xml` 
+#' configuration of the underlying (non-R) imagemagick library.
 #'
 #' @return A HeatmapList object
 #' @import EnrichedHeatmap
