@@ -375,7 +375,7 @@ views2Matrix <- function(v, padVal=NA_integer_){
 }
 
 .comparableStyles <- function(a,b,stopIfNot=TRUE){
-  if(.getSeqLevelsStyle(a)==.getSeqLevelsStyle(b)) return(TRUE)
+  if(all(.getSeqLevelsStyle(a)==.getSeqLevelsStyle(b))) return(TRUE)
   msg <- paste("It seems your are providing objects for which the seqlevel ",
                "styles do not match.")
   if(stopIfNot) stop(msg)
