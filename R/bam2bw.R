@@ -454,9 +454,8 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
   if(all(shift==0)) return(x)
   if(length(shift)>1){
     w <- strand(x)=="+"
-    x <- sort(c(
-      shift(x[IRanges::which(w)], shift=shift[1], use.names=FALSE),
-      shift(x[IRanges::which(!w)], shift=shift[2], use.names=FALSE)))
+    x[w] <- shift(x[w], shift[1], use.names=FALSE)
+    x[!w] <- shift(x[!w], shift[2], use.names=FALSE)
   }else{
     x <- shift(x, shift=shift, use.names=FALSE)
   }
