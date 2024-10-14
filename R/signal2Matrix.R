@@ -126,7 +126,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
     readRegions <- reduce(sort(c(regions,upstream,downstream)),
                           min.gapwidth=5000L)
   }else{
-    readRegions <- reduce(regions, min.gapwidth=max(extend)+5000L)
+    readRegions <- reduce(regions2, min.gapwidth=max(extend)+5000L)
   }
   
   
