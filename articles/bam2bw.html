@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.98</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.99</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,8 +103,8 @@ you’ve go the following single-end reads:</p>
 <code class="sourceCode R"><span><span class="va">bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bam"</span><span class="op">)</span> <span class="co"># temp file name</span></span>
 <span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="va">gr</span>, <span class="va">bam</span>, format<span class="op">=</span><span class="st">"bam"</span><span class="op">)</span></span>
 <span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">indexBam</a></span><span class="op">(</span><span class="va">bam</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##       /tmp/RtmpX0D7Fz/file343b77875b62.bam </span></span>
-<span><span class="co">## "/tmp/RtmpX0D7Fz/file343b77875b62.bam.bai"</span></span></code></pre>
+<pre><code><span><span class="co">##       /tmp/RtmpA7qS1Z/file339d6d1dfa54.bam </span></span>
+<span><span class="co">## "/tmp/RtmpA7qS1Z/file339d6d1dfa54.bam.bai"</span></span></code></pre>
 <p>Using these example reads, we can illustrate different ways of
 computing coverages.</p>
 <p>First, we can save coverage at different resolutions, from full
@@ -266,7 +266,7 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">## [8] methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] epiwraps_0.99.98            EnrichedHeatmap_1.34.0     </span></span>
+<span><span class="co">##  [1] epiwraps_0.99.99            EnrichedHeatmap_1.34.0     </span></span>
 <span><span class="co">##  [3] ComplexHeatmap_2.20.0       SummarizedExperiment_1.34.0</span></span>
 <span><span class="co">##  [5] Biobase_2.64.0              GenomicRanges_1.56.2       </span></span>
 <span><span class="co">##  [7] GenomeInfoDb_1.40.1         IRanges_2.38.1             </span></span>
@@ -275,7 +275,7 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">## [13] BiocStyle_2.32.1           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##   [1] RColorBrewer_1.1-3       rstudioapi_0.16.0        jsonlite_1.8.9          </span></span>
+<span><span class="co">##   [1] RColorBrewer_1.1-3       rstudioapi_0.17.1        jsonlite_1.8.9          </span></span>
 <span><span class="co">##   [4] shape_1.4.6.1            magrittr_2.0.3           GenomicFeatures_1.56.0  </span></span>
 <span><span class="co">##   [7] rmarkdown_2.28           GlobalOptions_0.1.2      fs_1.6.4                </span></span>
 <span><span class="co">##  [10] BiocIO_1.14.0            zlibbioc_1.50.0          ragg_1.3.3              </span></span>
@@ -307,7 +307,7 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">##  [88] rtracklayer_1.64.0       bit_4.5.0                biovizBase_1.52.0       </span></span>
 <span><span class="co">##  [91] tidyselect_1.2.1         locfit_1.5-9.10          pbapply_1.7-2           </span></span>
 <span><span class="co">##  [94] Biostrings_2.72.1        knitr_1.48               gridExtra_2.3           </span></span>
-<span><span class="co">##  [97] bookdown_0.40            ProtGenerics_1.36.0      xfun_0.48               </span></span>
+<span><span class="co">##  [97] bookdown_0.41            ProtGenerics_1.36.0      xfun_0.48               </span></span>
 <span><span class="co">## [100] stringi_1.8.4            UCSC.utils_1.0.0         lazyeval_0.2.2          </span></span>
 <span><span class="co">## [103] yaml_2.3.10              evaluate_1.0.1           codetools_0.2-20        </span></span>
 <span><span class="co">## [106] interp_1.1-6             GenomicFiles_1.40.0      tibble_3.2.1            </span></span>
