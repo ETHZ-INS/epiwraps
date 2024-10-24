@@ -30,7 +30,8 @@
 #' number of base pairs by which to extent on either side. If `extend`<=1, this
 #' will be interpreted as a fraction of the plotted region.
 #' @param aggregation Method for aggregation data tracks, one of: 'mean' 
-#' (default), 'median', 'max', 'overlay' or 'heatmap'.
+#' (default), 'median', 'max', 'overlay', 'heatmap', or 'heatmap+mean'. The 
+#' latter will create a mean plot of type `type` followed by a heatmap.
 #' @param transcripts Whether to show transcripts (reguires `ensdb`) as "full",
 #' "collapsed" (default), "coding" (only coding transcripts) or "none".
 #' Alternatively, can be a custom \code{\link[Gviz]{GeneRegionTrack}} object.
@@ -73,7 +74,8 @@
 plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue",
                              type="histogram",  genomeAxis=0.3, extend=0.15,
                              aggregation=c("mean","median", "sum", "max", 
-                                           "min", "heatmap", "overlay"),
+                                           "min", "heatmap", "overlay",
+                                           "heatmap+mean"),
                              transcripts=c("collapsed","full","coding","none"), 
                              genes.params=list(col.line="grey40", col=NULL,
                                                fill="#000000"),
@@ -89,7 +91,7 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
   if(!is.function(aggregation)) aggregation <- match.arg(aggregation)
   if(!is(transcripts, "GeneRegionTrack"))
     transcripts <- match.arg(transcripts)
-  if(!is.null(ensdb)) stopifnot(is(ensdb,"EnsDb"))
+  if(!is.null(ensdb)) stopifnot(is(ensdb,"EnsDb") || is(ensdb,"TxDb"))
   
   # region of interest
   region <- .parseRegion(region, ensdb)
@@ -105,7 +107,7 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
   if(length(files)>0){
     if(any(lengths(lapply(fm,unique))!=1))
       stop("Cannot aggregate files of different formats!")
-
+    
     # creating names if not specified
     if(is.null(names(files))){
       if(is.character(files)){
@@ -132,8 +134,8 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
   # converting RleLists to temporary bigwigs
   if(length(w <- which(fm=="cov"))>0 && 
      any(sapply(files[w], FUN=object.size)>10^6))
-      message("Writing coverage objects to temporary bigwigs ",
-              "(this might be suboptimal for large objects)...")
+    message("Writing coverage objects to temporary bigwigs ",
+            "(this might be suboptimal for large objects)...")
   for(i in w){
     stopifnot(!is.list(files[[i]]))
     fn <- tempfile("cov",fileext=".bw")
@@ -147,9 +149,9 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
   if(!is.null(ensdb) && !is(transcripts, "GeneRegionTrack") && 
      transcripts!="none"){
     ggr <- getGeneRegionTrackForGviz(ensdb, chromosome=region[[1]],
-             start=region2[[2]], end=region2[[3]],
-             featureIs=ifelse(transcripts=="collapsed",
-                              "gene_biotype","tx_biotype") )
+                                     start=region2[[2]], end=region2[[3]],
+                                     featureIs=ifelse(transcripts=="collapsed",
+                                                      "gene_biotype","tx_biotype") )
     if(is.null(genes.params$transcriptAnnotation))
       genes.params$transcriptAnnotation <- ifelse(transcripts=="collapsed",
                                                   "symbol","transcript")
@@ -229,6 +231,19 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
         }
       }
     }
+    if(aggregation=="heatmap+mean"){
+      gr2 <- gr
+      mcols(gr2) <- NULL
+      score(gr2) <- rowMeans(as.matrix(mcols(gr)))
+      tp2 <- tp
+      tp2$range <- gr2
+      tp$type <- "heatmap"
+      tp$range <- gr
+      out <- list()
+      out[[paste0(subf, "\nmean")]] <- do.call(DataTrack, tp2)
+      out[[subf]] <- do.call(DataTrack, tp)
+      return(out)
+    }
     if(aggregation=="heatmap"){
       tp$type <- "heatmap"
       tp$range <- gr
@@ -264,6 +279,9 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
       ga <- Gviz::GenomeAxisTrack()
     }
   }
+  tmns <- as.character(unlist(lapply(tracks,names)))
+  tracks <- unlist(tracks, recursive = FALSE, use.names = FALSE)
+  names(tracks) <- tmns
   
   plotTracks(c(tracks, extraTracks, gt, ga), 
              chromosome=region2[[1]], from=region2[[2]], to=region2[[3]], 
@@ -328,16 +346,20 @@ signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
     if(is.null(ensdb))
       stop("`ensdb` is required when defining the region with a gene name.")
     gname <- region
-    region <- reduce(genes(ensdb, filter=SymbolFilter(gname)))
-    if(length(region)==0) 
-      region <- reduce(genes(ensdb, filter=GeneIdFilter(gname)))
-    if(length(region)==0) 
-      region <- reduce(genes(ensdb, filter=TxIdFilter(gname)))
-    if(length(region)==0){
-      region <- reduce(genes(ensdb, filter=SymbolFilter(gname,"startsWith")))
-      if(length(region)>1)
-        stop("Gene not found with this exact name, and mutliple genes match ",
-             "this string.")
+    if(is(ensdb, "EnsDb")){
+      region <- reduce(genes(ensdb, filter=SymbolFilter(gname)))
+      if(length(region)==0) 
+        region <- reduce(genes(ensdb, filter=GeneIdFilter(gname)))
+      if(length(region)==0) 
+        region <- reduce(genes(ensdb, filter=TxIdFilter(gname)))
+      if(length(region)==0){
+        region <- reduce(genes(ensdb, filter=SymbolFilter(gname,"startsWith")))
+        if(length(region)>1)
+          stop("Gene not found with this exact name, and mutliple genes match ",
+               "this string.")
+      }
+    }else{
+      region <- reduce(genes(ensdb, filter=list(gene_id=gname)))
     }
     if(length(region)==0) stop("Gene/transcript not found!")
     if(length(region)>1)

@@ -12,7 +12,8 @@ plotSignalTracks(
   type = "histogram",
   genomeAxis = 0.3,
   extend = 0.15,
-  aggregation = c("mean", "median", "sum", "max", "min", "heatmap", "overlay"),
+  aggregation = c("mean", "median", "sum", "max", "min", "heatmap", "overlay",
+    "heatmap+mean"),
   transcripts = c("collapsed", "full", "coding", "none"),
   genes.params = list(col.line = "grey40", col = NULL, fill = "#000000"),
   align.params = list(color = NULL),
@@ -62,7 +63,8 @@ number of base pairs by which to extent on either side. If `extend`<=1, this
 will be interpreted as a fraction of the plotted region.}
 
 \item{aggregation}{Method for aggregation data tracks, one of: 'mean' 
-(default), 'median', 'max', 'overlay' or 'heatmap'.}
+(default), 'median', 'max', 'overlay', 'heatmap', or 'heatmap+mean'. The 
+latter will create a mean plot of type `type` followed by a heatmap.}
 
 \item{transcripts}{Whether to show transcripts (reguires `ensdb`) as "full",
 "collapsed" (default), "coding" (only coding transcripts) or "none".
