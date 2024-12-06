@@ -201,8 +201,8 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
       
       # since as.normalizedMatrix doesn't have all the args of normalizeToMatrix
       args <- list(...)
-      def_args <- list(background=NA, smooth_fun=default_smooth_fun,
-                       keep=c(0,1), limit=NULL)
+      def_args <- list(background=NA, keep=c(0,1), limit=NULL,
+                       smooth_fun=EnrichedHeatmap::default_smooth_fun)
       for(f in names(def_args)){
         if(is.null(args[[f]])) args[[f]] <- def_args[[f]]
       }
@@ -227,9 +227,10 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
                   smooth_fun=args$smooth_fun, background=args$background, 
                   k_upstream=extend[[1]]/w, k_downstream=extend[[2]]/w )
       }
-      if(!is.null(args$limit))
+      if(!is.null(args$limit)){
         mat[mat<min(args$limit)] <- min(args$limit)
-      mat[mat>max(args$limit)] <- max(args$limit)
+        mat[mat>max(args$limit)] <- max(args$limit)
+      }
     }
 
     rm(co)
