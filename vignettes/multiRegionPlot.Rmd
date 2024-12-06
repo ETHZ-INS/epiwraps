@@ -342,30 +342,37 @@ head(exampleDNAme)
 As is typical of DNAme data, the object is a GRanges object (or more 
 specifically a GPos object, since all ranges have a width of 1 nucleotide) with,
 in the score column, the percentage of DNA methylation. Let's see what happens
-if we plot a heatmap of this signal, with and without smoothing (we use 
-`type="scaled"` to scale the gene bodies to the same size, since these can have 
-very different sizes) :
+if we plot a heatmap of this signal, with and without smoothing.
 
 ```{r}
 o1 <- signal2Matrix(list(noSmooth=exampleDNAme), geneBodies, type="scaled")
 o2 <- signal2Matrix(list(smoothed=exampleDNAme), geneBodies, type="scaled", 
-                    smooth=TRUE)
-o <- cbind(o1,o2)
+                    smooth=TRUE, limit=c(0,100)) # recommended for DNAme
+# we add a third one to visualize the CpGs:
+o3 <- signal2Matrix(list("noSmooth only CpGs"=exampleDNAme), geneBodies, type="scaled", background=NA)
+o <- cbind(o1,o2,o3)
 plotEnrichedHeatmaps(o, scale_title="%\nmethylation", axis_name=c("TSS","TES"))
 ```
 
-Both heatmaps show a very clear absence of DNA methylation at the promoter of 
-these genes (upstream of the TSS) an predominantly methylated gene bodies. 
+Here we use `type="scaled"` to scale the gene bodies to the same size, since 
+these can have very different sizes. The first heatmap is the default (no 
+smoothing), while the center one uses smoothing (note that we cap values from 0 
+to 100 to avoid smoothing artefacts). The third doesn't use smoothing, but only
+display values for bins that contain a CpG.
+
+All heatmaps show a very clear absence of DNA methylation at the promoter of 
+these genes (upstream of the TSS) and predominantly methylated gene bodies. 
 However they disagree substantially on the methylation levels upstream the 
 promoter and downstream the transcription end sites (TES). This is because of 
 the density of these regions in (covered) CpG nucleotides. Since most genes are
-rather long, most of the bins in the heatmap contain a CpG, leading to an actual
-methylation signal. In the flanking regions, however, this is not necessarily 
-the case, and the non-smoothed heatmap does not distinguish bins that are 
-unmethylated form bins for which there is no information. Instead, the smoothed
-heatmap on the right uses neighborhing bins to estimate the methylation status 
-of each bin, effectively filling out the gaps. In doing so it provides the 
-truthful representation, i.e. that the regions downstream of the genes and 
+rather long, most of the bins in the gene body heatmap contain a CpG, leading to
+an actual methylation signal. In the flanking regions, however, this is not 
+necessarily the case, and the left heatmap does not distinguish bins that are 
+unmethylated form bins for which there is no information. On the right heatmap,
+we can see that regions downstream the TES are CpG-depleted. Instead, the 
+smoothed heatmap (center) uses neighborhing bins to estimate the methylation 
+status of each bin, effectively filling out the gaps. In doing so it provides 
+the truthful representation, i.e. that the regions downstream of the genes and 
 upstream of the promoters are, most of the time, as methylated as the gene 
 bodies.
 
