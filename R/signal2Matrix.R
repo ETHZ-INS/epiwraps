@@ -199,6 +199,13 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
       
       ####### BIGWIG OR COVERAGE INPUT
       
+      # since as.normalizedMatrix doesn't have all the args of normalizeToMatrix
+      args <- list(...)
+      def_args <- list(background=NA, smooth_fun=default_smooth_fun,
+                       keep=c(0,1), limit=NULL, flip_upstream=FALSE)
+      for(f in names(def_args)){
+        if(is.null(args[[f]])) args[[f]] <- def_args[[f]]
+      }
       if(type=="scaled"){
         upstream <- .getBinSignalFromBW(co, upstream, w=w, 
                                         method=binMethod, verbose=verbose)
@@ -209,15 +216,22 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
         mat <- cbind(upstream, mat, downstream)
         row.names(mat) <- names(regions2)
         mat <- EnrichedHeatmap::as.normalizedMatrix(unclass(mat), extend=extend,
-                  signal_name=filename, k_target=scaledBins, ...,
+                  signal_name=filename, k_target=scaledBins, keep=args$keep,
+                  smooth_fun=args$smooth_fun, flip_upstream=args$flip_upstream,
+                  limit=args$limit, background=args$background, 
                   k_upstream=extend[[1]]/w, k_downstream=extend[[2]]/w )
       }else{
         mat <- .getBinSignalFromBW(co, regions2, w=w, 
                                    method=binMethod, verbose=verbose)
         mat <- EnrichedHeatmap::as.normalizedMatrix(unclass(mat), extend=extend,
-                  signal_name=filename, k_target=0L, ...,
+                  signal_name=filename, k_target=0L, keep=args$keep,
+                  smooth_fun=args$smooth_fun, flip_upstream=args$flip_upstream,
+                  limit=args$limit, background=args$background, 
                   k_upstream=extend[[1]]/w, k_downstream=extend[[2]]/w )
       }
+      if(!is.null(args$limit))
+        mat[mat<min(args$limit)] <- min(args$limit)
+      mat[mat>max(args$limit)] <- max(args$limit)
     }
 
     rm(co)
