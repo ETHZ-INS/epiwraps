@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.104</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.105</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,9 +82,8 @@
 <p>This is exemplified in the following figure:</p>
 <p><img src="articles/example_bigwigs_hm.png" width="700"></p>
 <p>All columns are based on the same bam file, but select and/or summarize fragments differently. For example, the heatmap of insertion sites of nucleosome-free fragments was based on a bigwig file generated using:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/bam2bw.html">bam2bw</a></span><span class="op">(</span><span class="st">"aligned.bam"</span>, output_bw<span class="op">=</span><span class="st">"NF_cuts.bw"</span>, paired<span class="op">=</span><span class="cn">TRUE</span>, <span class="va">`shift=c(4L,-5L), </span></span>
-<span><span class="va">       binWidth=1L, minFragLength=25, maxFragLength=120, type="ends"`</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">bam2bw</span>(<span class="st">"aligned.bam"</span>, <span class="at">output_bw=</span><span class="st">"NF_cuts.bw"</span>, <span class="at">paired=</span><span class="cn">TRUE</span>, <span class="at">trim=</span><span class="dv">4</span><span class="dt">L</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>       <span class="at">binWidth=</span><span class="dv">1</span><span class="dt">L</span>, <span class="at">minFragLength=</span><span class="dv">25</span>, <span class="at">maxFragLength=</span><span class="dv">120</span>, <span class="at">type=</span><span class="st">"ends"`</span><span class="at">)</span></span></code></pre></div>
 <p>More information about bigwig file generation is available in the <a href="https://ethz-ins.github.io/epiwraps/articles/bam2bw.html">bam2bw vignette</a>.</p>
 <p>For information on the extraction of signal from such files (as well as other format) and plotting of such heatmaps, see the <a href="https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html">vignette to this effect</a>.</p>
 </div>
