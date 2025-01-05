@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.103</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.104</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,6 +51,7 @@
 <span>  bgbam <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  paired <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  binWidth <span class="op">=</span> <span class="fl">20L</span>,</span>
+<span>  trim <span class="op">=</span> <span class="fl">0L</span>,</span>
 <span>  extend <span class="op">=</span> <span class="fl">0L</span>,</span>
 <span>  scaling <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  shift <span class="op">=</span> <span class="fl">0L</span>,</span>
@@ -106,6 +107,13 @@ set to FALSE.</p></dd>
 resolution, but larger file size.</p></dd>
 
 
+<dt id="arg-trim">trim<a class="anchor" aria-label="anchor" href="#arg-trim"></a></dt>
+<dd><p>The amount by which to trim reads or fragments. Can either be a
+single integer, which will be removed at both ends of the fragment, or an
+integer of length=2 indicating the amount to trim at the beginning and end
+of the read/fragments. This is applied before `type` and `extension`.</p></dd>
+
+
 <dt id="arg-extend">extend<a class="anchor" aria-label="anchor" href="#arg-extend"></a></dt>
 <dd><p>The amount *by* which to extend single-end reads (e.g.
 fragment length minus read length). If `paired=TRUE` and `type` is either
@@ -124,8 +132,7 @@ main signal.</p></dd>
 <dt id="arg-shift">shift<a class="anchor" aria-label="anchor" href="#arg-shift"></a></dt>
 <dd><p>Shift (from 3' to 5') by which reads/fragments will be shifted.
 If `shift` is an integer vector of length 2, the first value will represent
-the shift for the positive strand, and the second for the negative strand.
-For ATACseq data, one normally uses `shift=c(4L,-5L)`.</p></dd>
+the shift for the positive strand, and the second for the negative strand.</p></dd>
 
 
 <dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
@@ -248,7 +255,14 @@ either "max" (default), "min" or "mean".</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>* For single-end ChIPseq data, extend reads to the expected fragment size
-  using the `extend` argument.
+  using the `extend` argument (i.e. setting extend to the read length plus
+  the mean expected fragment size).
+* For ATAC-seq data, when interested in high-resolution profiling of the Tn5
+  insertion sites, it is customary to shift reads based on their strand, i.e.
+  using `shift=c(4L,-5L)` and `type="start"`. With paired-end data, we
+  recommend instead using both ends with `type="ends"`. In this case, the
+  shifting should occur from both ends inwards, which is best accomplished
+  with `trim=4L` (rather than using the `shift` argument).
 * The implementation involves reading the reads before processing, which can
  be quite memory-hungry. To avoid this the files are read by chunks (composed
   of chromosomes of balanced sizes), controlled by the `splitByChr` argument.
