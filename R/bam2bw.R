@@ -9,6 +9,10 @@
 #'  set to FALSE.
 #' @param binWidth The window size. A lower value (min 1) means a higher 
 #'  resolution, but larger file size.
+#' @param trim The amount by which to trim reads or fragments. Can either be a 
+#'   single integer, which will be removed at both ends of the fragment, or an
+#'   integer of length=2 indicating the amount to trim at the beginning and end 
+#'   of the read/fragments. This is applied before `type` and `extension`.
 #' @param extend The amount *by* which to extend single-end reads (e.g. 
 #'   fragment length minus read length). If `paired=TRUE` and `type` is either
 #'   'ends' or 'center', then the extension will be applied after taking the 
@@ -30,7 +34,6 @@
 #' @param shift Shift (from 3' to 5') by which reads/fragments will be shifted.
 #'   If `shift` is an integer vector of length 2, the first value will represent
 #'   the shift for the positive strand, and the second for the negative strand.
-#'   For ATACseq data, one normally uses `shift=c(4L,-5L)`.
 #' @param includeDuplicates Logical, whether to include reads flagged as 
 #'   duplicates.
 #' @param includeSecondary Logical; whether to include secondary alignments
@@ -77,7 +80,14 @@
 #' 
 #' @details 
 #' * For single-end ChIPseq data, extend reads to the expected fragment size 
-#'   using the `extend` argument.
+#'   using the `extend` argument (i.e. setting extend to the read length plus 
+#'   the mean expected fragment size).
+#' * For ATAC-seq data, when interested in high-resolution profiling of the Tn5
+#'   insertion sites, it is customary to shift reads based on their strand, i.e.
+#'   using `shift=c(4L,-5L)` and `type="start"`. With paired-end data, we 
+#'   recommend instead using both ends with `type="ends"`. In this case, the 
+#'   shifting should occur from both ends inwards, which is best accomplished 
+#'   with `trim=4L` (rather than using the `shift` argument).
 #' * The implementation involves reading the reads before processing, which can
 #'  be quite memory-hungry. To avoid this the files are read by chunks (composed
 #'   of chromosomes of balanced sizes), controlled by the `splitByChr` argument.
@@ -107,7 +117,7 @@
 #' # create bigwig
 #' bam2bw(bam, "output.bw")
 bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
-                   binWidth=20L, extend=0L, scaling=TRUE, shift=0L,
+                   binWidth=20L, trim=0L, extend=0L, scaling=TRUE, shift=0L,
                    type=c("full","center","start","end","ends"),
                    compType=c("log2ratio", "subtract", "log10ppois", "log10FE"),
                    strand=c("*","+","-"), strandMode=1, log1p=FALSE, exclude=NULL,
@@ -133,6 +143,8 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
   shift <- as.integer(shift)
   stopifnot(length(shift) %in% 1:2)
   stopifnot(extend>=0L)
+  trim <- as.integer(trim)
+  stopifnot(length(trim) %in% 1:2)
   stopifnot(length(binWidth)==1 && binWidth>=1)
   paired <- .parsePairedArg(bamfile, paired, verbose=verbose)
   if(paired && !(type %in% c("center","ends")) && verbose)
@@ -159,7 +171,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
   
   # obtain coverage (and total count)
   res <- pblapply(names(param), FUN=function(x){
-    .bam2bwReadChunk(bamfile, param=param[[x]], binWidth=binWidth,
+    .bam2bwReadChunk(bamfile, param=param[[x]], binWidth=binWidth, trim=trim,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
                      forceStyle=forceSeqlevelsStyle, exclude=exclude,
@@ -182,7 +194,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
   
   # same as above
   bg <- pblapply(names(param), FUN=function(x){
-    .bam2bwReadChunk(bgbam, param=param[[x]], binWidth=binWidth,
+    .bam2bwReadChunk(bgbam, param=param[[x]], binWidth=binWidth, trim=trim,
                      paired=paired, type=type, extend=extend, shift=shift, 
                      minFragL=minFragLength, maxFragL=maxFragLength, 
                      forceStyle=forceSeqlevelsStyle, exclude=exclude,
@@ -401,8 +413,9 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
 
 # reads reads from bam file.
 .bam2bwGetReads <- function(bamfile, paired, param, type="full", extend=0L,
-                            shift=0L, minFragL=0, maxFragL=Inf, forceStyle=NULL,
-                            si=NULL, only=NULL, exclude=NULL, strandMode=0){
+                            trim=c(0L,0L), shift=0L, minFragL=0, maxFragL=Inf,
+                            forceStyle=NULL, si=NULL, only=NULL, exclude=NULL,
+                            strandMode=0){
   if(paired){
     bam <- readGAlignmentPairs(bamfile, param=param, strandMode=strandMode)
     bam <- as(bam[isProperPair(bam)], "GRanges")
@@ -411,7 +424,9 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
   }else{
     bam <- as(readGAlignments(bamfile, param=param), "GRanges")
     ls <- length(bam)
-    if(type %in% c("full","center") && extend!=0L)
+  }
+  bam <- .doTrim(bam, trim=trim)
+  if(!paired && type %in% c("full","center") && extend!=0L){
       bam <- suppressWarnings(trim(resize(bam, width(bam)+as.integer(extend),
                                           use.names=FALSE)))
   }
@@ -458,6 +473,19 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
     x[!w] <- shift(x[!w], shift[2], use.names=FALSE)
   }else{
     x <- shift(x, shift=shift, use.names=FALSE)
+  }
+  x
+}
+
+.doTrim <- function(x, trim=0L){
+  stopifnot(is.numeric(trim) && length(trim) %in% 1:2)
+  if(length(trim)==1) trim <- rep(trim,2)
+  trim <- as.integer(trim)
+  if(unique(trim)==1 & all(trim>0L)){
+    x <- resize(x, fix="center", width=width(x)-(2L*trim[1]))
+  }else{
+    if(trim[1]>0L) x <- resize(x, fix="end", width=width(x)-trim[1])
+    if(trim[2]>0L) x <- resize(x, fix="start", width=width(x)-trim[2])
   }
   x
 }
