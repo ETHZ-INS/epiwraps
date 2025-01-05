@@ -43,8 +43,7 @@ fragment length minus read length). If `paired=TRUE` and `type` is either
 
 \item{shift}{Shift (from 3' to 5') by which reads/fragments will be shifted.
 If `shift` is an integer vector of length 2, the first value will represent
-the shift for the positive strand, and the second for the negative strand.
-For ATACseq data, one normally uses `shift=c(4L,-5L)`.}
+the shift for the positive strand, and the second for the negative strand.}
 
 \item{type}{Type of the coverage to compile. Either full (full read/fragment),
 start (count read/fragment start locations), end, center, or 'ends' (both

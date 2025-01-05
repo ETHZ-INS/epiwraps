@@ -10,6 +10,7 @@ bam2bw(
   bgbam = NULL,
   paired = NULL,
   binWidth = 20L,
+  trim = 0L,
   extend = 0L,
   scaling = TRUE,
   shift = 0L,
@@ -51,6 +52,11 @@ set to FALSE.}
 \item{binWidth}{The window size. A lower value (min 1) means a higher 
 resolution, but larger file size.}
 
+\item{trim}{The amount by which to trim reads or fragments. Can either be a 
+single integer, which will be removed at both ends of the fragment, or an
+integer of length=2 indicating the amount to trim at the beginning and end 
+of the read/fragments. This is applied before `type` and `extension`.}
+
 \item{extend}{The amount *by* which to extend single-end reads (e.g. 
 fragment length minus read length). If `paired=TRUE` and `type` is either
 'ends' or 'center', then the extension will be applied after taking the 
@@ -64,8 +70,7 @@ main signal.}
 
 \item{shift}{Shift (from 3' to 5') by which reads/fragments will be shifted.
 If `shift` is an integer vector of length 2, the first value will represent
-the shift for the positive strand, and the second for the negative strand.
-For ATACseq data, one normally uses `shift=c(4L,-5L)`.}
+the shift for the positive strand, and the second for the negative strand.}
 
 \item{type}{Type of the coverage to compile. Either full (full read/fragment),
 start (count read/fragment start locations), end, center, or 'ends' (both
@@ -146,7 +151,14 @@ bam2bw: create a coverage bigwig file from an alignment bam file.
 }
 \details{
 * For single-end ChIPseq data, extend reads to the expected fragment size 
-  using the `extend` argument.
+  using the `extend` argument (i.e. setting extend to the read length plus 
+  the mean expected fragment size).
+* For ATAC-seq data, when interested in high-resolution profiling of the Tn5
+  insertion sites, it is customary to shift reads based on their strand, i.e.
+  using `shift=c(4L,-5L)` and `type="start"`. With paired-end data, we 
+  recommend instead using both ends with `type="ends"`. In this case, the 
+  shifting should occur from both ends inwards, which is best accomplished 
+  with `trim=4L` (rather than using the `shift` argument).
 * The implementation involves reading the reads before processing, which can
  be quite memory-hungry. To avoid this the files are read by chunks (composed
   of chromosomes of balanced sizes), controlled by the `splitByChr` argument.

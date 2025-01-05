@@ -15,7 +15,8 @@ plotSignalTracks(
   aggregation = c("mean", "median", "sum", "max", "min", "heatmap", "overlay",
     "heatmap+mean"),
   transcripts = c("collapsed", "full", "coding", "none"),
-  genes.params = list(col.line = "grey40", col = NULL, fill = "#000000"),
+  genes.params = list(col.line = "grey40", col = NULL, fill = "#000000", rotation.title =
+    0),
   align.params = list(color = NULL),
   tracks.params = list(),
   extraTracks = list(),
