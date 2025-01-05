@@ -47,7 +47,7 @@ fragments differently. For example, the heatmap of insertion sites of
 nucleosome-free fragments was based on a bigwig file generated using:
 
 ```r
-bam2bw("aligned.bam", output_bw="NF_cuts.bw", paired=TRUE, `shift=c(4L,-5L), 
+bam2bw("aligned.bam", output_bw="NF_cuts.bw", paired=TRUE, trim=4L,
        binWidth=1L, minFragLength=25, maxFragLength=120, type="ends"`)
 ```
 
