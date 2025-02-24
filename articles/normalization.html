@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.105</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.106</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -157,17 +157,14 @@ the original scale.</li>
 <p>The normalization factors can be computed using
 <code><a href="../reference/getNormFactors.html">getNormFactors()</a></code> :</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ethz-ins.github.io/epiwraps/">epiwraps</a></span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Error in get(paste0(generic, ".", class), envir = get_method_env()) : </span></span>
-<span><span class="co">##   object 'type_sum.accel' not found</span></span></code></pre>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># we fetch the path to the example bigwig file:</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ethz-ins.github.io/epiwraps/">epiwraps</a></span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># we fetch the path to the example bigwig file:</span></span>
 <span><span class="va">bwf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_atac.bw"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span>
 <span><span class="co"># we'll just double it to create a fake multi-sample dataset:</span></span>
 <span><span class="va">bwfiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>atac1<span class="op">=</span><span class="va">bwf</span>, atac2<span class="op">=</span><span class="va">bwf</span><span class="op">)</span></span>
 <span><span class="va">nf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getNormFactors.html">getNormFactors</a></span><span class="op">(</span><span class="va">bwfiles</span>, method<span class="op">=</span><span class="st">"background"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Comparing coverage in random regions...</span></span></code></pre>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nf</span></span></code></pre></div>
 <pre><code><span><span class="co">## atac1 atac2 </span></span>
 <span><span class="co">##     1     1</span></span></code></pre>
@@ -175,7 +172,7 @@ the original scale.</li>
 1.</p>
 <p>Some normalization methods addtionally require peaks as input,
 e.g.:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">peaks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_peaks.bed"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span>
 <span><span class="va">nf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getNormFactors.html">getNormFactors</a></span><span class="op">(</span><span class="va">bwfiles</span>, peaks <span class="op">=</span> <span class="va">peaks</span>, method<span class="op">=</span><span class="st">"MAnorm"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Comparing coverage in peaks...</span></span></code></pre>
@@ -183,11 +180,11 @@ e.g.:</p>
 each sample/experiment).</p>
 <p>Once computed, the normalization factors can be applied to an
 <code>EnrichmentSE</code> object:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="va">bwfiles</span>, <span class="va">peaks</span>, extend<span class="op">=</span><span class="fl">1000L</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span></span>
 <span><span class="co">## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span></span></code></pre>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/renormalizeSignalMatrices.html">renormalizeSignalMatrices</a></span><span class="op">(</span><span class="va">sm</span>, scaleFactors<span class="op">=</span><span class="va">nf</span><span class="op">)</span></span>
 <span><span class="va">sm</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: EnrichmentSE </span></span>
@@ -234,12 +231,12 @@ the same across tracks/samples.</li>
 </ul>
 <p>To illustrate these, we will first introduce some difference between
 our two tracks using arbitrary factors:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/renormalizeSignalMatrices.html">renormalizeSignalMatrices</a></span><span class="op">(</span><span class="va">sm</span>, scaleFactors<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">4</span><span class="op">)</span>, toAssay<span class="op">=</span><span class="st">"test"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">sm</span>, assay <span class="op">=</span> <span class="st">"test"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="normalization_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
 <p>Then we can normalize:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/renormalizeSignalMatrices.html">renormalizeSignalMatrices</a></span><span class="op">(</span><span class="va">sm</span>, method<span class="op">=</span><span class="st">"top"</span>, fromAssay<span class="op">=</span><span class="st">"test"</span><span class="op">)</span></span>
 <span><span class="co"># again this adds an assay to the object, which will be automatically used when plotting:</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">sm</span><span class="op">)</span></span></code></pre></div>
@@ -252,15 +249,15 @@ tracks/samples.</p>
 <div class="section level2">
 <h2 class="unnumbered" id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.4.2 (2024-10-31)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 22.04.5 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.1 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
-<span><span class="co">## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0</span></span>
+<span><span class="co">## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## locale:</span></span>
 <span><span class="co">##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
@@ -276,60 +273,60 @@ tracks/samples.</p>
 <span><span class="co">## [8] methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] epiwraps_0.99.105           EnrichedHeatmap_1.36.0     </span></span>
+<span><span class="co">##  [1] epiwraps_0.99.106           EnrichedHeatmap_1.36.0     </span></span>
 <span><span class="co">##  [3] ComplexHeatmap_2.22.0       SummarizedExperiment_1.36.0</span></span>
 <span><span class="co">##  [5] Biobase_2.66.0              GenomicRanges_1.58.0       </span></span>
-<span><span class="co">##  [7] GenomeInfoDb_1.42.1         IRanges_2.40.1             </span></span>
+<span><span class="co">##  [7] GenomeInfoDb_1.42.3         IRanges_2.40.1             </span></span>
 <span><span class="co">##  [9] S4Vectors_0.44.0            BiocGenerics_0.52.0        </span></span>
-<span><span class="co">## [11] MatrixGenerics_1.18.0       matrixStats_1.4.1          </span></span>
+<span><span class="co">## [11] MatrixGenerics_1.18.1       matrixStats_1.5.0          </span></span>
 <span><span class="co">## [13] BiocStyle_2.34.0           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##   [1] RColorBrewer_1.1-3       rstudioapi_0.17.1        jsonlite_1.8.9          </span></span>
+<span><span class="co">##   [1] RColorBrewer_1.1-3       rstudioapi_0.17.1        jsonlite_1.9.0          </span></span>
 <span><span class="co">##   [4] shape_1.4.6.1            magrittr_2.0.3           magick_2.8.5            </span></span>
 <span><span class="co">##   [7] GenomicFeatures_1.58.0   rmarkdown_2.29           GlobalOptions_0.1.2     </span></span>
 <span><span class="co">##  [10] fs_1.6.5                 BiocIO_1.16.0            zlibbioc_1.52.0         </span></span>
 <span><span class="co">##  [13] ragg_1.3.3               vctrs_0.6.5              memoise_2.0.1           </span></span>
 <span><span class="co">##  [16] Rsamtools_2.22.0         RCurl_1.98-1.16          base64enc_0.1-3         </span></span>
 <span><span class="co">##  [19] htmltools_0.5.8.1        S4Arrays_1.6.0           progress_1.2.3          </span></span>
-<span><span class="co">##  [22] curl_6.0.1               SparseArray_1.6.0        Formula_1.2-5           </span></span>
-<span><span class="co">##  [25] sass_0.4.9               bslib_0.8.0              htmlwidgets_1.6.4       </span></span>
+<span><span class="co">##  [22] curl_6.2.1               SparseArray_1.6.1        Formula_1.2-5           </span></span>
+<span><span class="co">##  [25] sass_0.4.9               bslib_0.9.0              htmlwidgets_1.6.4       </span></span>
 <span><span class="co">##  [28] desc_1.4.3               plyr_1.8.9               Gviz_1.50.0             </span></span>
-<span><span class="co">##  [31] httr2_1.0.7              cachem_1.1.0             GenomicAlignments_1.42.0</span></span>
+<span><span class="co">##  [31] httr2_1.1.0              cachem_1.1.0             GenomicAlignments_1.42.0</span></span>
 <span><span class="co">##  [34] lifecycle_1.0.4          iterators_1.0.14         pkgconfig_2.0.3         </span></span>
-<span><span class="co">##  [37] Matrix_1.7-1             R6_2.5.1                 fastmap_1.2.0           </span></span>
+<span><span class="co">##  [37] Matrix_1.7-1             R6_2.6.1                 fastmap_1.2.0           </span></span>
 <span><span class="co">##  [40] GenomeInfoDbData_1.2.13  clue_0.3-66              digest_0.6.37           </span></span>
-<span><span class="co">##  [43] colorspace_2.1-1         AnnotationDbi_1.68.0     textshaping_0.4.1       </span></span>
-<span><span class="co">##  [46] Hmisc_5.2-1              RSQLite_2.3.9            filelock_1.0.3          </span></span>
+<span><span class="co">##  [43] colorspace_2.1-1         AnnotationDbi_1.68.0     textshaping_1.0.0       </span></span>
+<span><span class="co">##  [46] Hmisc_5.2-2              RSQLite_2.3.9            filelock_1.0.3          </span></span>
 <span><span class="co">##  [49] httr_1.4.7               abind_1.4-8              compiler_4.4.2          </span></span>
-<span><span class="co">##  [52] bit64_4.5.2              doParallel_1.0.17        backports_1.5.0         </span></span>
+<span><span class="co">##  [52] bit64_4.6.0-1            doParallel_1.0.17        backports_1.5.0         </span></span>
 <span><span class="co">##  [55] htmlTable_2.4.3          BiocParallel_1.40.0      DBI_1.2.3               </span></span>
-<span><span class="co">##  [58] UpSetR_1.4.0             biomaRt_2.62.0           rappdirs_0.3.3          </span></span>
+<span><span class="co">##  [58] UpSetR_1.4.0             biomaRt_2.62.1           rappdirs_0.3.3          </span></span>
 <span><span class="co">##  [61] DelayedArray_0.32.0      rjson_0.2.23             tools_4.4.2             </span></span>
 <span><span class="co">##  [64] foreign_0.8-87           nnet_7.3-19              glue_1.8.0              </span></span>
 <span><span class="co">##  [67] restfulr_0.0.15          checkmate_2.3.2          cluster_2.1.6           </span></span>
 <span><span class="co">##  [70] generics_0.1.3           gtable_0.3.6             BSgenome_1.74.0         </span></span>
-<span><span class="co">##  [73] ensembldb_2.30.0         data.table_1.16.4        hms_1.1.3               </span></span>
+<span><span class="co">##  [73] ensembldb_2.30.0         data.table_1.17.0        hms_1.1.3               </span></span>
 <span><span class="co">##  [76] xml2_1.3.6               XVector_0.46.0           foreach_1.5.2           </span></span>
-<span><span class="co">##  [79] pillar_1.10.0            stringr_1.5.1            limma_3.62.1            </span></span>
+<span><span class="co">##  [79] pillar_1.10.1            stringr_1.5.1            limma_3.62.2            </span></span>
 <span><span class="co">##  [82] circlize_0.4.16          dplyr_1.1.4              BiocFileCache_2.14.0    </span></span>
 <span><span class="co">##  [85] lattice_0.22-6           deldir_2.0-4             rtracklayer_1.66.0      </span></span>
 <span><span class="co">##  [88] bit_4.5.0.1              biovizBase_1.54.0        tidyselect_1.2.1        </span></span>
-<span><span class="co">##  [91] locfit_1.5-9.10          pbapply_1.7-2            Biostrings_2.74.1       </span></span>
-<span><span class="co">##  [94] knitr_1.49               gridExtra_2.3            bookdown_0.41           </span></span>
-<span><span class="co">##  [97] ProtGenerics_1.38.0      edgeR_4.4.1              xfun_0.49               </span></span>
+<span><span class="co">##  [91] locfit_1.5-9.11          pbapply_1.7-2            Biostrings_2.74.1       </span></span>
+<span><span class="co">##  [94] knitr_1.49               gridExtra_2.3            bookdown_0.42           </span></span>
+<span><span class="co">##  [97] ProtGenerics_1.38.0      edgeR_4.4.2              xfun_0.51               </span></span>
 <span><span class="co">## [100] statmod_1.5.0            stringi_1.8.4            UCSC.utils_1.2.0        </span></span>
-<span><span class="co">## [103] lazyeval_0.2.2           yaml_2.3.10              evaluate_1.0.1          </span></span>
+<span><span class="co">## [103] lazyeval_0.2.2           yaml_2.3.10              evaluate_1.0.3          </span></span>
 <span><span class="co">## [106] codetools_0.2-20         interp_1.1-6             GenomicFiles_1.42.0     </span></span>
-<span><span class="co">## [109] tibble_3.2.1             BiocManager_1.30.25      cli_3.6.3               </span></span>
-<span><span class="co">## [112] rpart_4.1.23             systemfonts_1.1.0        munsell_0.5.1           </span></span>
-<span><span class="co">## [115] jquerylib_0.1.4          dichromat_2.0-0.1        Rcpp_1.0.13-1           </span></span>
+<span><span class="co">## [109] tibble_3.2.1             BiocManager_1.30.25      cli_3.6.4               </span></span>
+<span><span class="co">## [112] rpart_4.1.23             systemfonts_1.2.1        munsell_0.5.1           </span></span>
+<span><span class="co">## [115] jquerylib_0.1.4          dichromat_2.0-0.1        Rcpp_1.0.14             </span></span>
 <span><span class="co">## [118] dbplyr_2.5.0             png_0.1-8                XML_3.99-0.18           </span></span>
 <span><span class="co">## [121] parallel_4.4.2           pkgdown_2.1.1            ggplot2_3.5.1           </span></span>
 <span><span class="co">## [124] blob_1.2.4               prettyunits_1.2.0        jpeg_0.1-10             </span></span>
 <span><span class="co">## [127] latticeExtra_0.6-30      AnnotationFilter_1.30.0  bitops_1.0-9            </span></span>
 <span><span class="co">## [130] viridisLite_0.4.2        VariantAnnotation_1.52.0 scales_1.3.0            </span></span>
-<span><span class="co">## [133] crayon_1.5.3             GetoptLong_1.0.5         rlang_1.1.4             </span></span>
+<span><span class="co">## [133] crayon_1.5.3             GetoptLong_1.0.5         rlang_1.1.5             </span></span>
 <span><span class="co">## [136] cowplot_1.1.3            KEGGREST_1.46.0</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
