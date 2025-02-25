@@ -34,7 +34,7 @@
 #' algorithm for the computation of the means and standard deviations. This is 
 #' still faster than the original chromVAR implementation, but much less so than
 #' when using `welford=FALSE`. By default, Welford's algorithm will be used if 
-#' the projected memory usage is below 10GB.
+#' the projected memory usage is above 10GB.
 #' The speed gain depends a lot on the dimensions of the different inputs and 
 #' the number of threads used. The runtime when using Welford's algorithm can 
 #' vary from 50 to 100% of the original chromVAR implementation. When not using 
