@@ -108,8 +108,9 @@
 #' @importFrom GenomicRanges tileGenome shift trim
 #' @importFrom GenomeInfoDb Seqinfo seqinfo seqinfo<-
 #' @importFrom S4Vectors metadata metadata<- runmean Rle
-#' @importFrom IRanges RleList
+#' @importFrom IRanges RleList viewMeans viewMaxs
 #' @importFrom pbapply pblapply
+#' @importFrom stats setNames ppois
 #' 
 #' @examples 
 #' # get an example bam file

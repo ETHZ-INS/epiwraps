@@ -26,6 +26,7 @@
 #' @return By default, the estimated (mode) fragment length(s), but see the 
 #'   `ret` argument
 #' @export
+#' @importFrom IRanges viewRangeMaxs slice Views
 #'
 #' @examples
 #' # get an example bam file
