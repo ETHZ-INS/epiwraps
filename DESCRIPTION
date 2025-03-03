@@ -1,8 +1,8 @@
 Package: epiwraps
 Type: Package
 Title: epiwraps: Wrappers for plotting and dealing with epigenomics data
-Version: 0.99.106
-Date: 2025-01-05
+Version: 0.99.107
+Date: 2025-03-03
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
             role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
