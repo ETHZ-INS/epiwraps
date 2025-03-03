@@ -15,7 +15,6 @@
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/bam2bw.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/bamChrChunkApply.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/breakStrings.html</loc></url>
-<url><loc>https://ethz-ins.github.io/epiwraps/reference/callPeaks.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/clusterSignalMatrices.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/computeDeviationsFaster.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/estimateFragSize.html</loc></url>
@@ -26,7 +25,6 @@
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/fragSizesDist.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/getCounts.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/getCovStats.html</loc></url>
-<url><loc>https://ethz-ins.github.io/epiwraps/reference/getEmpiricalFDR.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/getNormFactors.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/getSignalMatrices.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/importBedlike.html</loc></url>
@@ -41,7 +39,6 @@
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/plotEnrichedHeatmaps.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/plotSignalTracks.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/reduceWithResplit.html</loc></url>
-<url><loc>https://ethz-ins.github.io/epiwraps/reference/refragment.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/regionCAT.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/regionOverlaps.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/regionUpset.html</loc></url>

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.106</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.107</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,8 +103,8 @@ you’ve go the following single-end reads:</p>
 <code class="sourceCode R"><span><span class="va">bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bam"</span><span class="op">)</span> <span class="co"># temp file name</span></span>
 <span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="va">gr</span>, <span class="va">bam</span>, format<span class="op">=</span><span class="st">"bam"</span><span class="op">)</span></span>
 <span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">indexBam</a></span><span class="op">(</span><span class="va">bam</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##       /tmp/Rtmpqsym1x/file3c0c43b14b87.bam </span></span>
-<span><span class="co">## "/tmp/Rtmpqsym1x/file3c0c43b14b87.bam.bai"</span></span></code></pre>
+<pre><code><span><span class="co">##       /tmp/RtmpyHhu8w/file3b443aa5b588.bam </span></span>
+<span><span class="co">## "/tmp/RtmpyHhu8w/file3b443aa5b588.bam.bai"</span></span></code></pre>
 <p>Using these example reads, we can illustrate different ways of
 computing coverages.</p>
 <p>First, we can save coverage at different resolutions, from full
@@ -246,9 +246,9 @@ files as input, you can still perform most of the above tasks. See the
 </h2>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R version 4.4.2 (2024-10-31)</span></span>
+<pre><code><span><span class="co">## R version 4.4.3 (2025-02-28)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 24.04.1 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.2 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -268,7 +268,7 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">## [8] methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] epiwraps_0.99.106           EnrichedHeatmap_1.36.0     </span></span>
+<span><span class="co">##  [1] epiwraps_0.99.107           EnrichedHeatmap_1.36.0     </span></span>
 <span><span class="co">##  [3] ComplexHeatmap_2.22.0       SummarizedExperiment_1.36.0</span></span>
 <span><span class="co">##  [5] Biobase_2.66.0              GenomicRanges_1.58.0       </span></span>
 <span><span class="co">##  [7] GenomeInfoDb_1.42.3         IRanges_2.40.1             </span></span>
@@ -284,24 +284,24 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">##  [13] vctrs_0.6.5              memoise_2.0.1            Rsamtools_2.22.0        </span></span>
 <span><span class="co">##  [16] RCurl_1.98-1.16          base64enc_0.1-3          htmltools_0.5.8.1       </span></span>
 <span><span class="co">##  [19] S4Arrays_1.6.0           progress_1.2.3           curl_6.2.1              </span></span>
-<span><span class="co">##  [22] SparseArray_1.6.1        Formula_1.2-5            sass_0.4.9              </span></span>
+<span><span class="co">##  [22] SparseArray_1.6.2        Formula_1.2-5            sass_0.4.9              </span></span>
 <span><span class="co">##  [25] bslib_0.9.0              htmlwidgets_1.6.4        desc_1.4.3              </span></span>
 <span><span class="co">##  [28] plyr_1.8.9               Gviz_1.50.0              httr2_1.1.0             </span></span>
 <span><span class="co">##  [31] cachem_1.1.0             GenomicAlignments_1.42.0 lifecycle_1.0.4         </span></span>
-<span><span class="co">##  [34] iterators_1.0.14         pkgconfig_2.0.3          Matrix_1.7-1            </span></span>
+<span><span class="co">##  [34] iterators_1.0.14         pkgconfig_2.0.3          Matrix_1.7-2            </span></span>
 <span><span class="co">##  [37] R6_2.6.1                 fastmap_1.2.0            GenomeInfoDbData_1.2.13 </span></span>
 <span><span class="co">##  [40] clue_0.3-66              digest_0.6.37            colorspace_2.1-1        </span></span>
 <span><span class="co">##  [43] AnnotationDbi_1.68.0     textshaping_1.0.0        Hmisc_5.2-2             </span></span>
 <span><span class="co">##  [46] RSQLite_2.3.9            filelock_1.0.3           httr_1.4.7              </span></span>
-<span><span class="co">##  [49] abind_1.4-8              compiler_4.4.2           bit64_4.6.0-1           </span></span>
+<span><span class="co">##  [49] abind_1.4-8              compiler_4.4.3           bit64_4.6.0-1           </span></span>
 <span><span class="co">##  [52] doParallel_1.0.17        backports_1.5.0          htmlTable_2.4.3         </span></span>
 <span><span class="co">##  [55] BiocParallel_1.40.0      DBI_1.2.3                UpSetR_1.4.0            </span></span>
 <span><span class="co">##  [58] biomaRt_2.62.1           rappdirs_0.3.3           DelayedArray_0.32.0     </span></span>
-<span><span class="co">##  [61] rjson_0.2.23             tools_4.4.2              foreign_0.8-87          </span></span>
-<span><span class="co">##  [64] nnet_7.3-19              glue_1.8.0               restfulr_0.0.15         </span></span>
-<span><span class="co">##  [67] checkmate_2.3.2          cluster_2.1.6            generics_0.1.3          </span></span>
+<span><span class="co">##  [61] rjson_0.2.23             tools_4.4.3              foreign_0.8-88          </span></span>
+<span><span class="co">##  [64] nnet_7.3-20              glue_1.8.0               restfulr_0.0.15         </span></span>
+<span><span class="co">##  [67] checkmate_2.3.2          cluster_2.1.8            generics_0.1.3          </span></span>
 <span><span class="co">##  [70] gtable_0.3.6             BSgenome_1.74.0          ensembldb_2.30.0        </span></span>
-<span><span class="co">##  [73] data.table_1.17.0        hms_1.1.3                xml2_1.3.6              </span></span>
+<span><span class="co">##  [73] data.table_1.17.0        hms_1.1.3                xml2_1.3.7              </span></span>
 <span><span class="co">##  [76] XVector_0.46.0           foreach_1.5.2            pillar_1.10.1           </span></span>
 <span><span class="co">##  [79] stringr_1.5.1            circlize_0.4.16          dplyr_1.1.4             </span></span>
 <span><span class="co">##  [82] BiocFileCache_2.14.0     lattice_0.22-6           deldir_2.0-4            </span></span>
@@ -312,10 +312,10 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">##  [97] stringi_1.8.4            UCSC.utils_1.2.0         lazyeval_0.2.2          </span></span>
 <span><span class="co">## [100] yaml_2.3.10              evaluate_1.0.3           codetools_0.2-20        </span></span>
 <span><span class="co">## [103] interp_1.1-6             GenomicFiles_1.42.0      tibble_3.2.1            </span></span>
-<span><span class="co">## [106] BiocManager_1.30.25      cli_3.6.4                rpart_4.1.23            </span></span>
+<span><span class="co">## [106] BiocManager_1.30.25      cli_3.6.4                rpart_4.1.24            </span></span>
 <span><span class="co">## [109] systemfonts_1.2.1        munsell_0.5.1            jquerylib_0.1.4         </span></span>
 <span><span class="co">## [112] dichromat_2.0-0.1        Rcpp_1.0.14              dbplyr_2.5.0            </span></span>
-<span><span class="co">## [115] png_0.1-8                XML_3.99-0.18            parallel_4.4.2          </span></span>
+<span><span class="co">## [115] png_0.1-8                XML_3.99-0.18            parallel_4.4.3          </span></span>
 <span><span class="co">## [118] pkgdown_2.1.1            ggplot2_3.5.1            blob_1.2.4              </span></span>
 <span><span class="co">## [121] prettyunits_1.2.0        jpeg_0.1-10              latticeExtra_0.6-30     </span></span>
 <span><span class="co">## [124] AnnotationFilter_1.30.0  bitops_1.0-9             viridisLite_0.4.2       </span></span>
