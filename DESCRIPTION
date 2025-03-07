@@ -54,6 +54,6 @@ License: GPL-3
 VignetteBuilder: knitr
 Encoding: UTF-8
 Config/testthat/edition: 3
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 URL: https://ethz-ins.github.io/epiwraps/
 BiocViews: Epigenetics, GeneRegulation, Visualization
