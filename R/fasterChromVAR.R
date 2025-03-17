@@ -48,8 +48,8 @@ computeDeviationsFaster <- function(counts, motifMatches, backgrounds,
                                     BPPARAM=SerialParam(progress=TRUE)){
   stopifnot(nrow(counts)==nrow(motifMatches) &&
               nrow(counts)==nrow(backgrounds))
-  stopifnot(min(b)>=1 & max(b)<=nrow(b))
-  if(!is.integer(b[1,1]))
+  stopifnot(min(backgrounds)>=1 & max(backgrounds)<=nrow(backgrounds))
+  if(!is.integer(backgrounds[1,1]))
     stop("`backgrounds` should be a matrix of integers.")
   
   expectedMem <- .computeDeviationsMemoryUsage(counts, motifMatches, 
