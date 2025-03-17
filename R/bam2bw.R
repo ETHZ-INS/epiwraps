@@ -615,11 +615,12 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
   }
   if(is.numeric(x)) x <- Rle(x)
   stopifnot(is(x,"RleList") || is(x,"Rle"))
-  if(length(windows)==1) return(runmean(x, k=windows, endrule = "constant"))
-  do.call(pmax, lapply(windows, FUN=function(w){
-    if(w==1) return(x)
-    runmean(x, k=w, endrule = "constant")
-  }))
+  x <- lapply(windows, FUN=function(k){
+    if(k==1) return(x)
+    runmean(x, k=k, endrule=ifelse(k%/%2==k/2, "drop", "constant"))
+  })
+  if(length(x)==1) return(x[[1]])
+  do.call(pmax, x)
 }
 
 .align2cuts <- function(x){
