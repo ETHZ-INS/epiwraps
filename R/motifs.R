@@ -35,3 +35,73 @@ motifFootprint <- function(bamfile, motif, motif_occurences, genome=NULL,
                               upstream=around, downstream=around,
                               seqlev=seqlevels(motif_occurences))
 }
+
+
+#' motifCoOccurence
+#' 
+#' Returns regions that have matches for given pairs of motifs within certain 
+#' distances of each other.
+#'
+#' @param motifs A list of motifs (only those specified in `pairs` will be 
+#'   used).
+#' @param pairs A list of pairs of motifs for which to compute co-occurence.
+#'   Specifically, this should be a (optionally named) list of character vectors
+#'   of length 2, corresponding to names in `motifs`.
+#' @param regions The regions in which to search for motif matches.
+#' @param genome A genome object or path to a genome fasta file.
+#' @param centerDist Logical; whether to compute distances from the center of 
+#'   the motifs.
+#' @param minDist The minimum distance between matches for a co-occurrence. This
+#'   is primarily used to exclude interactions between highly-similar, 
+#'   overlapping motifs, and to focus on putative cooperative interactions 
+#'   between TFs. If interested in competing TFs, set this to <=0.
+#' @param maxDist The maximum distance between the matches for a co-occurence.
+#' 
+#' @details
+#' Note that both `minDist` and `maxDist`, rather than specifying a single 
+#' threshold, can compute co-occurence for multiple thresholds (which is must
+#' faster than running the function multiple times). `minDist` and `maxDist` 
+#' should have the same length, and the corresponding entries will be used 
+#' together to produce multiple matrices.
+#' Also note that all matches are stored in memory, so using this function 
+#' across the entire genome is not advisable (unless for very few motifs).
+#' 
+#'
+#' @returns A list of sparse logical matrices, with one matrix for each value 
+#'   of `minDist`/`maxDist`.
+#' @export
+#' @importFrom motifmatchr matchMotifs
+#' @importFrom TFBSTools PFMatrixList
+#' @importFrom universalmotif convert_motifs
+#' @importFrom Rsamtools FaFile
+motifCoOccurence <- function(motifs, pairs, regions, genome, centerDist=TRUE,
+                             minDist=5, maxDist=50){
+  stopifnot(is.list(pairs) && all(lengths(pairs)==2))
+  stopifnot(is(regions, "GRanges"))
+  stopifnot(length(minDist)==length(maxDist))
+  if(!is(motifs, "XMatrixList")){
+    motifs <- do.call(TFBSTools::PFMatrixList,
+                      convert_motifs(motifs, class="TFBSTools-PFMatrix"))
+  }
+  if(!all(sapply(pairs, \(x) x %in% names(motifs)))){
+    stop("Some of the motifs specific in `pairs` appear not to be in `motifs`.")
+  }
+  if(is.null(names(pairs))) pairs <- setNames(pairs, sapply(pairs, paste, collapse="+"))
+  if(is.character(genome) && length(genome)==1)
+    genome <- Rsamtools::FaFile(genome)
+  
+  matches <- matchMotifs(motifs[unique(unlist(pairs))], regions,
+                         genome=genome, out="positions")
+  if(centerDist) matches <- lapply(matches, resize, fix="center", width=1)
+  distCrit <- setNames(seq_along(minDist), paste0(minDist,"<= d <=",maxDist))
+  lapply(distCrit, \(i){
+    as(sapply(pairs, \(x){
+      o <- findOverlapPairs(matches[[x[1]]], matches[[x[2]]], maxgap=maxDist[i]-1L)
+      o <- o[which((start(first(o))-start(second(o)))>=minDist[i])]
+      gr <- GRanges(seqnames(first(o)),
+                    IRanges(start=pmin(start(first(o)), start(second(o))),
+                            end=pmax(start(first(o)), start(second(o)))))
+      return(overlapsAny(regions, gr))
+    }), "sparseMatrix")
+  })
+}

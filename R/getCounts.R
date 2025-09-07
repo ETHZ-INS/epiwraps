@@ -118,3 +118,61 @@ getCounts <- function(bam_files, regions, paired, extend=0L, shift=0L,
   se$depth <- depths
   se
 }
+
+
+#' peakPbCountsSE
+#' 
+#' Generate a pseudobulk peak counts SummarizedExperiment.
+#'
+#' @param fragfile The path to a Tabix-indexed fragment file.
+#' @param peaks A GRanges of the regions in which to count.
+#' @param bcmap A named vector, indicating the pseudobulk sample (values) in 
+#'   which to include each barcode (names).
+#' @param genome A optional genome object or path to a genom fasta file. If
+#'   included, GC bias will be added to the rowData of the output object.
+#'
+#' @returns A \link[SummarizedExperiment]{RangedSummarizedExperiment} with a 
+#'   'counts' assay, and columns corresponding to each unique value of `bcmap`.
+#' @export
+peakPbCountsSE <- function(fragfile, peaks, bcmap, genome=NULL){
+  if(is.data.frame(bcmap) && !is.null(row.names(bcmap)) && 
+     "group" %in% colnames(bcmap))
+    bcmap <- setNames(bcmap$group, row.names(bcmap))
+  
+  stopifnot(length(bcmap)>1 && !is.null(names(bcmap)) &&
+              (is.character(bcmap) || is.factor(bcmap)))
+  
+  frags <- Rsamtools::TabixFile(fragfile)
+  resl <- tabixChrApply(frags, fn=function(x){
+    x <- x[which(x$name %in% names(bcmap))]
+    x$name <- factor(x$name, names(bcmap))
+    x <- x[!is.na(x$name)]
+    sapply(split(x, bcmap[as.integer(x$name)]), \(y){
+      countOverlaps(peaks, y)
+    })
+  })
+  gc(full=TRUE, verbose=FALSE)
+  mat <- sapply(setNames(unique(bcmap),unique(bcmap)), \(x){
+    y <- lapply(resl, \(y){
+      if(!is.null(dim(y)) && x %in% colnames(y)) return(y[,x])
+      NULL
+    })
+    y <- y[!sapply(y,is.null)]
+    Reduce("+",y)
+  })
+  
+  se <- SummarizedExperiment(list(counts=mat), rowRanges=peaks)
+
+  if(!is.null(genome)){
+    if(is.character(genome) && length(genome)==1)
+      genome <- Rsamtools::FaFile(genome)
+    se <- tryCatch({
+      chromVAR::addGCBias(se, genome=genome)
+    }, error=function(e){
+      warning("Failed to add GC bias to object: ", e)
+      se
+    })
+  }
+  
+  se
+}
