@@ -17,8 +17,8 @@ computeDeviationsFaster(
 \arguments{
 \item{counts}{A matrix of read counts per region(rows)/sample(columns), or a
 SummarizedExperiment with this as first assay, as produced by 
-\code{\link{getCounts}}. Can also be already normalized if 
-`normalize=FALSE`.}
+\code{\link{getCounts}} or \code{\link{peakPbCountsSE}}. Can also be 
+already normalized if `normalize=FALSE`.}
 
 \item{motifMatches}{A matrix of motif matches (either logical or with 
 something akin to binding probabilities), or a SummarizedExperiment 

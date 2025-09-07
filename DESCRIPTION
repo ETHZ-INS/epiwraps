@@ -37,7 +37,7 @@ Imports:
     dplyr,
     stats,
     pbapply,
-    methods,
+    methods
 Suggests: 
     knitr,
     rmarkdown,
@@ -57,3 +57,5 @@ Config/testthat/edition: 3
 RoxygenNote: 7.3.2
 URL: https://ethz-ins.github.io/epiwraps/
 BiocViews: Epigenetics, GeneRegulation, Visualization
+LinkingTo: Rcpp, RcppParallel
+SystemRequirements: GNU make
