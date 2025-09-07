@@ -1,35 +1,35 @@
-#' regionUpset
+#' regionsToUpset
 #' 
+#' Prepares sets of regions for UpSet overlap representation.
 #' A wrapper around \code{\link[UpSetR]{upset}} for comparing multiple sets of
 #' genomic ranges.
 #'
 #' @param x A named list of genomic ranges (or paths to bed files)
 #' @param reference The method for creating the reference windows ('reduce' or
 #'   'disjoin'). Alternatively, a `GRanges` object of reference windows.
-#' @param returnList Logical; whether to return the list instead of plotting.
-#' @param ignore.strand Logical; whether to ignore strands when computing 
-#' overlaps (default FALSE). Strand information is ignored if either of the 
-#' compared sets of regions is unstranded.
-#' @param maxgap Maximum gap between regions to count as an overlap (see 
-#'  \code{\link[GenomicRanges]{findOverlaps-methods}}).
-#' @param minoverlap Minimum overlap to count as a match (see 
-#'  \code{\link[GenomicRanges]{findOverlaps-methods}}).
-#' @param ... Further plotting arguments passed to \code{\link[UpSetR]{upset}}.
+#' @param returnList Logical; whether to return the list of regions instead of 
+#'   plotting.
+#' @param ... Further arguments specifying how the overlaps are done, 
+#' passed to \code{\link[GenomicRanges]{findOverlaps-methods}}).
 #'
-#' @return A plot
+#' @return A data.frame of set inclusions which can be directly input to
+#'   \code{\link[ComplexHeatmap]{make_comb_mat}}, and then
+#'   \code{\link[ComplexHeatmap]{UpSet}}.
 #' @export
-#' @importFrom UpSetR upset fromList
 #' @importFrom GenomicRanges reduce disjoin 
 #' @importFrom IRanges IRanges overlapsAny
+#' @importFrom ComplexHeatmap UpSet make_comb_mat
 #'
 #' @examples
 #' # random list of GRanges:
 #' grl <- lapply(c(A=10,B=20,C=30), FUN=function(x){
 #'   GRanges("seq1", IRanges(runif(x,1,1000), width=20))
 #' })
-#' regionUpset(grl)
-regionUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
-                        ignore.strand=FALSE, maxgap=-1L, minoverlap=0L, ...){
+#' input_for_upset <- regionsToUpset(grl)
+#' # we would then plot the data with:
+#' ComplexHeatmap(UpSet(make_comb_mat(input_for_upset)))
+regionsToUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
+                           ignore.strand=FALSE, maxgap=-1L, minoverlap=0L, ...){
   if(is.character(x)) x <- as.list(x)
   stopifnot(length(x)>1)
   if(is.list(x)){
@@ -71,11 +71,12 @@ regionUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
     reference <- switch(match.arg(reference),
                         reduce=reduce(unlist(x),ignore.strand=ignore.strand),
                         disjoin=disjoin(unlist(x),ignore.strand=ignore.strand))
-  x <- lapply(x, FUN=function(x)
-    which(overlapsAny(reference, x, ignore.strand=ignore.strand, 
-                      maxgap=maxgap, minoverlap=minoverlap)))
-  if(returnList) return(x)
-  UpSetR::upset(UpSetR::fromList(x), ...)
+  x <- vapply(x, FUN.VALUE=logical(length(reference)), FUN=function(x){
+    overlapsAny(reference, x, ignore.strand=ignore.strand, 
+                maxgap=maxgap, minoverlap=minoverlap)
+  })
+  if(returnList) return(apply(x, 2, function(x) reference[which(x)]))
+  as.data.frame(row.names=as.character(reference), x)
 }
 
 
