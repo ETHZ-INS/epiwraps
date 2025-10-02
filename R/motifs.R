@@ -75,7 +75,7 @@ motifFootprint <- function(bamfile, motif, motif_occurences, genome=NULL,
 #' @importFrom universalmotif convert_motifs
 #' @importFrom Rsamtools FaFile
 motifCoOccurence <- function(motifs, pairs, regions, genome, centerDist=TRUE,
-                             minDist=5, maxDist=50){
+                             minDist=5, maxDist=50, exclusiveDist=FALSE){
   stopifnot(is.list(pairs) && all(lengths(pairs)==2))
   stopifnot(is(regions, "GRanges"))
   stopifnot(length(minDist)==length(maxDist))

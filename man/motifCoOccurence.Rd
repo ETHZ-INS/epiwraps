@@ -11,7 +11,8 @@ motifCoOccurence(
   genome,
   centerDist = TRUE,
   minDist = 5,
-  maxDist = 50
+  maxDist = 50,
+  exclusiveDist = FALSE
 )
 }
 \arguments{
