@@ -130,11 +130,15 @@ getCounts <- function(bam_files, regions, paired, extend=0L, shift=0L,
 #'   which to include each barcode (names).
 #' @param genome A optional genome object or path to a genom fasta file. If
 #'   included, GC bias will be added to the rowData of the output object.
+#' @param insertions If TRUE, (shifted) Tn5 insertions events are counted 
+#'   instead of fragments. This means that each fragment gets counted twice
+#'   (for both ends). Default FALSE.
 #'
 #' @returns A \link[SummarizedExperiment]{RangedSummarizedExperiment} with a 
 #'   'counts' assay, and columns corresponding to each unique value of `bcmap`.
 #' @export
-peakPbCountsSE <- function(fragfile, peaks, bcmap, genome=NULL){
+peakPbCountsSE <- function(fragfile, peaks, bcmap, genome=NULL,
+                           insertions=FALSE){
   if(is.data.frame(bcmap) && !is.null(row.names(bcmap)) && 
      "group" %in% colnames(bcmap))
     bcmap <- setNames(bcmap$group, row.names(bcmap))
@@ -148,6 +152,9 @@ peakPbCountsSE <- function(fragfile, peaks, bcmap, genome=NULL){
     x$name <- factor(x$name, names(bcmap))
     x <- x[!is.na(x$name)]
     sapply(split(x, bcmap[as.integer(x$name)]), \(y){
+      if(insertions){
+        y <- epiwraps:::.align2cuts(resize(y, fix="center", width(y)-8L))
+      }
       countOverlaps(peaks, y)
     })
   })
