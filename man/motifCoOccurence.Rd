@@ -12,7 +12,8 @@ motifCoOccurence(
   centerDist = TRUE,
   minDist = 5,
   maxDist = 50,
-  exclusiveDist = FALSE
+  exclusiveDist = TRUE,
+  ignore.strand = TRUE
 )
 }
 \arguments{
@@ -36,6 +37,13 @@ overlapping motifs, and to focus on putative cooperative interactions
 between TFs. If interested in competing TFs, set this to <=0.}
 
 \item{maxDist}{The maximum distance between the matches for a co-occurence.}
+
+\item{exclusiveDist}{Logical; whether the co-occurences should be counted 
+only for the smallest of the distance thresholds. Ignored if `minDist` and
+`maxDist` have a length of 1.}
+
+\item{ignore.strand}{Logical; whether to ignore the strand for co-occurence
+(default TRUE).}
 }
 \value{
 A list of sparse logical matrices, with one matrix for each value 
@@ -50,7 +58,9 @@ Note that both `minDist` and `maxDist`, rather than specifying a single
 threshold, can compute co-occurence for multiple thresholds (which is must
 faster than running the function multiple times). `minDist` and `maxDist` 
 should have the same length, and the corresponding entries will be used 
-together to produce multiple matrices.
+together to produce multiple matrices. (If `exclusiveDist=TRUE`, the 
+distance threshold are exclusive, meaning that the higher threshold does not
+include co-occurences of the lower thresholds.)
 Also note that all matches are stored in memory, so using this function 
 across the entire genome is not advisable (unless for very few motifs).
 }

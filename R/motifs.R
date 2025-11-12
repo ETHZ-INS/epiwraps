@@ -56,13 +56,20 @@ motifFootprint <- function(bamfile, motif, motif_occurences, genome=NULL,
 #'   overlapping motifs, and to focus on putative cooperative interactions 
 #'   between TFs. If interested in competing TFs, set this to <=0.
 #' @param maxDist The maximum distance between the matches for a co-occurence.
+#' @param exclusiveDist Logical; whether the co-occurences should be counted 
+#'  only for the smallest of the distance thresholds. Ignored if `minDist` and
+#'  `maxDist` have a length of 1.
+#' @param ignore.strand Logical; whether to ignore the strand for co-occurence
+#'   (default TRUE).
 #' 
 #' @details
 #' Note that both `minDist` and `maxDist`, rather than specifying a single 
 #' threshold, can compute co-occurence for multiple thresholds (which is must
 #' faster than running the function multiple times). `minDist` and `maxDist` 
 #' should have the same length, and the corresponding entries will be used 
-#' together to produce multiple matrices.
+#' together to produce multiple matrices. (If `exclusiveDist=TRUE`, the 
+#' distance threshold are exclusive, meaning that the higher threshold does not
+#' include co-occurences of the lower thresholds.)
 #' Also note that all matches are stored in memory, so using this function 
 #' across the entire genome is not advisable (unless for very few motifs).
 #' 
@@ -75,7 +82,8 @@ motifFootprint <- function(bamfile, motif, motif_occurences, genome=NULL,
 #' @importFrom universalmotif convert_motifs
 #' @importFrom Rsamtools FaFile
 motifCoOccurence <- function(motifs, pairs, regions, genome, centerDist=TRUE,
-                             minDist=5, maxDist=50, exclusiveDist=FALSE){
+                             minDist=5, maxDist=50, exclusiveDist=TRUE,
+                             ignore.strand=TRUE){
   stopifnot(is.list(pairs) && all(lengths(pairs)==2))
   stopifnot(is(regions, "GRanges"))
   stopifnot(length(minDist)==length(maxDist))
@@ -96,8 +104,10 @@ motifCoOccurence <- function(motifs, pairs, regions, genome, centerDist=TRUE,
   distCrit <- setNames(seq_along(minDist), paste0(minDist,"<= d <=",maxDist))
   lapply(distCrit, \(i){
     as(sapply(pairs, \(x){
-      o <- findOverlapPairs(matches[[x[1]]], matches[[x[2]]], maxgap=maxDist[i]-1L)
-      o <- o[which((start(first(o))-start(second(o)))>=minDist[i])]
+      o <- findOverlapPairs(matches[[x[1]]], matches[[x[2]]],
+                            maxgap=maxDist[i]-1L, ignore.strand=ignore.strand)
+      if(exclusiveDist)
+        o <- o[which(abs(start(first(o))-start(second(o)))>=minDist[i])]
       gr <- GRanges(seqnames(first(o)),
                     IRanges(start=pmin(start(first(o)), start(second(o))),
                             end=pmax(start(first(o)), start(second(o)))))
