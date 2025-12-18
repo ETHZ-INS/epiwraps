@@ -13,6 +13,8 @@ motifCoOccurence(
   minDist = 5,
   maxDist = 50,
   exclusiveDist = TRUE,
+  restrictToRegions = FALSE,
+  nDistQuantiles = NULL,
   ignore.strand = TRUE
 )
 }
@@ -34,7 +36,8 @@ the motifs.}
 \item{minDist}{The minimum distance between matches for a co-occurrence. This
 is primarily used to exclude interactions between highly-similar, 
 overlapping motifs, and to focus on putative cooperative interactions 
-between TFs. If interested in competing TFs, set this to <=0.}
+between TFs. If interested in competing TFs, set this to <=0. Note that
+`minDist` is ignored when using `nDistQuantiles`.}
 
 \item{maxDist}{The maximum distance between the matches for a co-occurence.}
 
@@ -42,12 +45,21 @@ between TFs. If interested in competing TFs, set this to <=0.}
 only for the smallest of the distance thresholds. Ignored if `minDist` and
 `maxDist` have a length of 1.}
 
+\item{restrictToRegions}{Logical; whether to restrict the search for motifs 
+to `regions`. If FALSE (default), one of the motifs still needs to be within
+the regions, but the other can be +/- `maxDist` around the region.}
+
+\item{nDistQuantiles}{The number of distance quantiles to use. Disabled by
+default and requires `exclusiveDist=TRUE`. When a positive integer, the 
+span from 0 to `maxDist` is split into `nDistQuantiles` number of 
+quantiles for each pair of motifs.}
+
 \item{ignore.strand}{Logical; whether to ignore the strand for co-occurence
 (default TRUE).}
 }
 \value{
 A list of sparse logical matrices, with one matrix for each value 
-  of `minDist`/`maxDist`.
+  of `minDist`/`maxDist` (or each quantile bin).
 }
 \description{
 Returns regions that have matches for given pairs of motifs within certain 
@@ -58,9 +70,13 @@ Note that both `minDist` and `maxDist`, rather than specifying a single
 threshold, can compute co-occurence for multiple thresholds (which is must
 faster than running the function multiple times). `minDist` and `maxDist` 
 should have the same length, and the corresponding entries will be used 
-together to produce multiple matrices. (If `exclusiveDist=TRUE`, the 
-distance threshold are exclusive, meaning that the higher threshold does not
-include co-occurences of the lower thresholds.)
+together to produce multiple matrices.
+If `exclusiveDist=TRUE`, the distance threshold are exclusive, meaning that 
+the higher threshold does not include co-occurences of the lower thresholds.
+When using multiple exclusive distance bins, it is also possible to have the
+bin boundaries adjusted for each pair of motifs so that each been is equally
+populated by setting `nDistQuantiles` (the breaks used can be retrieved from
+`attr(results, "breaks")` ).
 Also note that all matches are stored in memory, so using this function 
 across the entire genome is not advisable (unless for very few motifs).
 }
