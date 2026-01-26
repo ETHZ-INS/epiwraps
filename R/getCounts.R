@@ -66,7 +66,7 @@ getCounts <- function(bam_files, regions, paired, extend=0L, shift=0L,
                       isSecondaryAlignment=ifelse(includeSecondary,NA,FALSE),
                       isNotPassingQualityControls=FALSE)
   seqs <- Rsamtools::scanBamHeader(bam_files[[1]])[[1]]$targets
-  seqs <- seqs[.checkMissingSeqLevels(names(seqs), seqlevelsInUse(peaks),
+  seqs <- seqs[.checkMissingSeqLevels(names(seqs), seqlevelsInUse(regions),
                                       argName="regions")]
   
   if(is.null(randomAcc))
