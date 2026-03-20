@@ -1,4 +1,4 @@
-#' getCounts
+#' peakCountsFromBAM
 #' 
 #' Creates a SummarizedExperiment of fragment (or insertion) counts from bam 
 #' files that overlap given regions.
@@ -32,8 +32,9 @@
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 #' # create regions of interest
 #' peaks <- GRanges(c("seq1","seq1","seq2"), IRanges(c(400,900,500), width=100))
-#' getCounts(bam, peaks, paired=FALSE)
-getCounts <- function(bam_files, regions, paired, extend=0L, shift=0L, 
+#' peakCountsFromBAM(bam, peaks, paired=FALSE)
+peakCountsFromBAM <- function(
+                      bam_files, regions, paired, extend=0L, shift=0L, 
                       type=c("full","center","start","end","ends"),
                       ov.type="any", maxgap=-1L, minoverlap=1L,
                       ignore.strand=TRUE, strandMode=1, includeDuplicates=TRUE, 
@@ -122,7 +123,7 @@ getCounts <- function(bam_files, regions, paired, extend=0L, shift=0L,
 
 #' peakPbCountsSE
 #' 
-#' Generate a pseudobulk peak counts SummarizedExperiment.
+#' Generate a pseudobulk peak counts SummarizedExperiment from a fragment file.
 #'
 #' @param fragfile The path to a Tabix-indexed fragment file.
 #' @param peaks A GRanges of the regions in which to count.

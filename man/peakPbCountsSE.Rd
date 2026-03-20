@@ -26,5 +26,5 @@ A \link[SummarizedExperiment]{RangedSummarizedExperiment} with a
   'counts' assay, and columns corresponding to each unique value of `bcmap`.
 }
 \description{
-Generate a pseudobulk peak counts SummarizedExperiment.
+Generate a pseudobulk peak counts SummarizedExperiment from a fragment file.
 }
