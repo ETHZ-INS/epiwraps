@@ -1,9 +1,9 @@
-#' callPeaks
+#' callPeaksExperimental
 #' 
-#' This is a R-based implementation of the general MACS2 strategy (Zhang et al.,
-#'  Genome Biology 2008), taking some freedom here and there in comparison to 
-#'  the original. The function is still under development, especially with 
-#'  respect to single-end reads, where some optimization might still be needed.
+#' This is an experimental native R peak caller loosely based on the general 
+#' MACS2 strategy (Zhang et al., Genome Biology 2008). The function is still 
+#' under development, especially with respect to single-end reads, where some 
+#' optimization might still be needed.
 #'  For paired-end reads, the results are nearly identical with those of MACS2, 
 #'  with two main differences: 1) the p-values are more conservative (and 
 #'  arguably better calibrated) and 2) because the implementation does not rely 
@@ -35,9 +35,10 @@
 #' @return A `GRanges`
 #' 
 #' @details 
-#' `callPeaks` takes about twice as long to run as MACS2, and uses more memory.
-#' If dealing with very large files (or a very low memory system), consider
-#' increasing the number of processing chunks, for instance with `nChunks=10`.
+#' `callPeaksExperimental` takes about twice as long to run as MACS2, and uses 
+#' more memory. If dealing with very large files (or a very low memory system),
+#' consider increasing the number of processing chunks, for instance with 
+#' `nChunks=10`.
 #' 
 #' The function uses \code{\link{bamChrChunkApply}} to obtain the coverages,
 #' and can accept any argument of that function. This means that the 
@@ -47,19 +48,28 @@
 #' @importFrom stats setNames pnorm ppois optim density
 #' @importFrom S4Vectors mean.Rle
 #' @export
-callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"), 
-                      nullH=c("local","global.nb","global.bin"), ### TO IMPLEMENT
-                      blacklist=NULL, binSize=10L, fragLength=200L, 
-                      minPeakCount=5L, minFoldChange=1.3, pthres=10^-3,
-                      maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=1L,
-                      useStrand=TRUE, outFormat=c("custom", "narrowPeak"),
-                      verbose=TRUE, ...){
+callPeaksExperimental <- function(
+      bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"), 
+      nullH=c("local","global.nb","global.bin"), ### TO IMPLEMENT
+      blacklist=NULL, binSize=10L, fragLength=NULL, 
+      minPeakCount=5L, minFoldChange=1.3, pthres=10^-3,
+      maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=1L,
+      useStrand=TRUE, outFormat=c("custom", "narrowPeak"), verbose=TRUE, ...){
   type <- match.arg(type)
   if(is.null(maxSize)) maxSize <- ifelse(type=="narrow",1000L,5000L)
   outFormat <- match.arg(outFormat)
   binSize <- as.integer(binSize)
   minPeakCount <- as.integer(minPeakCount)
-  fragLength <- as.integer(fragLength)
+  
+  sigType <- .parseFiletypeFromName(bam, FALSE)
+  
+  if(!paired && isTRUE(sigType=="bam")){
+    if(is.null(fragLength))
+      stop("Please provide the mean fragment length.",
+           "You may estimate it with `estimateFragSize()`.")
+    fragLength <- as.integer(fragLength)
+  }
+  
   if(!is.null(blacklist) && is.character(blacklist)){
     if(verbose) message("Importing blacklist...")
     blacklist <- rtracklayer::import(blacklist)
@@ -72,15 +82,27 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
                           binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
                           minFoldChange=minFoldChange, minPeakCount=minPeakCount,
                           pseudoCount=pseudoCount, useStrand=useStrand,
-                          maxSize=maxSize)
+                          maxSize=maxSize, verbose=TRUE)
     o <- list(o)
   }else{
     if(verbose) message("Reading signal and identifying candidate regions...")
-    o <- bamChrChunkApply(bam, ..., paired=paired, ctrl=ctrl, verbose=verbose,
-                          binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
-                          minFoldChange=minFoldChange, minPeakCount=minPeakCount,
-                          pseudoCount=pseudoCount, useStrand=useStrand,
-                          breakPeaks=type=="narrow", FUN=.cpGetCandidates)
+    if(is.null(sigType)){
+      if(is(try(TabixFile(bam[[1]]), silent=TRUE), "try-error")){
+        stop("Unrecognized file format.")
+      }else{
+        fn <- tabixChrApply
+      }
+    }else if(sigType=="bam"){
+      fn <- bamChrChunkApply
+    }else{
+      stop("Unrecognized file format.")
+    }
+    
+    o <- fn(bam, ..., paired=paired, ctrl=ctrl, verbose=FALSE,
+            binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
+            minFoldChange=minFoldChange, minPeakCount=minPeakCount,
+            pseudoCount=pseudoCount, useStrand=useStrand,
+            breakPeaks=type=="narrow", FUN=.cpGetCandidates)
   }
   if(!is.null(ctrl)){
     # adjust the per-block normalization factors
@@ -96,13 +118,16 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
       o[[i]]$regions$bg <- o[[i]]$regions$bg*nf[[i]]/mnf
       o[[i]]$negR$bg <- o[[i]]$negR$bg*mnf/nf[[i]]
     }
-    covtm <- median(unlist(lapply(o, FUN=function(x) x$covtm), use.names=FALSE))
-    negR <- unlist(GRangesList(lapply(o, FUN=function(x) x$negR)), use.names=FALSE)
+    covtm <- median(unlist(lapply(o, FUN=function(x) x$covtm),
+                           use.names=FALSE))
+    negR <- unlist(GRangesList(lapply(o, FUN=function(x) x$negR)),
+                   use.names=FALSE)
     if(!is.null(blacklist)) negR <- negR[!overlapsAny(negR, blacklist)]
     
   }
   r <- unlist(GRangesList(lapply(o, FUN=function(x) x$r)), use.names=FALSE)
   if(!is.null(blacklist)) r <- r[!overlapsAny(r, blacklist)]
+  if(length(r)==0) stop("No candidate region found!")
   if(verbose) message("Identified ", length(r), " candidate regions")
   rm(o)
   gc(full=TRUE)
@@ -110,12 +135,13 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
   if(verbose) message("Computing significance...")
   if(!is.null(ctrl)){
     # calculate new logFC
-    r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/(pseudoCount+r$bg))))
+    r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/
+                                              (pseudoCount+r$bg))))
     r <- r[which(r$log10FE > as.integer(floor(100*log10(minFoldChange))))]
     # poisson deviation from background
     r$log10p <- -log10(ppois(r$meanCount, r$bg, lower.tail=FALSE))
     
-    if(verbose) message("Computing false discovery rate using negative peaks...")
+    if(verbose) message("Computing FDR using negative peaks...")
     # call peaks in the control
     p <- -log10(ppois(negR$meanCount, pmax(covtm, pseudoCount, negR$bg),
                       lower.tail=FALSE))
@@ -151,10 +177,11 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
 
 
 .cpGetCandidates <- function(x, ctrl=NULL, paired=FALSE, blacklist=NULL, 
-                             binSize=5L, fragLength=300L, minPeakCount=5L, minSize=10L,
-                             maxSize=2000L, minFoldChange=1.3, bgWindow=c(1,5,10)*1000, 
-                             pseudoCount=1L, useStrand=TRUE,
-                             flgs=scanBamFlag(), breakPeaks=TRUE, verbose=TRUE, ...){
+                             binSize=5L, fragLength=300L, minPeakCount=5L, 
+                             minSize=10L, maxSize=2000L, minFoldChange=1.3, 
+                             bgWindow=c(1,5,10)*1000, pseudoCount=1L, 
+                             useStrand=TRUE, flgs=scanBamFlag(),
+                             breakPeaks=TRUE, verbose=FALSE, ...){
   covtm <- nf <- negR <- fsq <- NULL
   if(!is(x, "RleList")){
     if(verbose) message("Reading signal coverage...")
@@ -165,8 +192,10 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
     }
     co <- coverage(x)
     if(useStrand){
-      cop <- coverage(resize(x[which(as.factor(strand(x))=="+")], binSize, fix="start"))
-      con <- coverage(resize(x[which(as.factor(strand(x))=="-")], binSize, fix="start"))
+      cop <- coverage(resize(x[which(as.factor(strand(x))=="+")], binSize,
+                             fix="start"))
+      con <- coverage(resize(x[which(as.factor(strand(x))=="-")], binSize,
+                             fix="start"))
     }
     rm(x)
     gc(full=TRUE, verbose=FALSE)
@@ -237,7 +266,8 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
   }else if(!is.null(ctrl)){
     if(verbose) message("Computing neighborhood background")
     r$bg <- .getLocalBackground(ctrl, gr=r, windows=bgWindow)/nf
-    r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/(pseudoCount+r$bg))))
+    r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/
+                                              (pseudoCount+r$bg))))
     r <- r[which(r$log10FE > as.integer(floor(100*log10(minFoldChange))))]
     if(verbose) message("Obtaining negative peaks")
     # get negative regions
@@ -245,8 +275,9 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
     negR <- .viewl2gr(negR, maxCount=unlist(viewMaxs(negR)),
                       meanCount=unlist(viewMeans(negR)))
     negR$bg <- nf*.getLocalBackground(co, gr=negR, windows=bgWindow)
-    negR$log10FE <- as.integer(round(100*log10((pseudoCount+negR$meanCount)/(pseudoCount+negR$bg))))
-    negR <- negR[which(negR$log10FE > as.integer(floor(100*log10(minFoldChange))))]
+    negR$log10FE <- as.integer(round(100*log10((pseudoCount+negR$meanCount)/
+                                                 (pseudoCount+negR$bg))))
+    negR <- negR[which(negR$log10FE>as.integer(floor(100*log10(minFoldChange))))]
   }else{
     r$bg <- .getLocalBackground(co, r, windows=max(bgWindow), incRegion=FALSE)
   }
@@ -289,43 +320,6 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
   median(cumsum(runLength(rle))[IRanges::which(runValue(rle))])
 }
 
-# very slow implementation, not used -- see .breakRegions2 instead
-.breakRegions <- function(x, v, maxW=250L, minW=50L){
-  x$V <- v
-  x$iC <- max(v)
-  toFrag <- width(x)>maxW
-  notFrag <- x[which(!toFrag)]
-  x <- x[toFrag]
-  i <- 0L
-  while(length(x)>0){
-    w <- which(x$V==x$iC)
-    l1 <- unlist(w)
-    l2 <- rep(width(x), lengths(w))-l1
-    w2 <- relist(l1>=minW & l2>=minW, w)
-    bp <- w[relist(l1>=minW & l2>=minW, w)]
-    fragged <- lengths(bp)>0
-    if(sum(fragged)>0){
-      bp <- bp[fragged]
-      bp <- unlist(bp[setNames(splitAsList(ceiling(lengths(bp)/2), seq_along(bp)),
-                        NULL)])
-      fr1 <- fr2 <- x[fragged]
-      fr1 <- trim(suppressWarnings(resize(x[fragged], bp-1L)))
-      fr1$V <- fr1$V[IntegerList(lapply(bp,seq_len))]
-      fr2 <- trim(suppressWarnings(resize(x[fragged], width(x[fragged])-bp-1L, fix="end")))
-      fr2$V <- fr2$V[IntegerList(mapply(from=bp,to=lengths(fr2$V),FUN=seq,SIMPLIFY=FALSE))]
-      notFrag <- c(notFrag, fr1[which(width(fr1)<=maxW)], fr2[which(width(fr2)<=maxW)])
-      x <- c(x[which(!fragged)], fr1[which(width(fr1)>maxW)], fr2[which(width(fr2)>maxW)])
-    }
-    i <- i + 1L
-    rv <- runValue(x$V)
-    x$iC <- max(rv[rv<x$iC])
-    if(any(wStop <- x$iC<1L)){
-      notFrag <- c(notFrag, x[which(wStop)])
-      x <- x[which(!wStop)]
-    }
-  }
-  sort(notFrag)
-}
 
 # x is a gr, v is a coverage RleList corresponding to elements of x
 .breakRegions2 <- function(x, v, minW=25L, maxW=1000L, denom=2){
@@ -367,15 +361,28 @@ callPeaks <- function(bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"),
 }
 
 
+#' @importFrom S4Vectors runmean
+#' @importFrom IRanges Views viewMaxs
 .getLocalBackground <- function(co, gr, windows=c(1,5)*1000, incRegion=TRUE){
-  v <- Views(co, trim(suppressWarnings(resize(gr, max(windows), "center"))))
-  m <- do.call(cbind, lapply(sort(windows, decreasing=TRUE), FUN=function(w){
-    if(w!=unlist(width(v))[1])
-      v <- resize(v, w, fix="center")
-    unlist(viewMeans(v))
-  }))
-  if(incRegion) m <- cbind(unlist(viewMaxs(Views(co, gr))),m)
-  rowMaxs(m)
+  centers <- trim(suppressWarnings(resize(gr, width=1L, fix="center")))
+  sublen <- length(co)
+  bg_max <- rep(0L, length(gr))
+  for(k in windows){
+    k <- as.integer(k)
+    # to handle ends:
+    if(k %% 2 == 0) k <- k + 1L 
+    if (sublen > k){
+      v_center <- Views(runmean(co, k=k, endrule="constant"), centers)
+      bg_vals <- unlist(viewMaxs(v_center), use.names=FALSE)
+      bg_max <- pmax(bg_max, bg_vals)
+    }
+  }
+  if(incRegion){
+    v_region <- Views(co, gr)
+    region_vals <- unlist(viewMaxs(v_region), use.names=FALSE)
+    bg_max <- pmax(bg_max, region_vals)
+  }
+  return(bg_max)
 }
 
 # resize peaks using read starts
