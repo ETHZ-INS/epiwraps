@@ -4,7 +4,15 @@
 \alias{peakPbCountsSE}
 \title{peakPbCountsSE}
 \usage{
-peakPbCountsSE(fragfile, peaks, bcmap, genome = NULL, insertions = FALSE)
+peakPbCountsSE(
+  fragfile,
+  peaks,
+  bcmap,
+  insertions = FALSE,
+  genome = NULL,
+  minFragLength = 1L,
+  maxFragLength = 5000L
+)
 }
 \arguments{
 \item{fragfile}{The path to a Tabix-indexed fragment file.}
@@ -14,12 +22,16 @@ peakPbCountsSE(fragfile, peaks, bcmap, genome = NULL, insertions = FALSE)
 \item{bcmap}{A named vector, indicating the pseudobulk sample (values) in 
 which to include each barcode (names).}
 
-\item{genome}{A optional genome object or path to a genom fasta file. If
-included, GC bias will be added to the rowData of the output object.}
-
 \item{insertions}{If TRUE, (shifted) Tn5 insertions events are counted 
 instead of fragments. This means that each fragment gets counted twice
 (for both ends). Default FALSE.}
+
+\item{genome}{A optional genome object or path to a genom fasta file. If
+included, GC bias will be added to the rowData of the output object.}
+
+\item{minFragLength}{Minimum fragment length for a fragment to be counted.}
+
+\item{maxFragLength}{Maximum fragment length for a fragment to be counted.}
 }
 \value{
 A \link[SummarizedExperiment]{RangedSummarizedExperiment} with a 

@@ -33,8 +33,8 @@
 #' quantile(unlist(fragLen))
 bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, nChunks=4,
                              strandMode=2, flgs=scanBamFlag(), exclude=NULL,
-                             mapqFilter=NA_integer_, BPPARAM=SerialParam(), 
-                             ...){
+                             mapqFilter=NA_integer_, ...,
+                             BPPARAM=SerialParam(progressbar=TRUE)){
   if(!is.null(exclude)) stopifnot(is(exclude, "GRanges"))
   param <- .getBamChunkParams(x, flgs=flgs, keepSeqLvls=keepSeqLvls, 
                               nChunks=nChunks)

@@ -43,11 +43,7 @@ chromosomes are split into threads.}
 A reduced `GRanges` of non-overlapping peaks.
 }
 \description{
-This is an alternative to something like 
-\code{reduce(unlist(GRangesList(peaks)))} for merging overlapping regions"
-it tries to break up large merged regions based on the profile of overlap
-with the un-merged regions. We typically use this to merge for instance peaks
-called on different samples.
+Merge regions, re-splitting large merges using local overlap minima
 }
 \details{
 This is an alternative to something like 

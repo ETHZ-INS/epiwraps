@@ -42,7 +42,6 @@ Suggests:
     knitr,
     rmarkdown,
     BiocStyle,
-    UpSetR,
     magick,
     testthat (>= 3.0.0)
 Description:

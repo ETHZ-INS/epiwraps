@@ -44,6 +44,8 @@ A SummarizedExperiment
 }
 \description{
 A faster version of \code{\link[chromVAR]{computeDeviations}} (see details).
+This is kept for legacy/backward compatibility, and users should rather use 
+the `betterChromVAR` package.
 }
 \details{
 The results of this function are equivalent (within a very small precision) 
