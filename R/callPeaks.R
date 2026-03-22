@@ -1,18 +1,13 @@
 #' callPeaksExperimental
 #' 
-#' This is an experimental native R peak caller loosely based on the general 
-#' MACS2 strategy (Zhang et al., Genome Biology 2008). The function is still 
-#' under development, especially with respect to single-end reads, where some 
-#' optimization might still be needed.
-#'  For paired-end reads, the results are nearly identical with those of MACS2, 
-#'  with two main differences: 1) the p-values are more conservative (and 
-#'  arguably better calibrated) and 2) because the implementation does not rely 
-#'  on sliding windows, with default settings the peaks are narrower.
+#' This is a native R peak caller loosely based on the general MACS2 strategy 
+#' (Zhang et al., Genome Biology 2008).
 #'
-#' @param bam A signal bam file
-#' @param ctrl An optional (but highly recommended) control bam file
-#' @param paired Logical, whether the reads are paired
-#' @param binSize Binsize used to estimate peak shift
+#' @param bam A signal bam file (which should be accompanied by an index file).
+#'   Alternatively, a TABIX-indexed fragment file, or an RleList object.
+#' @param ctrl An optional (but highly recommended) control bam file.
+#' @param paired Logical, whether the reads are paired.
+#' @param binSize Binsize used to estimate peak shift.
 #' @param fragLength Fragment length. Ignored if `paired=TRUE`. If 
 #'   `useStrand=TRUE` (default), this is only used for the initial candidate 
 #'   region identification, and sizes are adjusted after, so it doesn't need to 
@@ -29,9 +24,7 @@
 #'   for local background.
 #' @param type The type of peaks to identify ('narrow' or 'broad').
 #' @param outFormat The output format ('custom' or 'narrowPeak')
-#' @param pthres The p-value threshold to use
-#' @param verbose Logical; whether to output progress messages
-#' @param ... Passed to \code{\link{bamChrChunkApply}}
+#' @param pthres The p-value threshold to use.
 #' @param globalNullH Logical; whether to use a global expectation, rather than
 #'   the local background (default), in the absence of a control.
 #' @param gsize The mappable genome size. Ignored unless `globalNullH=TRUE`.
@@ -44,6 +37,8 @@
 #' @param pseudoCount The pseudocount to use when computing logFC.
 #' @param useStrand Logical; whether to use strand information to better 
 #'   estimate the peak boundaries with single-end data.
+#' @param verbose Logical; whether to output progress messages
+#' @param ... Passed to \code{\link{bamChrChunkApply}}
 #'
 #' @return A `GRanges`. If `outFormat="narrowPeak"`, the metadata columns will
 #'   follow the narrowPeak format specification.
@@ -66,7 +61,7 @@ callPeaksExperimental <- function(
       bam, ctrl=NULL, paired, type=c("narrow","broad"), fragLength=NULL,
       globalNullH=FALSE, gsize=NULL, blacklist=NULL, binSize=10L,
       flags=scanBamFlag(isDuplicate=FALSE), minPeakCount=5L, minFoldChange=1.3,
-      pthres=10^-3, maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=1L,
+      pthres=10^-3, maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=0.1,
       useStrand=!paired, outFormat=c("custom", "narrowPeak"), verbose=TRUE,
       ...){
   type <- match.arg(type)
@@ -75,6 +70,8 @@ callPeaksExperimental <- function(
   binSize <- as.integer(binSize)
   minPeakCount <- as.integer(minPeakCount)
   sigType <- .parseFiletypeFromName(bam, FALSE)
+  
+  if(is.null(ctrl) && type=="broad") globalNullH <- TRUE
   
   stopifnot(is.logical(globalNullH) && length(globalNullH)==1)
   if(globalNullH){
@@ -110,20 +107,26 @@ callPeaksExperimental <- function(
       if(is(try(TabixFile(bam[[1]]), silent=TRUE), "try-error")){
         stop("Unrecognized file format.")
       }else{
-        fn <- tabixChrApply
+        o <- tabixChrApply(bam, ..., isPaired=TRUE, ctrl=ctrl, verbose=FALSE,
+                           binSize=binSize, bgWindow=bgWindow,
+                           minFoldChange=minFoldChange, useStrand=useStrand, 
+                           minPeakCount=minPeakCount, pseudoCount=pseudoCount,
+                           breakPeaks=type=="narrow", globalBg=globalNullH,
+                           fn=.cpGetCandidates)
         paired <- TRUE
       }
     }else if(sigType=="bam"){
-      fn <- bamChrChunkApply
+      # paired and flgs doubled because the first is captured by the chunk fn
+      o <- bamChrChunkApply(bam, ..., paired=paired, isPaired=paired, ctrl=ctrl,
+                            verbose=FALSE, binSize=binSize, bgWindow=bgWindow, 
+                            fragLength=fragLength, minFoldChange=minFoldChange, 
+                            minPeakCount=minPeakCount, pseudoCount=pseudoCount,
+                            useStrand=useStrand, flgs=flags, flgs2=flags,
+                            breakPeaks=type=="narrow", globalBg=globalNullH,
+                            FUN=.cpGetCandidates)
     }else{
       stop("Unrecognized file format.")
     }
-    # paired and flgs doubled because the first is captured by the chunk fn
-    o <- fn(bam, ..., paired=paired, isPaired=paired, ctrl=ctrl, verbose=FALSE,
-            binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
-            minFoldChange=minFoldChange, minPeakCount=minPeakCount,
-            pseudoCount=pseudoCount, useStrand=useStrand, flgs=flags, flgs2=flags,
-            breakPeaks=type=="narrow", globalBg=globalNullH, FUN=.cpGetCandidates)
   }
   if(!is.null(ctrl)){
     # adjust the per-block normalization factors
@@ -155,21 +158,22 @@ callPeaksExperimental <- function(
   
   if(verbose) message("Computing significance...")
   
+  adjmax <- r$maxCount+pseudoCount
+  adjbg <- r$bg+pseudoCount
+  p <- ppois(adjmax, adjbg, lower.tail=FALSE)
+  r$log10p <- -log10(p)
+  r$log10FE <- round(log10(adjmax/adjbg),2)
+  
   if(!is.null(ctrl)){
-    
-    # calculate new logFC
-    r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/
-                                              (pseudoCount+r$bg))))
-    r <- r[which(r$log10FE > as.integer(floor(100*log10(minFoldChange))))]
-    # poisson deviation from background
-    r$log10p <- -log10(ppois(r$meanCount, r$bg, lower.tail=FALSE))
-    
+
+    r <- r[which(r$log10FE > as.integer(round(log10(minFoldChange),2)))]
+
     if(verbose) message("Computing FDR using negative peaks...")
     # call peaks in the control
-    p <- -log10(ppois(negR$meanCount, pmax(covtm, pseudoCount, negR$bg),
+    pneg <- -log10(ppois(negR$maxCount, pmax(covtm, pseudoCount, negR$bg),
                       lower.tail=FALSE))
-    metadata(r)$ctrl.log10p <- p
-    mcols(r) <- cbind(mcols(r), getEmpiricalFDR(r$log10p, p))
+    metadata(r)$ctrl.log10p <- pneg
+    mcols(r) <- cbind(mcols(r), getEmpiricalFDR(r$log10p, pneg))
     
   }else{
     
@@ -183,26 +187,23 @@ callPeaksExperimental <- function(
     }
 
     if(type=="narrow"){
-      p <- pmax(ppois(r$meanCount, pmax(r$bg,pseudoCount), lower.tail=FALSE),
-                ppois(r$maxPos, pseudoCount, lower.tail=FALSE),
-                ppois(r$maxNeg, pseudoCount, lower.tail=FALSE))
-      fc <- (pseudoCount+r$meanCount)/(pseudoCount+r$bg)
-    }else{
-      p <- ppois(r$meanCount, pseudoCount, lower.tail=FALSE)
-      fc <- (pseudoCount+r$meanCount)/pseudoCount
+      if(all(c("maxPos","maxNeg") %in% colnames(mcols(r)))){
+        p <- pmax(p, ppois(2*r$maxPos+pseudoCount, adjbg, lower.tail=FALSE),
+                  ppois(2*r$maxNeg+pseudoCount, adjbg, lower.tail=FALSE))
+      }
     }
-    r$log10FE <- as.integer(round(100*log10(fc)))
+    
     r$log10p <- -log10(p)
     r$log10FDR <- round(-log10(p.adjust(p, method="holm")),2)
   }
   r <- r[r$log10p >= -log10(pthres)]
   if(verbose) message("Reporting ", length(r), " regions, ",
                       sum(r$log10FDR>-log10(0.05))," with FDR<0.05")
-  r$log10p <- round(r$log10p,2)
+  for(f in c("log10p", "log10FDR")) mcols(r)[[f]] <- round(mcols(r)[[f]], 2)
   
   r$score <- as.integer(round(1000*(r$log10FE/quantile(r$log10FE, .99))))
   r$score[r$score>1000L] <- 1000L
-  if(outFormat=="NarrowPeak") r <- .customPeaks2NarrowPeaks(r)
+  if(outFormat=="NarrowPeak")  r <- .customPeaks2NarrowPeaks(r)
   r
 }
 
@@ -351,7 +352,7 @@ callPeaksExperimental <- function(
       if(is.null(minW)) minW <- 25L
     } else {
       if(is.null(maxW)) maxW <- as.integer(round(quantile(x, 0.95)))
-      if(is.null(minW)) minW <- as.integer(round(max(0.9*quantile(x, 0.05), 20)))
+      if(is.null(minW)) minW <- as.integer(round(max(0.9*quantile(x,0.05),20)))
     }
   }
   medpo <- median(r$pos, na.rm=TRUE)
@@ -419,21 +420,33 @@ callPeaksExperimental <- function(
 #' @importFrom IRanges Views viewMeans viewMaxs
 .getLocalBackground <- function(co, gr, windows=c(1,5)*1000, incRegion=TRUE){
   bg_max <- rep(0, length(gr))
-  for(k in windows){
-    # 1. Resize candidate regions to the specific window size, centered on the peak
-    gr_window <- suppressWarnings(trim(resize(gr, width=k, fix="center")))
-    bg_max <- pmax(bg_max, unlist(viewMeans(Views(co, gr_window)),
-                                  use.names=FALSE))
-  }
   if(incRegion){
+    for(k in windows){
+      gr_window <- suppressWarnings(trim(resize(gr, width=k, fix="center")))
+      bg_max <- pmax(bg_max, unlist(viewMeans(Views(co, gr_window)),
+                                    use.names=FALSE))
+    }
     bg_max <- pmax(bg_max, unlist(viewMaxs(Views(co, gr)), use.names=FALSE))
+  }else{
+    for(k in windows){
+      # we look left and right, avoiding the region itself
+      k2 <- floor(k/2)
+      wgr <- suppressWarnings(trim(shift(resize(gr, width=k2, fix="start"),
+                                         width(gr))))
+      bg_right <- unlist(viewMeans(Views(co, wgr)), use.names=FALSE)
+      wgr <- suppressWarnings(trim(shift(resize(gr, width=k2, fix="end"),
+                                   -width(gr))))
+      bg_left <- unlist(viewMeans(Views(co, wgr)), use.names=FALSE)
+      bg_max <- pmax(bg_max, bg_right, bg_left)
+    }
   }
   bg_max
 }
 
 
 # resize peaks using read starts
-.resizePeaks <- function(gr, fragLength, within=NULL, pos=NULL, neg=NULL, minC=4L){
+.resizePeaks <- function(gr, fragLength, within=NULL, pos=NULL, neg=NULL,
+                         minC=4L){
   fragLength <- quantile(abs(fragLength), c(0.05,0.95))
   if(!is.null(pos) && !is.null(neg)){
     gr2 <- resize(gr, pmax(width(gr), fragLength[1]), fix="center")
