@@ -229,8 +229,14 @@ callPeaksExperimental <- function(
   }
   if(breakPeaks){
     r2 <- r[width(r)>maxSize]
+    minW <- 25L
+    if(is.null(fragLength)){
+      if(!is.null(fsq)) minW <- round(fragLength/3)
+    }else{
+      minW <- round(fsq[5]/3)
+    }
     r2 <- suppressWarnings({
-      .breakRegions2(r2, v=r2$cov, minW=round(fragLength/2), maxW=maxSize)
+      .breakRegions2(r2, v=r2$cov, minW=minW, maxW=maxSize)
     })
     v <- Views(co, r2)
     r2$maxCount <- unlist(viewMaxs(v))
@@ -334,7 +340,7 @@ callPeaksExperimental <- function(
   ll <- IRangesList(ll)
   gr <- GRanges(rep(seqnames(x), lengths(ll)),
                 ranges=unlist(ll, recursive=FALSE, use.names=FALSE))
-  gr <- reduce(gr, min.gapwidth=round(minW/2))
+  gr <- reduce(gr, min.gapwidth=as.integer(round(minW/2)))
   gr <- reduce(resize(gr, pmax(minW, width(gr)), fix="center"))
   seqinfo(gr) <- seqinfo(xO)
   gr <- trim(gr)
