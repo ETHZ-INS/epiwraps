@@ -13,9 +13,10 @@
 #' @param ctrl An optional (but highly recommended) control bam file
 #' @param paired Logical, whether the reads are paired
 #' @param binSize Binsize used to estimate peak shift
-#' @param fragLength Fragment length. Ignored if `paired=TRUE`. This is only 
-#'   used for the initial candidate region identification, and sizes are 
-#'   adjusted after, so it doesn't need to be very precise.
+#' @param fragLength Fragment length. Ignored if `paired=TRUE`. If 
+#'   `useStrand=TRUE` (default), this is only used for the initial candidate 
+#'   region identification, and sizes are adjusted after, so it doesn't need to 
+#'   be very precise.
 #' @param minPeakCount The minimum summit count for a region to be considered.
 #'   Decreasing this can substantially increase the running time.
 #' @param minFoldChange The minimum fold-change for a region to be considered.
@@ -31,8 +32,21 @@
 #' @param pthres The p-value threshold to use
 #' @param verbose Logical; whether to output progress messages
 #' @param ... Passed to \code{\link{bamChrChunkApply}}
+#' @param globalNullH Logical; whether to use a global expectation, rather than
+#'   the local background (default), in the absence of a control.
+#' @param gsize The mappable genome size. Ignored unless `globalNullH=TRUE`.
+#'   Can also be a species acronym in 'hs', 'mm', 'dm', and 'ce'.
+#' @param flags An optional \link[Rsamtools]{scanBamFlag} object to filter the 
+#'   reads. By default, reads flagged as optical duplicates are excluded.
+#' @param maxSize The loose maximum size of a peak. This is the size above which
+#'   the method will attempt to break up peaks into smaller ones. By default, it
+#'   is 1000 for `type="narrow"`, and 5000 for `type="broad"`.
+#' @param pseudoCount The pseudocount to use when computing logFC.
+#' @param useStrand Logical; whether to use strand information to better 
+#'   estimate the peak boundaries with single-end data.
 #'
-#' @return A `GRanges`
+#' @return A `GRanges`. If `outFormat="narrowPeak"`, the metadata columns will
+#'   follow the narrowPeak format specification.
 #' 
 #' @details 
 #' `callPeaksExperimental` takes about twice as long to run as MACS2, and uses 
@@ -41,26 +55,33 @@
 #' `nChunks=10`.
 #' 
 #' The function uses \code{\link{bamChrChunkApply}} to obtain the coverages,
-#' and can accept any argument of that function. This means that the 
-#' `mapqFilter` and bam `flgs` arguments can be used to restrict the reads used.
+#' and can accept any argument of that function. This means for instance that 
+#' the `mapqFilter` argument can be used to restrict the reads used.
 #' 
 #' @importFrom IRanges Views viewMaxs viewMeans slice viewRangeMaxs relist IntegerList
 #' @importFrom stats setNames pnorm ppois optim density
 #' @importFrom S4Vectors mean.Rle
 #' @export
 callPeaksExperimental <- function(
-      bam, ctrl=NULL, paired, type=c("narrow","broad"), 
-      nullH=c("local","global.nb","global.bin"), ### TO IMPLEMENT
-      blacklist=NULL, binSize=10L, fragLength=NULL, flags=scanBamFlag(isDuplicate=FALSE),
-      minPeakCount=5L, minFoldChange=1.3, pthres=10^-3,
-      maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=1L, useStrand=!paired,
-      outFormat=c("custom", "narrowPeak"), verbose=TRUE, ...){
+      bam, ctrl=NULL, paired, type=c("narrow","broad"), fragLength=NULL,
+      globalNullH=FALSE, gsize=NULL, blacklist=NULL, binSize=10L,
+      flags=scanBamFlag(isDuplicate=FALSE), minPeakCount=5L, minFoldChange=1.3,
+      pthres=10^-3, maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=1L,
+      useStrand=!paired, outFormat=c("custom", "narrowPeak"), verbose=TRUE,
+      ...){
   type <- match.arg(type)
   if(is.null(maxSize)) maxSize <- ifelse(type=="narrow",1000L,5000L)
   outFormat <- match.arg(outFormat)
   binSize <- as.integer(binSize)
   minPeakCount <- as.integer(minPeakCount)
   sigType <- .parseFiletypeFromName(bam, FALSE)
+  
+  stopifnot(is.logical(globalNullH) && length(globalNullH)==1)
+  if(globalNullH){
+    if(!is.null(ctrl))
+      stop("A global background model cannot be use with a control experiment.")
+    gsize <- .checkgsize(gsize)
+  }
   
   if(!paired && isTRUE(sigType=="bam")){
     if(is.null(fragLength))
@@ -81,7 +102,7 @@ callPeaksExperimental <- function(
                           binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
                           minFoldChange=minFoldChange, minPeakCount=minPeakCount,
                           pseudoCount=pseudoCount, useStrand=useStrand, 
-                          flgs=flags, maxSize=maxSize, verbose=TRUE)
+                          flgs=flags, maxSize=maxSize, globalBg=globalNullH, verbose=TRUE)
     o <- list(o)
   }else{
     if(verbose) message("Reading signal and identifying candidate regions...")
@@ -102,7 +123,7 @@ callPeaksExperimental <- function(
             binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
             minFoldChange=minFoldChange, minPeakCount=minPeakCount,
             pseudoCount=pseudoCount, useStrand=useStrand, flgs=flags, flgs2=flags,
-            breakPeaks=type=="narrow", FUN=.cpGetCandidates)
+            breakPeaks=type=="narrow", globalBg=globalNullH, FUN=.cpGetCandidates)
   }
   if(!is.null(ctrl)){
     # adjust the per-block normalization factors
@@ -133,7 +154,9 @@ callPeaksExperimental <- function(
   gc(full=TRUE)
   
   if(verbose) message("Computing significance...")
+  
   if(!is.null(ctrl)){
+    
     # calculate new logFC
     r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/
                                               (pseudoCount+r$bg))))
@@ -147,9 +170,18 @@ callPeaksExperimental <- function(
                       lower.tail=FALSE))
     metadata(r)$ctrl.log10p <- p
     mcols(r) <- cbind(mcols(r), getEmpiricalFDR(r$log10p, p))
+    
   }else{
+    
     if(verbose)
       message("(In the absence of a control, FDR is unlikely to be calibrated)")
+
+    if(globalNullH){
+      # Not using local background, but expected coverage
+      r$bg <- sum(unlist(lapply(o, FUN=function(x) x$totCov),
+                              use.names=FALSE))/gsize
+    }
+
     if(type=="narrow"){
       p <- pmax(ppois(r$meanCount, pmax(r$bg,pseudoCount), lower.tail=FALSE),
                 ppois(r$maxPos, pseudoCount, lower.tail=FALSE),
@@ -175,13 +207,28 @@ callPeaksExperimental <- function(
 }
 
 
+.checkgsize <- function(gsize){
+  stopifnot(!is.null(gsize) & length(gsize)==1)
+  if(is.character(gsize))
+    gsize <- switch(gsize,
+                    "hs" = 2.7e9,
+                    "mm" = 1.87e9,
+                    "ce" = 9e7,
+                    "dm" = 1.2e8,
+                    stop("Unrecognized species in `gsize`")
+    )
+  if(gsize<=0 || ((gsize %% 2)!=0))
+    stop("`gsize` should be a positive integer.")
+  gsize
+}
+
 
 .cpGetCandidates <- function(x, ctrl=NULL, isPaired=FALSE, blacklist=NULL, 
                              binSize=5L, fragLength=300L, minPeakCount=5L, 
                              minSize=10L, maxSize=2000L, minFoldChange=1.3, 
                              bgWindow=c(1,5,10)*1000, pseudoCount=1L, 
-                             useStrand=TRUE, flgs2=scanBamFlag(),
-                             breakPeaks=TRUE, verbose=FALSE, ...){
+                             useStrand=TRUE, breakPeaks=TRUE, globalBg=FALSE,
+                             flgs2=scanBamFlag(), verbose=FALSE, ...){
   covtm <- nf <- negR <- fsq <- NULL
   if(!is(x, "RleList")){
     if(verbose) message("Reading signal coverage...")
@@ -281,13 +328,15 @@ callPeaksExperimental <- function(
     negR$log10FE <- as.integer(round(100*log10((pseudoCount+negR$meanCount)/
                                                  (pseudoCount+negR$bg))))
     negR <- negR[which(negR$log10FE>as.integer(floor(100*log10(minFoldChange))))]
-  }else{
+  }else if(!globalBg){
     r$bg <- .getLocalBackground(co, r, windows=max(bgWindow), incRegion=FALSE)
   }
   if(verbose) message(length(r), " peaks after filtering")
+  
+  totCov <- sum(as.numeric(sum(co)))
   rm(co,ctrl)
   gc(verbose=FALSE)
-  list(regions=r, fsq=fsq, negR=negR, nf=nf, covtm=covtm)
+  list(regions=r, fsq=fsq, negR=negR, nf=nf, covtm=covtm, totCov=totCov)
 }
 
 # refines peaks based on stranded read starts
@@ -367,31 +416,21 @@ callPeaksExperimental <- function(
   mean(x)
 }
 
-
-#' @importFrom S4Vectors runmean
-#' @importFrom IRanges Views viewMaxs
+#' @importFrom IRanges Views viewMeans viewMaxs
 .getLocalBackground <- function(co, gr, windows=c(1,5)*1000, incRegion=TRUE){
-  centers <- trim(suppressWarnings(resize(gr, width=1L, fix="center")))
-  bg_max <- rep(0L, length(gr))
+  bg_max <- rep(0, length(gr))
   for(k in windows){
-    k <- as.integer(k)
-    # to handle ends:
-    if(k %% 2 == 0) k <- k + 1L 
-    # handle chromosomes/scaffolds smaller than the window
-    isBigEnough <- lengths(co)>k
-    w <- which(isBigEnough[as.integer(seqnames(centers))])
-    if(length(w)>0){
-      v_center <- Views(runmean(co, k=k, endrule="constant"), centers[w])
-      bg_max[w] <- pmax(bg_max[w], unlist(viewMaxs(v_center), use.names=FALSE))
-    }
+    # 1. Resize candidate regions to the specific window size, centered on the peak
+    gr_window <- suppressWarnings(trim(resize(gr, width=k, fix="center")))
+    bg_max <- pmax(bg_max, unlist(viewMeans(Views(co, gr_window)),
+                                  use.names=FALSE))
   }
   if(incRegion){
-    v_region <- Views(co, gr)
-    region_vals <- unlist(viewMaxs(v_region), use.names=FALSE)
-    bg_max <- pmax(bg_max, region_vals)
+    bg_max <- pmax(bg_max, unlist(viewMaxs(Views(co, gr)), use.names=FALSE))
   }
-  return(bg_max)
+  bg_max
 }
+
 
 # resize peaks using read starts
 .resizePeaks <- function(gr, fragLength, within=NULL, pos=NULL, neg=NULL, minC=4L){
