@@ -49,18 +49,17 @@
 #' @importFrom S4Vectors mean.Rle
 #' @export
 callPeaksExperimental <- function(
-      bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"), 
+      bam, ctrl=NULL, paired, type=c("narrow","broad"), 
       nullH=c("local","global.nb","global.bin"), ### TO IMPLEMENT
       blacklist=NULL, binSize=10L, fragLength=NULL, flags=scanBamFlag(isDuplicate=FALSE),
       minPeakCount=5L, minFoldChange=1.3, pthres=10^-3,
-      maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=1L,
-      useStrand=TRUE, outFormat=c("custom", "narrowPeak"), verbose=TRUE, ...){
+      maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=1L, useStrand=!paired,
+      outFormat=c("custom", "narrowPeak"), verbose=TRUE, ...){
   type <- match.arg(type)
   if(is.null(maxSize)) maxSize <- ifelse(type=="narrow",1000L,5000L)
   outFormat <- match.arg(outFormat)
   binSize <- as.integer(binSize)
   minPeakCount <- as.integer(minPeakCount)
-  
   sigType <- .parseFiletypeFromName(bam, FALSE)
   
   if(!paired && isTRUE(sigType=="bam")){
@@ -293,14 +292,18 @@ callPeaksExperimental <- function(
 
 # refines peaks based on stranded read starts
 .refinePeaks <- function(r, f=20, minC=3, minW=NULL, maxW=NULL){
-  if(is.null(r$wPos)){
-    r$wPos <- which.max()
-  }
+  if(is.null(r$wPos)) return(r)
+  
   if(is.null(maxW) || is.null(minW)){
     x <- (r$wNeg-r$wPos)[which(r$maxPos>(2*minC) & r$maxNeg>(2*minC))]
     x <- x[x>0]
-    if(is.null(maxW)) maxW <- as.integer(round(quantile(x, 0.95)))
-    if(is.null(minW)) minW <- as.integer(round(max(0.9*quantile(x, 0.05),20)))
+    if(length(x) < 5){ 
+      if(is.null(maxW)) maxW <- 500L
+      if(is.null(minW)) minW <- 25L
+    } else {
+      if(is.null(maxW)) maxW <- as.integer(round(quantile(x, 0.95)))
+      if(is.null(minW)) minW <- as.integer(round(max(0.9*quantile(x, 0.05), 20)))
+    }
   }
   medpo <- median(r$pos, na.rm=TRUE)
   medneg <- median(r$neg, na.rm=TRUE)
@@ -317,7 +320,7 @@ callPeaksExperimental <- function(
     start(r)[w][w2] <- start(r)[w][w2]+wPos[w2]-1L
     end(r)[w][w2] <- start(r)[w][w2]+wNeg[w2]-1L
   }
-  trim(suppressWarnings(resize(r, pmax(minW,width(r)), fix="center")))
+  trim(suppressWarnings(resize(r, pmax(minW, width(r)), fix="center")))
 }
 
 .rleMedWhich <- function(rle){
