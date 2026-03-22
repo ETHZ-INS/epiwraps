@@ -223,7 +223,7 @@ callPeaksExperimental <- function(
     }
     covtm <- .covTrimmedMean(ctrl)
     nf <- covtm/.covTrimmedMean(co)
-    fc <- nf*S4Vectors::mean.Rle(r$cov)/unlist(viewMeans(Views(ctrl, r)))
+    fc <- (nf * r$meanCount)/pmax(unlist(viewMeans(Views(ctrl, r))), pseudoCount)
     r <- r[which(fc>minFoldChange)]
   }
   if(breakPeaks){
