@@ -186,7 +186,7 @@ callPeaksExperimental <- function(
   covtm <- nf <- negR <- fsq <- NULL
   if(!is(x, "RleList")){
     if(verbose) message("Reading signal coverage...")
-    if(paired){
+    if(isPaired){
       fsq <- quantile(width(x), c(0,0.05,0.1,0.25,0.5,0.75,0.9,0.95,1))
     }else{
       x <- trim(suppressWarnings(resize(x, width=fragLength, fix="start")))
@@ -214,7 +214,7 @@ callPeaksExperimental <- function(
       lvls <- lengths(co)[lengths(runValue(co))>1L]
       p <- ScanBamParam(flag=flgs,
                         which=GRanges(names(lvls), IRanges(1L, width=lvls)))
-      if(paired){
+      if(isPaired){
         ctrl <- coverage(GRanges(readGAlignmentPairs(ctrl, param=p)))
       }else{
         ctrl <- GRanges(readGAlignments(ctrl, param=p))
