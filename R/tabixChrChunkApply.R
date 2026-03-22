@@ -13,7 +13,9 @@
 #'   high `nChunks`.
 #' @param only An optional GRanges of regions for which overlapping reads should
 #'   be included. If set, all other reads are discarded.
-#' @param only 
+#' @param progress Logical; whether to show a progress bar.
+#' @param exclude An optional GRanges of regions for which overlapping reads 
+#'   should be excluded.
 #' @param ... Passed to `fn`
 #'
 #' @return A list of whatever `fn` returns
@@ -23,7 +25,7 @@
 #' @importFrom BiocParallel bpnworkers bplapply
 #' @importFrom pbapply pblapply
 tabixChrApply <- function(x, fn, keepSeqLvls=NULL, exclude=NULL, only=NULL,
-                          BPPARAM=SerialParam(), ...){
+                          BPPARAM=NULL, progress=TRUE, ...){
   x <- TabixFile(x)
   if(!is.null(exclude)) stopifnot(is(exclude, "GRanges"))
   if(!is.null(only)) stopifnot(is(only, "GRanges"))
@@ -52,8 +54,9 @@ head(paste(missingLvls, collapse=", "), 3)))
     slvls <- keepSeqLvls
   }
   
-  if(BiocParallel::bpnworkers(BPPARAM)==1){
-    return(pblapply(slvls, FUN=f2, postfn=fn, ...))
+  if(is.null(BPPARAM) || BiocParallel::bpnworkers(BPPARAM)==1){
+    if(progress) return(pblapply(slvls, FUN=f2, postfn=fn, ...))
+    return(lapply(slvls, FUN=f2, postfn=fn, ...))
   }
   bplapply(slvls, FUN=f2, postfn=fn, ..., BPPARAM=BPPARAM)
 }

@@ -22,6 +22,7 @@
 #'   high `nChunks`.
 #' @param exclude An optional GRanges of regions for which overlapping reads 
 #'   should be excluded.
+#' @param progress Logical; whether to show a progress bar.
 #' @param ... Passed to `FUN`
 #'
 #' @return A list of whatever `FUN` returns
@@ -33,8 +34,8 @@
 #' quantile(unlist(fragLen))
 bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, nChunks=4,
                              strandMode=2, flgs=scanBamFlag(), exclude=NULL,
-                             mapqFilter=NA_integer_, ...,
-                             BPPARAM=SerialParam(progressbar=TRUE)){
+                             mapqFilter=NA_integer_, progress=TRUE,
+                             BPPARAM=NULL, ...){
   if(!is.null(exclude)) stopifnot(is(exclude, "GRanges"))
   param <- .getBamChunkParams(x, flgs=flgs, keepSeqLvls=keepSeqLvls, 
                               nChunks=nChunks)
@@ -57,9 +58,11 @@ bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, nChunks=4,
     gc(full=TRUE, verbose=FALSE)
     x
   }
-  if(BiocParallel::bpnworkers(BPPARAM)==1){
-    return(lapply(param,FUN=f2,...))
+  if(is.null(BPPARAM) || BiocParallel::bpnworkers(BPPARAM)==1){
+    if(progress) return(pblapply(param, FUN=f2, ...))
+    return(lapply(param, FUN=f2, ...))
   }
+  
   bplapply(param, FUN=f2, ..., BPPARAM=BPPARAM)
 }
 
