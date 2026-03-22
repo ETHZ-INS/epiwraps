@@ -51,7 +51,7 @@
 callPeaksExperimental <- function(
       bam, ctrl=NULL, paired=FALSE, type=c("narrow","broad"), 
       nullH=c("local","global.nb","global.bin"), ### TO IMPLEMENT
-      blacklist=NULL, binSize=10L, fragLength=NULL, 
+      blacklist=NULL, binSize=10L, fragLength=NULL, flags=scanBamFlag(isDuplicate=FALSE),
       minPeakCount=5L, minFoldChange=1.3, pthres=10^-3,
       maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=1L,
       useStrand=TRUE, outFormat=c("custom", "narrowPeak"), verbose=TRUE, ...){
@@ -78,11 +78,11 @@ callPeaksExperimental <- function(
   if(is(bam, "RleList")){
     useStrand <- FALSE
     if(verbose) message("Identifying candidate regions...")
-    o <- .cpGetCandidates(bam, paired=paired, ctrl=ctrl,  verbose=verbose,
+    o <- .cpGetCandidates(bam, isPaired=paired, ctrl=ctrl,  verbose=verbose,
                           binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
                           minFoldChange=minFoldChange, minPeakCount=minPeakCount,
-                          pseudoCount=pseudoCount, useStrand=useStrand,
-                          maxSize=maxSize, verbose=TRUE)
+                          pseudoCount=pseudoCount, useStrand=useStrand, 
+                          flgs=flags, maxSize=maxSize, verbose=TRUE)
     o <- list(o)
   }else{
     if(verbose) message("Reading signal and identifying candidate regions...")
@@ -91,17 +91,18 @@ callPeaksExperimental <- function(
         stop("Unrecognized file format.")
       }else{
         fn <- tabixChrApply
+        paired <- TRUE
       }
     }else if(sigType=="bam"){
       fn <- bamChrChunkApply
     }else{
       stop("Unrecognized file format.")
     }
-    
-    o <- fn(bam, ..., paired=paired, ctrl=ctrl, verbose=FALSE,
+    # paired and flgs doubled because the first is captured by the chunk fn
+    o <- fn(bam, ..., paired=paired, isPaired=paired, ctrl=ctrl, verbose=FALSE,
             binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
             minFoldChange=minFoldChange, minPeakCount=minPeakCount,
-            pseudoCount=pseudoCount, useStrand=useStrand,
+            pseudoCount=pseudoCount, useStrand=useStrand, flgs=flags, flgs2=flags,
             breakPeaks=type=="narrow", FUN=.cpGetCandidates)
   }
   if(!is.null(ctrl)){
@@ -125,7 +126,7 @@ callPeaksExperimental <- function(
     if(!is.null(blacklist)) negR <- negR[!overlapsAny(negR, blacklist)]
     
   }
-  r <- unlist(GRangesList(lapply(o, FUN=function(x) x$r)), use.names=FALSE)
+  r <- unlist(GRangesList(lapply(o, FUN=\(x) x$regions)), use.names=FALSE)
   if(!is.null(blacklist)) r <- r[!overlapsAny(r, blacklist)]
   if(length(r)==0) stop("No candidate region found!")
   if(verbose) message("Identified ", length(r), " candidate regions")
@@ -176,11 +177,11 @@ callPeaksExperimental <- function(
 
 
 
-.cpGetCandidates <- function(x, ctrl=NULL, paired=FALSE, blacklist=NULL, 
+.cpGetCandidates <- function(x, ctrl=NULL, isPaired=FALSE, blacklist=NULL, 
                              binSize=5L, fragLength=300L, minPeakCount=5L, 
                              minSize=10L, maxSize=2000L, minFoldChange=1.3, 
                              bgWindow=c(1,5,10)*1000, pseudoCount=1L, 
-                             useStrand=TRUE, flgs=scanBamFlag(),
+                             useStrand=TRUE, flgs2=scanBamFlag(),
                              breakPeaks=TRUE, verbose=FALSE, ...){
   covtm <- nf <- negR <- fsq <- NULL
   if(!is(x, "RleList")){
