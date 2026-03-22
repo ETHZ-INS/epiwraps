@@ -372,16 +372,17 @@ callPeaksExperimental <- function(
 #' @importFrom IRanges Views viewMaxs
 .getLocalBackground <- function(co, gr, windows=c(1,5)*1000, incRegion=TRUE){
   centers <- trim(suppressWarnings(resize(gr, width=1L, fix="center")))
-  sublen <- length(co)
   bg_max <- rep(0L, length(gr))
   for(k in windows){
     k <- as.integer(k)
     # to handle ends:
     if(k %% 2 == 0) k <- k + 1L 
-    if (sublen > k){
-      v_center <- Views(runmean(co, k=k, endrule="constant"), centers)
-      bg_vals <- unlist(viewMaxs(v_center), use.names=FALSE)
-      bg_max <- pmax(bg_max, bg_vals)
+    # handle chromosomes/scaffolds smaller than the window
+    isBigEnough <- lengths(co)>k
+    w <- which(isBigEnough[as.integer(seqnames(centers))])
+    if(length(w)>0){
+      v_center <- Views(runmean(co, k=k, endrule="constant"), centers[w])
+      bg_max[w] <- pmax(bg_max[w], unlist(viewMaxs(v_center), use.names=FALSE))
     }
   }
   if(incRegion){
