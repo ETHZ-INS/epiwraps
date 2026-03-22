@@ -212,7 +212,7 @@ callPeaksExperimental <- function(
     if(!is(ctrl, "RleList")){
       if(verbose) message("Reading control coverage...")
       lvls <- lengths(co)[lengths(runValue(co))>1L]
-      p <- ScanBamParam(flag=flgs,
+      p <- ScanBamParam(flag=flgs2,
                         which=GRanges(names(lvls), IRanges(1L, width=lvls)))
       if(isPaired){
         ctrl <- coverage(GRanges(readGAlignmentPairs(ctrl, param=p)))
