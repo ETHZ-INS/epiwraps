@@ -230,11 +230,8 @@ callPeaksExperimental <- function(
   if(breakPeaks){
     r2 <- r[width(r)>maxSize]
     minW <- 25L
-    if(is.null(fragLength)){
-      if(!is.null(fsq)) minW <- round(fragLength/3)
-    }else{
-      minW <- round(fsq[5]/3)
-    }
+    if(!is.null(fsq)) minW <- round(fsq[5]/3)
+    if(!is.null(fragLength)) minW <- round(fragLength/3)
     r2 <- suppressWarnings({
       .breakRegions2(r2, v=r2$cov, minW=minW, maxW=maxSize)
     })
