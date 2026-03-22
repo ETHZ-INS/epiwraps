@@ -71,7 +71,7 @@
 #' @param only An optional GRanges of regions for which overlapping reads should
 #'   be included. If set, all other reads are discarded.
 #' @param binSummarization The method to summarize nucleotides into each bin,
-#'   either "max" (default), "min" or "mean".
+#'   either "mean" (default), "min" or "max".
 #' @param verbose Logical; whether to print progress messages
 #' @param ... Passed to `ScanBamParam`
 #' 
@@ -299,7 +299,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
 #'   be included. If set, all other reads are discarded.
 #' @param format The format of the fragment file.
 #' @param binSummarization The method to summarize nucleotides into each bin,
-#'   either "max" (default), "min" or "mean".
+#'   either "mean" (default), "min" or "max".
 #' @param verbose Logical; whether to print progress messages
 #' 
 #' @return The bigwig filepath. Alternatively, if `output_bw=NA_character_`, 
@@ -324,7 +324,7 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
                     exclude=NULL, minFragLength=1L, maxFragLength=5000L,
                     keepSeqLvls=NULL, useScore=FALSE, forceSeqlevelsStyle=NULL,
                     only=NULL, format="bed",
-                    binSummarization=c("max","min","mean"), verbose=TRUE){
+                    binSummarization=c("mean","max","min"), verbose=TRUE){
   
   binSummarization <- match.arg(binSummarization)
   strand <- match.arg(strand)
