@@ -272,7 +272,7 @@ bwNormFactors <- function(x, ...){
   if(is.character(x)){
     if(.parseFiletypeFromName(x)=="bam"){
       if(paired){
-        x <- readGAlignmentPairs(BamFile(x),
+        x <- readGAlignmentPairs(.initPairedBam(x),
                                  param=ScanBamParam(which=windows, ...))
       }else{
         x <- readGAlignments(BamFile(x), param=ScanBamParam(which=windows, ...))

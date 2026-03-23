@@ -284,7 +284,8 @@ callPeaksExperimental <- function(
       p <- ScanBamParam(flag=flgs2,
                         which=GRanges(names(lvls), IRanges(1L, width=lvls)))
       if(isPaired){
-        ctrl <- coverage(GRanges(readGAlignmentPairs(ctrl, param=p)))
+        ctrl <- coverage(GRanges(readGAlignmentPairs(.initPairedBam(ctrl),
+                                                     param=p)))
       }else{
         ctrl <- GRanges(readGAlignments(ctrl, param=p))
         ctrl <- suppressWarnings(resize(ctrl, width=fragLength, fix="start"))

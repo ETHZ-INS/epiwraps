@@ -86,7 +86,8 @@ In this example we are always using the same track, but the first element
 given tracks. By default, the mean is shown, but this can be controlled through 
 the `aggregation` argument. In addition to usual operations, the tracks can be 
 overlayed on top of one another (`aggregation='overlay'`), or shown as a 
-heatmap (`aggregation='heatmap'`).
+heatmap (`aggregation='heatmap'`), or a mean track with heatmap below 
+(`aggregation="heatmap+mean"`).
 
 ## Using an EnsDb object
 

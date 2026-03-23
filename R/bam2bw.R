@@ -418,6 +418,7 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
                             forceStyle=NULL, si=NULL, only=NULL, exclude=NULL,
                             strandMode=0){
   if(paired){
+    bamfile <- .initPairedBam(bamfile)
     bam <- readGAlignmentPairs(bamfile, param=param, strandMode=strandMode)
     bam <- as(bam[isProperPair(bam)], "GRanges")
     ls <- length(bam)
