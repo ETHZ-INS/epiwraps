@@ -216,7 +216,7 @@ callPeaksExperimental <- function(
     r$log10p <- -log10(p)
     r$log10FDR <- round(-log10(p.adjust(p, method="holm")),2)
   }
-  r <- r[r$log10p >= -log10(pthres)]
+  r <- r[which(r$log10p >= -log10(pthres))]
   if(verbose) message("Reporting ", length(r), " regions, ",
                       sum(r$log10FDR>-log10(0.05))," with FDR<0.05")
   for(f in c("log10p", "log10FDR")) mcols(r)[[f]] <- round(mcols(r)[[f]], 2)
@@ -459,7 +459,7 @@ callPeaksExperimental <- function(
       wgr <- suppressWarnings(trim(shift(resize(gr, width=k2, fix="end"),
                                    -width(gr))))
       bg_left <- unlist(viewMeans(Views(co, wgr)), use.names=FALSE)
-      bg_max <- pmax(bg_max, bg_right, bg_left)
+      bg_max <- pmax(bg_max, bg_right, bg_left, na.rm=TRUE)
     }
   }
   bg_max
