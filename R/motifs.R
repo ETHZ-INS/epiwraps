@@ -42,8 +42,10 @@ motifFootprint <- function(bamfile, motif, motif_occurences, genome=NULL,
 #' Returns regions that have matches for given pairs of motifs within certain 
 #' distances of each other.
 #'
-#' @param motifs A list of motifs (only those specified in `pairs` will be 
-#'   used).
+#' @param motifs A named `PFMatrixList` or `PWMatrixList` object containing 
+#'   motifs (only those specified in `pairs` will be used). If you're not 
+#'   familiar with these objects, see the `TFBSTools` package, and the 
+#'   `univervalmotif` package on how to convert motifs.
 #' @param pairs A list of pairs of motifs for which to compute co-occurence.
 #'   Specifically, this should be a (optionally named) list of character vectors
 #'   of length 2, corresponding to names in `motifs`.
@@ -90,14 +92,13 @@ motifFootprint <- function(bamfile, motif, motif_occurences, genome=NULL,
 #'   of `minDist`/`maxDist` (or each quantile bin).
 #' @export
 #' @importFrom motifmatchr matchMotifs
-#' @importFrom TFBSTools PFMatrixList
-#' @importFrom universalmotif convert_motifs
 #' @importFrom Rsamtools FaFile
 motifCoOccurence <- function(motifs, pairs, regions, genome, centerDist=TRUE,
                              minDist=5, maxDist=50, exclusiveDist=TRUE,
                              restrictToRegions=FALSE,
                              nDistQuantiles=NULL, ignore.strand=TRUE){
   
+  stopifnot(is(motifs, "XMatrixList"))
   stopifnot(is.list(pairs) && all(lengths(pairs)==2))
   stopifnot(is(regions, "GRanges"))
   stopifnot(length(minDist)==length(maxDist))
@@ -112,10 +113,6 @@ motifCoOccurence <- function(motifs, pairs, regions, genome, centerDist=TRUE,
     if(length(maxDist)>1)
       stop("`maxDist` and `minDist` should each have a length of 1 when using",
            " `nDistQuantiles`.")
-  }
-  if(!is(motifs, "XMatrixList")){
-    motifs <- do.call(TFBSTools::PFMatrixList,
-                      convert_motifs(motifs, class="TFBSTools-PFMatrix"))
   }
   if(!all(sapply(pairs, \(x) x %in% names(motifs)))){
     stop("Some of the motifs specific in `pairs` appear not to be in `motifs`.")
