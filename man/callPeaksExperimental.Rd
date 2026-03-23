@@ -7,54 +7,77 @@
 callPeaksExperimental(
   bam,
   ctrl = NULL,
-  paired = FALSE,
+  paired,
   type = c("narrow", "broad"),
-  nullH = c("local", "global.nb", "global.bin"),
+  fragLength = NULL,
+  globalNullH = FALSE,
+  gsize = NULL,
   blacklist = NULL,
   binSize = 10L,
-  fragLength = NULL,
+  flags = scanBamFlag(isDuplicate = FALSE),
   minPeakCount = 5L,
-  minFoldChange = 1.3,
+  minFoldEnr = 1.3,
   pthres = 10^-3,
   maxSize = NULL,
   bgWindow = c(1, 5, 10) * 1000,
-  pseudoCount = 1L,
-  useStrand = TRUE,
+  pseudoCount = 0.5,
+  useStrand = !paired,
   outFormat = c("custom", "narrowPeak"),
   verbose = TRUE,
   ...
 )
 }
 \arguments{
-\item{bam}{A signal bam file}
+\item{bam}{A signal bam file (which should be accompanied by an index file).
+Alternatively, a TABIX-indexed fragment file, or an RleList object.}
 
-\item{ctrl}{An optional (but highly recommended) control bam file}
+\item{ctrl}{An optional (but highly recommended) path to a control bam file. 
+Alternatively, an RleList object.}
 
-\item{paired}{Logical, whether the reads are paired}
+\item{paired}{Logical, whether the reads are paired.}
 
 \item{type}{The type of peaks to identify ('narrow' or 'broad').}
+
+\item{fragLength}{Fragment length. Ignored if `paired=TRUE`. If 
+`useStrand=TRUE` (default), this is only used for the initial candidate 
+region identification, and sizes are adjusted after, so it doesn't need to 
+be very precise.}
+
+\item{globalNullH}{Logical; whether to use a global expectation, rather than
+the local background (default), in the absence of a control.}
+
+\item{gsize}{The mappable genome size. Ignored unless `globalNullH=TRUE`.
+Can also be a species acronym in 'hs', 'mm', 'dm', and 'ce'.}
 
 \item{blacklist}{An optional `GRanges` of regions to be excluded (or the path
 to such a file). Since the blacklisted regions are removed from both the
 signal and control peaks, this also has an important impact on the 
 empirical FDR (when `ctrl` is given).}
 
-\item{binSize}{Binsize used to estimate peak shift}
+\item{binSize}{Binsize used to estimate peak shift.}
 
-\item{fragLength}{Fragment length. Ignored if `paired=TRUE`. This is only 
-used for the initial candidate region identification, and sizes are 
-adjusted after, so it doesn't need to be very precise.}
+\item{flags}{An optional \link[Rsamtools]{scanBamFlag} object to filter the 
+reads. By default, reads flagged as optical duplicates are excluded.}
 
 \item{minPeakCount}{The minimum summit count for a region to be considered.
 Decreasing this can substantially increase the running time.}
 
-\item{minFoldChange}{The minimum fold-change for a region to be considered.
-Decreasing this can substantially increase the running time.}
+\item{minFoldEnr}{The minimum fold-enrichment for a region to be 
+considered. Decreasing this can substantially increase the running time.}
 
-\item{pthres}{The p-value threshold to use}
+\item{pthres}{The p-value threshold to use.}
+
+\item{maxSize}{The loose maximum size of a peak. This is the size above which
+the method will attempt to break up peaks into smaller ones. By default, it
+is 1000 for `type="narrow"`, and 5000 for `type="broad"`.}
 
 \item{bgWindow}{The windows to consider (in addition to the peak itself) 
 for local background.}
+
+\item{pseudoCount}{The pseudocount to use when computing logFC.}
+
+\item{useStrand}{Logical; whether to use strand information to better 
+estimate the peak boundaries with single-end data.}
 
 \item{outFormat}{The output format ('custom' or 'narrowPeak')}
 
@@ -63,25 +86,38 @@ for local background.}
 \item{...}{Passed to \code{\link{bamChrChunkApply}}}
 }
 \value{
-A `GRanges`
+A `GRanges`. If `outFormat="narrowPeak"`, the metadata columns will
+  follow the narrowPeak format specification.
 }
 \description{
-This is an experimental native R peak caller loosely based on the general 
-MACS2 strategy (Zhang et al., Genome Biology 2008). The function is still 
-under development, especially with respect to single-end reads, where some 
-optimization might still be needed.
- For paired-end reads, the results are nearly identical with those of MACS2, 
- with two main differences: 1) the p-values are more conservative (and 
- arguably better calibrated) and 2) because the implementation does not rely 
- on sliding windows, with default settings the peaks are narrower.
+This is a native R peak caller loosely based on the general MACS2 strategy 
+(Zhang et al., Genome Biology 2008).
 }
 \details{
-`callPeaksExperimental` takes about twice as long to run as MACS2, and uses 
-more memory. If dealing with very large files (or a very low memory system),
-consider increasing the number of processing chunks, for instance with 
-`nChunks=10`.
+Unless `globalNullH=TRUE`, this function uses MACS' local lambda (defined by
+`bgWindow`). A major difference with MACS2/3 is that, rather than using 
+sliding windows, if works on the running list encoding of the coverage(s).
+As a consequence, significance is estimated based on the peak's maximum 
+coverage, which is very similar for narrow peaks, but very different for 
+broad peaks, which will not produce astronomical p-values as is the case 
+with MACS.
+The function takes about twice as long to run as MACS2, and uses more memory.
+It can however be multithreaded relatively efficiently using the `BPPARAM`
+argument (passed to \code{\link{bamChrChunkApply}}). 
+If dealing with very large files and memory usage is a problem, be sure not 
+to multi-thread, and consider increasing the number of processing chunks, 
+for instance with `nChunks=10`.
 
 The function uses \code{\link{bamChrChunkApply}} to obtain the coverages,
-and can accept any argument of that function. This means that the 
-`mapqFilter` and bam `flgs` arguments can be used to restrict the reads used.
+and can accept any argument of that function. This means for instance that 
+the `mapqFilter` argument can be used to restrict the reads used.
+}
+\examples{
+# we use the example bam file from the Rsamtools package:
+bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
+peaks <- callPeaksExperimental(bam, paired=TRUE)
+# If you are calling peaks on multiple IPs against the same input, you can 
+# save time by pre-loading the input coverage input memory, e.g. :
+# input.cov <- bam2bw("input.bam", output_bw=NA, scaling=FALSE, paired=TRUE)
+# peaks <- callPeaksExperimental("IP.bam", ctrl=input.cov, paired=TRUE)
 }

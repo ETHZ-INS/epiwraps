@@ -5,7 +5,8 @@
 #'
 #' @param bam A signal bam file (which should be accompanied by an index file).
 #'   Alternatively, a TABIX-indexed fragment file, or an RleList object.
-#' @param ctrl An optional (but highly recommended) control bam file.
+#' @param ctrl An optional (but highly recommended) path to a control bam file. 
+#'   Alternatively, an RleList object.
 #' @param paired Logical, whether the reads are paired.
 #' @param binSize Binsize used to estimate peak shift.
 #' @param fragLength Fragment length. Ignored if `paired=TRUE`. If 
@@ -14,8 +15,8 @@
 #'   be very precise.
 #' @param minPeakCount The minimum summit count for a region to be considered.
 #'   Decreasing this can substantially increase the running time.
-#' @param minFoldChange The minimum fold-change for a region to be considered.
-#'   Decreasing this can substantially increase the running time.
+#' @param minFoldEnr The minimum fold-enrichment for a region to be 
+#'   considered. Decreasing this can substantially increase the running time.
 #' @param blacklist An optional `GRanges` of regions to be excluded (or the path
 #'   to such a file). Since the blacklisted regions are removed from both the
 #'   signal and control peaks, this also has an important impact on the 
@@ -44,10 +45,19 @@
 #'   follow the narrowPeak format specification.
 #' 
 #' @details 
-#' `callPeaksExperimental` takes about twice as long to run as MACS2, and uses 
-#' more memory. If dealing with very large files (or a very low memory system),
-#' consider increasing the number of processing chunks, for instance with 
-#' `nChunks=10`.
+#' Unless `globalNullH=TRUE`, this function uses MACS' local lambda (defined by
+#' `bgWindow`). A major difference with MACS2/3 is that, rather than using 
+#' sliding windows, if works on the running list encoding of the coverage(s).
+#' As a consequence, significance is estimated based on the peak's maximum 
+#' coverage, which is very similar for narrow peaks, but very different for 
+#' broad peaks, which will not produce astronomical p-values as is the case 
+#' with MACS.
+#' The function takes about twice as long to run as MACS2, and uses more memory.
+#' It can however be multithreaded relatively efficiently using the `BPPARAM`
+#' argument (passed to \code{\link{bamChrChunkApply}}). 
+#' If dealing with very large files and memory usage is a problem, be sure not 
+#' to multi-thread, and consider increasing the number of processing chunks, 
+#' for instance with `nChunks=10`.
 #' 
 #' The function uses \code{\link{bamChrChunkApply}} to obtain the coverages,
 #' and can accept any argument of that function. This means for instance that 
@@ -57,19 +67,27 @@
 #' @importFrom stats setNames pnorm ppois optim density
 #' @importFrom S4Vectors mean.Rle
 #' @export
+#' @examples
+#' # we use the example bam file from the Rsamtools package:
+#' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
+#' peaks <- callPeaksExperimental(bam, paired=TRUE)
+#' # If you are calling peaks on multiple IPs against the same input, you can 
+#' # save time by pre-loading the input coverage input memory, e.g. :
+#' # input.cov <- bam2bw("input.bam", output_bw=NA, scaling=FALSE, paired=TRUE)
+#' # peaks <- callPeaksExperimental("IP.bam", ctrl=input.cov, paired=TRUE)
 callPeaksExperimental <- function(
       bam, ctrl=NULL, paired, type=c("narrow","broad"), fragLength=NULL,
       globalNullH=FALSE, gsize=NULL, blacklist=NULL, binSize=10L,
-      flags=scanBamFlag(isDuplicate=FALSE), minPeakCount=5L, minFoldChange=1.3,
-      pthres=10^-3, maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=0.1,
+      flags=scanBamFlag(isDuplicate=FALSE), minPeakCount=5L, minFoldEnr=1.3,
+      pthres=10^-3, maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=0.5,
       useStrand=!paired, outFormat=c("custom", "narrowPeak"), verbose=TRUE,
       ...){
   type <- match.arg(type)
-  if(is.null(maxSize)) maxSize <- ifelse(type=="narrow",1000L,5000L)
+  if(is.null(maxSize)) maxSize <- ifelse(type=="narrow",600L,5000L)
   outFormat <- match.arg(outFormat)
   binSize <- as.integer(binSize)
   minPeakCount <- as.integer(minPeakCount)
-  sigType <- .parseFiletypeFromName(bam, FALSE)
+  sigType <- .parseFiletypeFromName(bam, stopOnUnrecognized=FALSE, covOk=TRUE)
   
   if(is.null(ctrl) && type=="broad") globalNullH <- TRUE
   
@@ -93,13 +111,15 @@ callPeaksExperimental <- function(
   }
   
   if(is(bam, "RleList")){
+    if(useStrand && verbose)
+      message("`useStrand` disabled as the input is a coverage object.")
     useStrand <- FALSE
     if(verbose) message("Identifying candidate regions...")
     o <- .cpGetCandidates(bam, isPaired=paired, ctrl=ctrl,  verbose=verbose,
                           binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
-                          minFoldChange=minFoldChange, minPeakCount=minPeakCount,
+                          minFoldEnr=minFoldEnr, minPeakCount=minPeakCount,
                           pseudoCount=pseudoCount, useStrand=useStrand, 
-                          flgs=flags, maxSize=maxSize, globalBg=globalNullH, verbose=TRUE)
+                          flgs=flags, maxSize=maxSize, globalBg=globalNullH)
     o <- list(o)
   }else{
     if(verbose) message("Reading signal and identifying candidate regions...")
@@ -108,8 +128,8 @@ callPeaksExperimental <- function(
         stop("Unrecognized file format.")
       }else{
         o <- tabixChrApply(bam, ..., isPaired=TRUE, ctrl=ctrl, verbose=FALSE,
-                           binSize=binSize, bgWindow=bgWindow,
-                           minFoldChange=minFoldChange, useStrand=useStrand, 
+                           binSize=binSize, bgWindow=bgWindow, progress=verbose,
+                           minFoldEnr=minFoldEnr, useStrand=useStrand, 
                            minPeakCount=minPeakCount, pseudoCount=pseudoCount,
                            breakPeaks=type=="narrow", globalBg=globalNullH,
                            fn=.cpGetCandidates)
@@ -119,11 +139,11 @@ callPeaksExperimental <- function(
       # paired and flgs doubled because the first is captured by the chunk fn
       o <- bamChrChunkApply(bam, ..., paired=paired, isPaired=paired, ctrl=ctrl,
                             verbose=FALSE, binSize=binSize, bgWindow=bgWindow, 
-                            fragLength=fragLength, minFoldChange=minFoldChange, 
+                            fragLength=fragLength, minFoldEnr=minFoldEnr, 
                             minPeakCount=minPeakCount, pseudoCount=pseudoCount,
                             useStrand=useStrand, flgs=flags, flgs2=flags,
                             breakPeaks=type=="narrow", globalBg=globalNullH,
-                            FUN=.cpGetCandidates)
+                            FUN=.cpGetCandidates, progress=verbose)
     }else{
       stop("Unrecognized file format.")
     }
@@ -166,7 +186,7 @@ callPeaksExperimental <- function(
   
   if(!is.null(ctrl)){
 
-    r <- r[which(r$log10FE > as.integer(round(log10(minFoldChange),2)))]
+    r <- r[which(r$log10FE > as.integer(round(log10(minFoldEnr),2)))]
 
     if(verbose) message("Computing FDR using negative peaks...")
     # call peaks in the control
@@ -226,12 +246,14 @@ callPeaksExperimental <- function(
 
 .cpGetCandidates <- function(x, ctrl=NULL, isPaired=FALSE, blacklist=NULL, 
                              binSize=5L, fragLength=300L, minPeakCount=5L, 
-                             minSize=10L, maxSize=2000L, minFoldChange=1.3, 
+                             minSize=10L, maxSize=2000L, minFoldEnr=1.3, 
                              bgWindow=c(1,5,10)*1000, pseudoCount=1L, 
                              useStrand=TRUE, breakPeaks=TRUE, globalBg=FALSE,
                              flgs2=scanBamFlag(), verbose=FALSE, ...){
   covtm <- nf <- negR <- fsq <- NULL
-  if(!is(x, "RleList")){
+  if(is(x, "RleList")){
+    co <- x
+  }else{
     if(verbose) message("Reading signal coverage...")
     if(isPaired){
       fsq <- quantile(width(x), c(0,0.05,0.1,0.25,0.5,0.75,0.9,0.95,1))
@@ -272,7 +294,7 @@ callPeaksExperimental <- function(
     covtm <- .covTrimmedMean(ctrl)
     nf <- covtm/.covTrimmedMean(co)
     fc <- (nf * r$meanCount)/pmax(unlist(viewMeans(Views(ctrl, r))), pseudoCount)
-    r <- r[which(fc>minFoldChange)]
+    r <- r[which(fc>minFoldEnr)]
   }
   if(breakPeaks){
     r2 <- r[width(r)>maxSize]
@@ -317,18 +339,17 @@ callPeaksExperimental <- function(
   }else if(!is.null(ctrl)){
     if(verbose) message("Computing neighborhood background")
     r$bg <- .getLocalBackground(ctrl, gr=r, windows=bgWindow)/nf
-    r$log10FE <- as.integer(round(100*log10((pseudoCount+r$meanCount)/
-                                              (pseudoCount+r$bg))))
-    r <- r[which(r$log10FE > as.integer(floor(100*log10(minFoldChange))))]
+    r$log10FE <- round(log10((pseudoCount+r$maxCount)/(pseudoCount+r$bg)), 2)
+    r <- r[which(r$log10FE > round(log10(minFoldEnr),2))]
     if(verbose) message("Obtaining negative peaks")
     # get negative regions
     negR <- slice(ctrl, lower=max(minPeakCount, minPeakCount/nf))
     negR <- .viewl2gr(negR, maxCount=unlist(viewMaxs(negR)),
                       meanCount=unlist(viewMeans(negR)))
     negR$bg <- nf*.getLocalBackground(co, gr=negR, windows=bgWindow)
-    negR$log10FE <- as.integer(round(100*log10((pseudoCount+negR$meanCount)/
-                                                 (pseudoCount+negR$bg))))
-    negR <- negR[which(negR$log10FE>as.integer(floor(100*log10(minFoldChange))))]
+    negR$log10FE <- round(log10((pseudoCount+negR$maxCount)/
+                                  (pseudoCount+negR$bg)),2)
+    negR <- negR[which(negR$log10FE>as.integer(round(log10(minFoldEnr),2)))]
   }else if(!globalBg){
     r$bg <- .getLocalBackground(co, r, windows=max(bgWindow), incRegion=FALSE)
   }
@@ -401,7 +422,8 @@ callPeaksExperimental <- function(
 .customPeaks2NarrowPeak <- function(r){
   r$name <- Rle(rep(factor("."),length(r)))
   r$pointSource <- r$summit-start(r)
-  mcols(r) <- mcols(r)[,c("name","score","logFC","log10p","log10FDR",
+  r$foldEnrichment <- 10^r$log10FE
+  mcols(r) <- mcols(r)[,c("name","score","foldEnrichment","log10p","log10FDR",
                           "pointSource")]
   r
 }

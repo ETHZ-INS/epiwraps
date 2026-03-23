@@ -24,7 +24,7 @@ frag2bw(
   forceSeqlevelsStyle = NULL,
   only = NULL,
   format = "bed",
-  binSummarization = c("max", "min", "mean"),
+  binSummarization = c("mean", "max", "min"),
   verbose = TRUE
 )
 }
@@ -80,7 +80,7 @@ be included. If set, all other reads are discarded.}
 \item{format}{The format of the fragment file.}
 
 \item{binSummarization}{The method to summarize nucleotides into each bin,
-either "max" (default), "min" or "mean".}
+either "mean" (default), "min" or "max".}
 
 \item{verbose}{Logical; whether to print progress messages}
 }

@@ -138,7 +138,7 @@ seqlevel style for the output bigwig. Can take any value accepted by
 \item{verbose}{Logical; whether to print progress messages}
 
 \item{binSummarization}{The method to summarize nucleotides into each bin,
-either "max" (default), "min" or "mean".}
+either "mean" (default), "min" or "max".}
 
 \item{...}{Passed to `ScanBamParam`}
 }

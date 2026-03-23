@@ -14,8 +14,9 @@ bamChrChunkApply(
   flgs = scanBamFlag(),
   exclude = NULL,
   mapqFilter = NA_integer_,
-  ...,
-  BPPARAM = SerialParam(progressbar = TRUE)
+  progress = TRUE,
+  BPPARAM = NULL,
+  ...
 )
 }
 \arguments{
@@ -43,11 +44,13 @@ should be excluded.}
 \item{mapqFilter}{Integer of the minimum mapping quality for reads to be 
 included.}
 
-\item{...}{Passed to `FUN`}
+\item{progress}{Logical; whether to show a progress bar.}
 
 \item{BPPARAM}{A `BiocParallel` parameter object for multithreading. Note 
 that if used, memory usage will be high; in this context we recommend a 
 high `nChunks`.}
+
+\item{...}{Passed to `FUN`}
 }
 \value{
 A list of whatever `FUN` returns

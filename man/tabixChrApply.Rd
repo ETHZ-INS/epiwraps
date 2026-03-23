@@ -10,7 +10,8 @@ tabixChrApply(
   keepSeqLvls = NULL,
   exclude = NULL,
   only = NULL,
-  BPPARAM = SerialParam(),
+  BPPARAM = NULL,
+  progress = TRUE,
   ...
 )
 }
@@ -22,11 +23,17 @@ tabixChrApply(
 
 \item{keepSeqLvls}{An optional vector of seqLevels to keep}
 
-\item{only}{}
+\item{exclude}{An optional GRanges of regions for which overlapping reads 
+should be excluded.}
+
+\item{only}{An optional GRanges of regions for which overlapping reads should
+be included. If set, all other reads are discarded.}
 
 \item{BPPARAM}{A `BiocParallel` parameter object for multithreading. Note 
 that if used, memory usage will be high; in this context we recommend a 
 high `nChunks`.}
+
+\item{progress}{Logical; whether to show a progress bar.}
 
 \item{...}{Passed to `fn`}
 }
