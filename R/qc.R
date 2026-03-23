@@ -57,7 +57,7 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
     if(ftype=="bam"){
       flgs <- scanBamFlag(isDuplicate=FALSE, isSecondaryAlignment=FALSE)
       params <- Rsamtools::ScanBamParam(which=gr, flag=flgs)
-      x <- as(GenomicAlignments::readGAlignmentPairs(x, param=params), "GRanges")
+      x <- as(readGAlignmentPairs(.initPairedBam(x), param=params), "GRanges")
       y <- as.integer(countOverlaps(gr,x))
     }else if(ftype=="bw"){
       x <- rtracklayer::import(x, format="BigWig", selection=BigWigSelection(gr))
@@ -215,16 +215,16 @@ fragSizesDist <- function(x, what=10000, flags=scanBamFlag(isProperPair=TRUE),
   stopifnot(length(what)==1)
   if(is.null(names(x))) names(x) <- .cleanFileNames(x)
   flen <- bplapply(x, BPPARAM=BPPARAM, FUN=function(x){
+    bam <- .initPairedBam(x)
     if(is.numeric(what)){
       what <- as.integer(what)
       stopifnot(what>1)
-      x <- GenomicFiles::reduceByYield(
-        BamFile(x), MAP=identity, YIELD=function(x)
-           readGAlignmentPairs(x, param = ScanBamParam(flag=flags)),
+      x <- GenomicFiles::reduceByYield(bam, MAP=identity, YIELD=function(x)
+           readGAlignmentPairs(bam, param = ScanBamParam(flag=flags)),
         REDUCE=GenomicFiles::REDUCEsampler(what, verbose=FALSE))
     }else{
-      x <- readGAlignmentPairs(x, param=ScanBamParam(flag=flags, 
-                               which=GRanges(what, IRanges(1L,10^8))))
+      x <- readGAlignmentPairs(bam, param=ScanBamParam(flag=flags, 
+                                which=GRanges(what, IRanges(1L,10^8))))
     }
     width(as(x, "GRanges"))
   })

@@ -41,7 +41,8 @@ bamChrChunkApply <- function(x, FUN, paired=FALSE, keepSeqLvls=NULL, nChunks=4,
                               nChunks=nChunks)
   f2 <- function(p, ...){
     if(paired){
-      x <- readGAlignmentPairs(x, param=p, strandMode=strandMode)
+      bam <- .initPairedBam(x)
+      x <- readGAlignmentPairs(bam, param=p, strandMode=strandMode)
       x <- as(x[isProperPair(x)], "GRanges")
     }else{
       x <- GRanges(readGAlignments(x, param=p))

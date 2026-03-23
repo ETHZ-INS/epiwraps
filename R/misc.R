@@ -460,3 +460,12 @@ formatGenomicDist <- function(e, allowFraction=TRUE, sameUnits=TRUE, head0=TRUE,
   }
   e/f
 }
+
+.initPairedBam <- function(path){
+  bam <- BamFile(path, yieldSize=10L)
+  qn <- Rsamtools::scanBam(bam, param=ScanBamParam(what="qname"))[[1]]$qname
+  suffix <- NA
+  if(sum(grepl("/[0-3]$", qn))>=9) suffix <- "/"
+  if(sum(grepl("\\.[0-3]$", qn))>=9) suffix <- "."
+  BamFile(path, qnameSuffixStart=suffix)
+}
