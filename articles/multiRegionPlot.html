@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.107</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.106</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,10 +84,10 @@ Switzerland<br><div class="d-none name"><code>multiRegionPlot.Rmd</code></div>
 <p>Since reading data from many regions is typically longer than
 plotting it, we split plotting and acquiring the data. The latter is
 done through function specific to this package, while the former wraps
-around the <em><a href="https://bioconductor.org/packages/3.20/EnrichedHeatmap" class="external-link">EnrichedHeatmap</a></em>
+around the <em><a href="https://bioconductor.org/packages/3.22/EnrichedHeatmap" class="external-link">EnrichedHeatmap</a></em>
 package. The interface here has been simplified, but for full
 functionality and customization it is recommended to have a look at the
-<em><a href="https://bioconductor.org/packages/3.20/EnrichedHeatmap" class="external-link">EnrichedHeatmap</a></em>
+<em><a href="https://bioconductor.org/packages/3.22/EnrichedHeatmap" class="external-link">EnrichedHeatmap</a></em>
 documentation.</p>
 </div>
 <div class="section level2">
@@ -122,7 +122,7 @@ kind of signal you want to visualize, see the
 <span><span class="co">## colData names(0):</span></span>
 <span><span class="co">## metadata(0):</span></span></code></pre>
 <p>The result is an object of class <code>EnrichmentSE</code>, which
-inherits from a <em><a href="https://bioconductor.org/packages/3.20/SummarizedExperiment/vignettes/RangedSummarizedExperiment" class="external-link">SummarizedExperiment</a></em>,
+inherits from a <em><a href="https://bioconductor.org/packages/3.22/SummarizedExperiment/vignettes/RangedSummarizedExperiment" class="external-link">SummarizedExperiment</a></em>,
 and therefore affords all the manipulations that the latter offers. Each
 region is stored as a row, and each sample or signal track as a column
 of the object. So we can see that we have signal for 150 rows/regions
@@ -203,20 +203,20 @@ eventually normalized, see the section below), we can plot heatmaps
 based on them as follows:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/heatmap1-1.png" width="384">
-We can use most arguments that are supported by <em><a href="https://bioconductor.org/packages/3.20/EnrichedHeatmap" class="external-link">EnrichedHeatmap</a></em>
-(and thus, by extension, by <em><a href="https://bioconductor.org/packages/3.20/ComplexHeatmap" class="external-link">ComplexHeatmap</a></em>),
+<p><img src="multiRegionPlot_files/figure-html/heatmap1-1.png" class="r-plt" alt="" width="384">
+We can use most arguments that are supported by <em><a href="https://bioconductor.org/packages/3.22/EnrichedHeatmap" class="external-link">EnrichedHeatmap</a></em>
+(and thus, by extension, by <em><a href="https://bioconductor.org/packages/3.22/ComplexHeatmap" class="external-link">ComplexHeatmap</a></em>),
 for example:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">m</span>, colors<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>,<span class="st">"darkred"</span><span class="op">)</span>, cluster_rows<span class="op">=</span><span class="cn">TRUE</span>,</span>
 <span>                     show_row_dend<span class="op">=</span><span class="cn">TRUE</span>, top_annotation<span class="op">=</span><span class="cn">FALSE</span>, </span>
 <span>                     row_title<span class="op">=</span><span class="st">"My list of cool regions"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/heatmap2-1.png" width="384"></p>
+<p><img src="multiRegionPlot_files/figure-html/heatmap2-1.png" class="r-plt" alt="" width="384"></p>
 <p>It is often useful to subset to regions with a high enrichment, which
 we can do with the <code>score</code> function:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">m</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/order.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/score.html" class="external-link">score</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,<span class="fl">50</span><span class="op">)</span>,<span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/heatmap2b-1.png" width="384"></p>
+<p><img src="multiRegionPlot_files/figure-html/heatmap2b-1.png" class="r-plt" alt="" width="384"></p>
 <div class="section level3">
 <h3 id="color-scale-trimming">Color-scale trimming<a class="anchor" aria-label="anchor" href="#color-scale-trimming"></a>
 </h3>
@@ -232,7 +232,7 @@ following two heatmaps:</p>
 <span>                       column_title<span class="op">=</span><span class="st">"trim=0.99"</span>, top_annotation<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">m</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, trim<span class="op">=</span><span class="fl">0.9</span>, column_title<span class="op">=</span><span class="st">"trim=0.9"</span>,</span>
 <span>                       scale_title<span class="op">=</span><span class="st">"trim=0.9"</span>, top_annotation<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/heatmapTrim-1.png" width="480"></p>
+<p><img src="multiRegionPlot_files/figure-html/heatmapTrim-1.png" class="r-plt" alt="" width="480"></p>
 <p>The underlying data is exactly the same, only the color-mapping
 changes. In the left one, which has no trimming, a single very high
 value at the top forces the colorscale to extend to high values, even
@@ -264,19 +264,19 @@ tracks:</p>
 <p>We can put each of the three tracks on its own color scale:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">exampleESE</span>, multiScale<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/heatmap1ms-1.png" width="432"></p>
+<p><img src="multiRegionPlot_files/figure-html/heatmap1ms-1.png" class="r-plt" alt="" width="432"></p>
 <p>One could also specify colors separately by providing them as a
 list:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">exampleESE</span>,</span>
 <span>                     colors<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>,<span class="st">"darkblue"</span><span class="op">)</span>, <span class="st">"darkgreen"</span>, <span class="st">"darkred"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/heatmap1ms2-1.png" width="432"></p>
+<p><img src="multiRegionPlot_files/figure-html/heatmap1ms2-1.png" class="r-plt" alt="" width="432"></p>
 <p>This information can also be stored in the object, rather than
 specified everytime:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">exampleESE</span><span class="op">$</span><span class="va">hmcolors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">viridisLite</span><span class="fu">::</span><span class="fu"><a href="https://sjmgarnier.github.io/viridisLite/reference/viridis.html" class="external-link">inferno</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>,  <span class="st">"darkgreen"</span>, <span class="st">"darkred"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-8-1.png" width="432"></p>
+<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="432"></p>
 </div>
 <div class="section level3">
 <h3 id="scaled-regions">Scaled regions<a class="anchor" aria-label="anchor" href="#scaled-regions"></a>
@@ -296,7 +296,7 @@ regions to the same width, which can be done using the
 <span><span class="co">## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span></span></code></pre>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">ese</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
+<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="700"></p>
 <p>For some purposes, such as when plotting signal over transcripts, it
 can be useful for the target region to consist of multiple regions
 (e.g. exons) stitched together. This can be done by supplying a
@@ -309,7 +309,7 @@ can be useful for the target region to consist of multiple regions
 <pre><code><span><span class="co">## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span></span></code></pre>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">sm</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
+<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="heatmap-rasterization">Heatmap rasterization<a class="anchor" aria-label="anchor" href="#heatmap-rasterization"></a>
@@ -340,7 +340,7 @@ hide patterns in the data, which are instead revealed by clustering. One
 approach is to use hierarchical clustering of the rows:</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">exampleESE</span>, cluster_rows<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
+<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="700"></p>
 <p>In this example, this already reveals important patterns in the data,
 namely the fact that p300 binding is associated with H3K27ac and tends
 to be mutually exclusive with the promoter-associated H3K4me3 mark.</p>
@@ -358,7 +358,7 @@ cluster the regions. We provide a function to this end:</p>
 <code class="sourceCode R"><span><span class="co"># we additionally label the clusters with colors:</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">exampleESE</span>, row_split<span class="op">=</span><span class="st">"cluster"</span>,</span>
 <span>                     mean_color<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span><span class="op">=</span><span class="st">"red"</span>, <span class="st">"2"</span><span class="op">=</span><span class="st">"blue"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
+<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-12-1.png" class="r-plt" alt="" width="700"></p>
 <p>Note that here we are splitting into 3 clusters, you can also provide
 a range of values (e.g. <code>k=2:8</code>) and the function will also
 return cluster quality metrics for each.</p>
@@ -405,7 +405,7 @@ relative to the center, for each sample/matrix:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">position</span>, ymin<span class="op">=</span><span class="va">mean</span><span class="op">-</span><span class="va">SE</span>, ymax<span class="op">=</span><span class="va">mean</span><span class="op">+</span><span class="va">SE</span>, fill<span class="op">=</span><span class="va">sample</span><span class="op">)</span>, alpha<span class="op">=</span><span class="fl">0.4</span>, colour<span class="op">=</span><span class="cn">NA</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth<span class="op">=</span><span class="fl">1.2</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x<span class="op">=</span><span class="st">"relative position"</span>, y<span class="op">=</span><span class="st">"mean RPKM"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/aggPlot-1.png" width="384"></p>
+<p><img src="multiRegionPlot_files/figure-html/aggPlot-1.png" class="r-plt" alt="" width="384"></p>
 <p>We could also include cluster information:</p>
 <div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/meltSignals.html">meltSignals</a></span><span class="op">(</span><span class="va">exampleESE</span>, splitBy <span class="op">=</span> <span class="st">"cluster"</span><span class="op">)</span></span>
@@ -414,7 +414,7 @@ relative to the center, for each sample/matrix:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">position</span>, ymin<span class="op">=</span><span class="va">mean</span><span class="op">-</span><span class="va">SE</span>, ymax<span class="op">=</span><span class="va">mean</span><span class="op">+</span><span class="va">SE</span>, fill<span class="op">=</span><span class="va">sample</span><span class="op">)</span>, alpha<span class="op">=</span><span class="fl">0.4</span>, colour<span class="op">=</span><span class="cn">NA</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>linewidth<span class="op">=</span><span class="fl">1.2</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">split</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x<span class="op">=</span><span class="st">"relative position"</span>, y<span class="op">=</span><span class="st">"mean RPKM"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/aggPlot2-1.png" width="576"></p>
+<p><img src="multiRegionPlot_files/figure-html/aggPlot2-1.png" class="r-plt" alt="" width="576"></p>
 </div>
 <div class="section level2">
 <h2 id="visualizing-dname-and-sparse-signals">Visualizing DNAme and sparse signals<a class="anchor" aria-label="anchor" href="#visualizing-dname-and-sparse-signals"></a>
@@ -463,7 +463,7 @@ with and without smoothing.</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">o</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">o1</span>,<span class="va">o2</span>,<span class="va">o3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">o</span>, scale_title<span class="op">=</span><span class="st">"%\nmethylation"</span>, axis_name<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TSS"</span>,<span class="st">"TES"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-16-1.png" width="700"></p>
+<p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-16-1.png" class="r-plt" alt="" width="700"></p>
 <p>Here we use <code>type="scaled"</code> to scale the gene bodies to
 the same size, since these can have very different sizes. The first
 heatmap is the default (no smoothing), while the center one uses
@@ -486,7 +486,7 @@ bins to estimate the methylation status of each bin, effectively filling
 out the gaps. In doing so it provides the truthful representation,
 i.e. that the regions downstream of the genes and upstream of the
 promoters are, most of the time, as methylated as the gene bodies.</p>
-<p>Smoothing is performed by <em><a href="https://bioconductor.org/packages/3.20/EnrichedHeatmap" class="external-link">EnrichedHeatmap</a></em>;
+<p>Smoothing is performed by <em><a href="https://bioconductor.org/packages/3.22/EnrichedHeatmap" class="external-link">EnrichedHeatmap</a></em>;
 see <code><a href="https://rdrr.io/pkg/EnrichedHeatmap/man/normalizeToMatrix.html" class="external-link">?EnrichedHeatmap::normalizeToMatrix</a></code> for more
 information/customization.</p>
 <p><br><br></p>
@@ -496,9 +496,9 @@ information/customization.</p>
 </h2>
 <div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R version 4.4.3 (2025-02-28)</span></span>
+<pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 24.04.2 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.3 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -518,61 +518,86 @@ information/customization.</p>
 <span><span class="co">## [8] methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] ggplot2_3.5.1               epiwraps_0.99.107          </span></span>
-<span><span class="co">##  [3] EnrichedHeatmap_1.36.0      ComplexHeatmap_2.22.0      </span></span>
-<span><span class="co">##  [5] SummarizedExperiment_1.36.0 Biobase_2.66.0             </span></span>
-<span><span class="co">##  [7] GenomicRanges_1.58.0        GenomeInfoDb_1.42.3        </span></span>
-<span><span class="co">##  [9] IRanges_2.40.1              S4Vectors_0.44.0           </span></span>
-<span><span class="co">## [11] BiocGenerics_0.52.0         MatrixGenerics_1.18.1      </span></span>
-<span><span class="co">## [13] matrixStats_1.5.0           BiocStyle_2.34.0           </span></span>
+<span><span class="co">##  [1] ggplot2_4.0.2               epiwraps_0.99.106          </span></span>
+<span><span class="co">##  [3] EnrichedHeatmap_1.40.1      ComplexHeatmap_2.26.1      </span></span>
+<span><span class="co">##  [5] SummarizedExperiment_1.40.0 Biobase_2.70.0             </span></span>
+<span><span class="co">##  [7] GenomicRanges_1.62.1        Seqinfo_1.0.0              </span></span>
+<span><span class="co">##  [9] IRanges_2.44.0              S4Vectors_0.48.0           </span></span>
+<span><span class="co">## [11] BiocGenerics_0.56.0         generics_0.1.4             </span></span>
+<span><span class="co">## [13] MatrixGenerics_1.22.0       matrixStats_1.5.0          </span></span>
+<span><span class="co">## [15] BiocStyle_2.38.0           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##   [1] RColorBrewer_1.1-3       rstudioapi_0.17.1        jsonlite_1.9.0          </span></span>
-<span><span class="co">##   [4] shape_1.4.6.1            magrittr_2.0.3           magick_2.8.5            </span></span>
-<span><span class="co">##   [7] GenomicFeatures_1.58.0   farver_2.1.2             rmarkdown_2.29          </span></span>
-<span><span class="co">##  [10] GlobalOptions_0.1.2      fs_1.6.5                 BiocIO_1.16.0           </span></span>
-<span><span class="co">##  [13] zlibbioc_1.52.0          ragg_1.3.3               vctrs_0.6.5             </span></span>
-<span><span class="co">##  [16] memoise_2.0.1            Rsamtools_2.22.0         RCurl_1.98-1.16         </span></span>
-<span><span class="co">##  [19] base64enc_0.1-3          htmltools_0.5.8.1        S4Arrays_1.6.0          </span></span>
-<span><span class="co">##  [22] progress_1.2.3           curl_6.2.1               SparseArray_1.6.2       </span></span>
-<span><span class="co">##  [25] Formula_1.2-5            sass_0.4.9               bslib_0.9.0             </span></span>
-<span><span class="co">##  [28] htmlwidgets_1.6.4        desc_1.4.3               plyr_1.8.9              </span></span>
-<span><span class="co">##  [31] Gviz_1.50.0              httr2_1.1.0              cachem_1.1.0            </span></span>
-<span><span class="co">##  [34] GenomicAlignments_1.42.0 lifecycle_1.0.4          iterators_1.0.14        </span></span>
-<span><span class="co">##  [37] pkgconfig_2.0.3          Matrix_1.7-2             R6_2.6.1                </span></span>
-<span><span class="co">##  [40] fastmap_1.2.0            GenomeInfoDbData_1.2.13  clue_0.3-66             </span></span>
-<span><span class="co">##  [43] digest_0.6.37            colorspace_2.1-1         AnnotationDbi_1.68.0    </span></span>
-<span><span class="co">##  [46] textshaping_1.0.0        Hmisc_5.2-2              RSQLite_2.3.9           </span></span>
-<span><span class="co">##  [49] labeling_0.4.3           filelock_1.0.3           httr_1.4.7              </span></span>
-<span><span class="co">##  [52] abind_1.4-8              compiler_4.4.3           withr_3.0.2             </span></span>
-<span><span class="co">##  [55] bit64_4.6.0-1            doParallel_1.0.17        backports_1.5.0         </span></span>
-<span><span class="co">##  [58] htmlTable_2.4.3          BiocParallel_1.40.0      DBI_1.2.3               </span></span>
-<span><span class="co">##  [61] UpSetR_1.4.0             biomaRt_2.62.1           rappdirs_0.3.3          </span></span>
-<span><span class="co">##  [64] DelayedArray_0.32.0      rjson_0.2.23             tools_4.4.3             </span></span>
-<span><span class="co">##  [67] foreign_0.8-88           nnet_7.3-20              glue_1.8.0              </span></span>
-<span><span class="co">##  [70] restfulr_0.0.15          checkmate_2.3.2          cluster_2.1.8           </span></span>
-<span><span class="co">##  [73] generics_0.1.3           gtable_0.3.6             BSgenome_1.74.0         </span></span>
-<span><span class="co">##  [76] ensembldb_2.30.0         data.table_1.17.0        hms_1.1.3               </span></span>
-<span><span class="co">##  [79] xml2_1.3.7               XVector_0.46.0           foreach_1.5.2           </span></span>
-<span><span class="co">##  [82] pillar_1.10.1            stringr_1.5.1            circlize_0.4.16         </span></span>
-<span><span class="co">##  [85] dplyr_1.1.4              BiocFileCache_2.14.0     lattice_0.22-6          </span></span>
-<span><span class="co">##  [88] deldir_2.0-4             rtracklayer_1.66.0       bit_4.5.0.1             </span></span>
-<span><span class="co">##  [91] biovizBase_1.54.0        tidyselect_1.2.1         locfit_1.5-9.11         </span></span>
-<span><span class="co">##  [94] pbapply_1.7-2            Biostrings_2.74.1        knitr_1.49              </span></span>
-<span><span class="co">##  [97] gridExtra_2.3            bookdown_0.42            ProtGenerics_1.38.0     </span></span>
-<span><span class="co">## [100] xfun_0.51                stringi_1.8.4            UCSC.utils_1.2.0        </span></span>
-<span><span class="co">## [103] lazyeval_0.2.2           yaml_2.3.10              evaluate_1.0.3          </span></span>
-<span><span class="co">## [106] codetools_0.2-20         interp_1.1-6             GenomicFiles_1.42.0     </span></span>
-<span><span class="co">## [109] tibble_3.2.1             BiocManager_1.30.25      cli_3.6.4               </span></span>
-<span><span class="co">## [112] rpart_4.1.24             systemfonts_1.2.1        munsell_0.5.1           </span></span>
-<span><span class="co">## [115] jquerylib_0.1.4          dichromat_2.0-0.1        Rcpp_1.0.14             </span></span>
-<span><span class="co">## [118] dbplyr_2.5.0             png_0.1-8                XML_3.99-0.18           </span></span>
-<span><span class="co">## [121] parallel_4.4.3           pkgdown_2.1.1            blob_1.2.4              </span></span>
-<span><span class="co">## [124] prettyunits_1.2.0        jpeg_0.1-10              latticeExtra_0.6-30     </span></span>
-<span><span class="co">## [127] AnnotationFilter_1.30.0  bitops_1.0-9             viridisLite_0.4.2       </span></span>
-<span><span class="co">## [130] VariantAnnotation_1.52.0 scales_1.3.0             crayon_1.5.3            </span></span>
-<span><span class="co">## [133] GetoptLong_1.0.5         rlang_1.1.5              cowplot_1.1.3           </span></span>
-<span><span class="co">## [136] KEGGREST_1.46.0</span></span></code></pre>
+<span><span class="co">##   [1] RColorBrewer_1.1-3          rstudioapi_0.18.0          </span></span>
+<span><span class="co">##   [3] jsonlite_2.0.0              shape_1.4.6.1              </span></span>
+<span><span class="co">##   [5] magrittr_2.0.4              magick_2.9.1               </span></span>
+<span><span class="co">##   [7] GenomicFeatures_1.62.0      farver_2.1.2               </span></span>
+<span><span class="co">##   [9] rmarkdown_2.30              GlobalOptions_0.1.3        </span></span>
+<span><span class="co">##  [11] fs_2.0.0                    BiocIO_1.20.0              </span></span>
+<span><span class="co">##  [13] ragg_1.5.1                  vctrs_0.7.2                </span></span>
+<span><span class="co">##  [15] memoise_2.0.1               Rsamtools_2.26.0           </span></span>
+<span><span class="co">##  [17] RCurl_1.98-1.18             base64enc_0.1-6            </span></span>
+<span><span class="co">##  [19] htmltools_0.5.9             S4Arrays_1.10.1            </span></span>
+<span><span class="co">##  [21] progress_1.2.3              curl_7.0.0                 </span></span>
+<span><span class="co">##  [23] SparseArray_1.10.9          Formula_1.2-5              </span></span>
+<span><span class="co">##  [25] sass_0.4.10                 bslib_0.10.0               </span></span>
+<span><span class="co">##  [27] htmlwidgets_1.6.4           desc_1.4.3                 </span></span>
+<span><span class="co">##  [29] Gviz_1.54.0                 httr2_1.2.2                </span></span>
+<span><span class="co">##  [31] cachem_1.1.0                GenomicAlignments_1.46.0   </span></span>
+<span><span class="co">##  [33] lifecycle_1.0.5             iterators_1.0.14           </span></span>
+<span><span class="co">##  [35] pkgconfig_2.0.3             Matrix_1.7-4               </span></span>
+<span><span class="co">##  [37] R6_2.6.1                    fastmap_1.2.0              </span></span>
+<span><span class="co">##  [39] clue_0.3-67                 digest_0.6.39              </span></span>
+<span><span class="co">##  [41] TFMPvalue_1.0.0             colorspace_2.1-2           </span></span>
+<span><span class="co">##  [43] AnnotationDbi_1.72.0        textshaping_1.0.5          </span></span>
+<span><span class="co">##  [45] Hmisc_5.2-5                 RSQLite_2.4.6              </span></span>
+<span><span class="co">##  [47] labeling_0.4.3              seqLogo_1.76.0             </span></span>
+<span><span class="co">##  [49] filelock_1.0.3              httr_1.4.8                 </span></span>
+<span><span class="co">##  [51] abind_1.4-8                 compiler_4.5.3             </span></span>
+<span><span class="co">##  [53] withr_3.0.2                 bit64_4.6.0-1              </span></span>
+<span><span class="co">##  [55] doParallel_1.0.17           backports_1.5.0            </span></span>
+<span><span class="co">##  [57] htmlTable_2.4.3             S7_0.2.1                   </span></span>
+<span><span class="co">##  [59] BiocParallel_1.44.0         DBI_1.3.0                  </span></span>
+<span><span class="co">##  [61] biomaRt_2.66.2              rappdirs_0.3.4             </span></span>
+<span><span class="co">##  [63] DelayedArray_0.36.0         rjson_0.2.23               </span></span>
+<span><span class="co">##  [65] gtools_3.9.5                caTools_1.18.3             </span></span>
+<span><span class="co">##  [67] tools_4.5.3                 foreign_0.8-91             </span></span>
+<span><span class="co">##  [69] nnet_7.3-20                 glue_1.8.0                 </span></span>
+<span><span class="co">##  [71] restfulr_0.0.16             checkmate_2.3.4            </span></span>
+<span><span class="co">##  [73] cluster_2.1.8.2             TFBSTools_1.48.0           </span></span>
+<span><span class="co">##  [75] gtable_0.3.6                BSgenome_1.78.0            </span></span>
+<span><span class="co">##  [77] ensembldb_2.34.0            data.table_1.18.2.1        </span></span>
+<span><span class="co">##  [79] hms_1.1.4                   XVector_0.50.0             </span></span>
+<span><span class="co">##  [81] motifmatchr_1.32.0          foreach_1.5.2              </span></span>
+<span><span class="co">##  [83] pillar_1.11.1               stringr_1.6.0              </span></span>
+<span><span class="co">##  [85] circlize_0.4.17             dplyr_1.2.0                </span></span>
+<span><span class="co">##  [87] BiocFileCache_3.0.0         lattice_0.22-9             </span></span>
+<span><span class="co">##  [89] deldir_2.0-4                rtracklayer_1.70.1         </span></span>
+<span><span class="co">##  [91] bit_4.6.0                   biovizBase_1.58.0          </span></span>
+<span><span class="co">##  [93] DirichletMultinomial_1.52.0 tidyselect_1.2.1           </span></span>
+<span><span class="co">##  [95] locfit_1.5-9.12             pbapply_1.7-4              </span></span>
+<span><span class="co">##  [97] Biostrings_2.78.0           knitr_1.51                 </span></span>
+<span><span class="co">##  [99] gridExtra_2.3               bookdown_0.46              </span></span>
+<span><span class="co">## [101] ProtGenerics_1.42.0         xfun_0.57                  </span></span>
+<span><span class="co">## [103] stringi_1.8.7               UCSC.utils_1.6.1           </span></span>
+<span><span class="co">## [105] lazyeval_0.2.2              yaml_2.3.12                </span></span>
+<span><span class="co">## [107] evaluate_1.0.5              codetools_0.2-20           </span></span>
+<span><span class="co">## [109] cigarillo_1.0.0             interp_1.1-6               </span></span>
+<span><span class="co">## [111] GenomicFiles_1.46.0         tibble_3.3.1               </span></span>
+<span><span class="co">## [113] BiocManager_1.30.27         cli_3.6.5                  </span></span>
+<span><span class="co">## [115] rpart_4.1.24                systemfonts_1.3.2          </span></span>
+<span><span class="co">## [117] jquerylib_0.1.4             dichromat_2.0-0.1          </span></span>
+<span><span class="co">## [119] Rcpp_1.1.1                  GenomeInfoDb_1.46.2        </span></span>
+<span><span class="co">## [121] dbplyr_2.5.2                png_0.1-9                  </span></span>
+<span><span class="co">## [123] XML_3.99-0.23               parallel_4.5.3             </span></span>
+<span><span class="co">## [125] pkgdown_2.2.0               blob_1.3.0                 </span></span>
+<span><span class="co">## [127] prettyunits_1.2.0           jpeg_0.1-11                </span></span>
+<span><span class="co">## [129] latticeExtra_0.6-31         AnnotationFilter_1.34.0    </span></span>
+<span><span class="co">## [131] bitops_1.0-9                pwalign_1.6.0              </span></span>
+<span><span class="co">## [133] viridisLite_0.4.3           VariantAnnotation_1.56.0   </span></span>
+<span><span class="co">## [135] scales_1.4.0                crayon_1.5.3               </span></span>
+<span><span class="co">## [137] GetoptLong_1.1.0            rlang_1.1.7                </span></span>
+<span><span class="co">## [139] cowplot_1.2.0               KEGGREST_1.50.0</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -585,7 +610,7 @@ information/customization.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

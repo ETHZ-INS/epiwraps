@@ -1,0 +1,248 @@
+# bam2bw: create a coverage bigwig file from an alignment bam file.
+
+bam2bw: create a coverage bigwig file from an alignment bam file.
+
+## Usage
+
+``` r
+bam2bw(
+  bamfile,
+  output_bw,
+  bgbam = NULL,
+  paired = NULL,
+  binWidth = 20L,
+  trim = 0L,
+  extend = 0L,
+  scaling = TRUE,
+  shift = 0L,
+  type = c("full", "center", "start", "end", "ends"),
+  compType = c("log2ratio", "subtract", "log10ppois", "log10FE"),
+  strand = c("*", "+", "-"),
+  strandMode = 1,
+  log1p = FALSE,
+  exclude = NULL,
+  includeDuplicates = TRUE,
+  includeSecondary = FALSE,
+  minMapq = 1L,
+  minFragLength = 1L,
+  maxFragLength = 5000L,
+  keepSeqLvls = NULL,
+  splitByChr = 3,
+  pseudocount = 1L,
+  localBackground = 1L,
+  only = NULL,
+  zeroCap = TRUE,
+  forceSeqlevelsStyle = NULL,
+  verbose = TRUE,
+  binSummarization = c("mean", "max", "min"),
+  ...
+)
+```
+
+## Arguments
+
+- bamfile:
+
+  The path to the signal bam file.
+
+- output_bw:
+
+  The path to the output bigwig file
+
+- bgbam:
+
+  The optional path to the control/input bam file to compute relative
+  signal (see the \`compType\` argument).
+
+- paired:
+
+  Logical; whether to consider fragments instead of reads for paired-end
+  data. For spliced (e.g. RNA-seq) data, paired should always be set to
+  FALSE.
+
+- binWidth:
+
+  The window size. A lower value (min 1) means a higher resolution, but
+  larger file size.
+
+- trim:
+
+  The amount by which to trim reads or fragments. Can either be a single
+  integer, which will be removed at both ends of the fragment, or an
+  integer of length=2 indicating the amount to trim at the beginning and
+  end of the read/fragments. This is applied before \`type\` and
+  \`extension\`.
+
+- extend:
+
+  The amount \*by\* which to extend single-end reads (e.g. fragment
+  length minus read length). If \`paired=TRUE\` and \`type\` is either
+  'ends' or 'center', then the extension will be applied after taking
+  the (shifted) fragment ends or centers, resulting in ranges of width
+  equal to \`extend\`.
+
+- scaling:
+
+  Either TRUE (performs Count Per Million scaling), FALSE (no scaling),
+  or a numeric value by which the signal will be divided. If \`bgbam\`
+  is given and \`scaling=TRUE\`, the background will be scaled to the
+  main signal.
+
+- shift:
+
+  Shift (from 3' to 5') by which reads/fragments will be shifted. If
+  \`shift\` is an integer vector of length 2, the first value will
+  represent the shift for the positive strand, and the second for the
+  negative strand.
+
+- type:
+
+  Type of the coverage to compile. Either full (full read/fragment),
+  start (count read/fragment start locations), end, center, or 'ends'
+  (both ends of the read/fragment).
+
+- compType:
+
+  The type of relative signal to compute (ignored if \`bgbam\` isn't
+  given). Can either be 'log2ratio' (log2-foldchange between signals),
+  'subtract' (difference), 'log10ppois' (rounded -log10 poisson
+  p-value), 'log10FE' (log10 fold-enrichment). For fold-based signals,
+  \`pseudocount\` will be added before computing the ratio. By default
+  negative values are capped (see \`zeroCap\`).
+
+- strand:
+
+  Strand(s) to capture (any by default).
+
+- strandMode:
+
+  The strandMode of the data (whether the strand is given by the first
+  or second mate, which depends on the library prep protocol). See
+  [strandMode](https://rdrr.io/pkg/GenomicAlignments/man/GAlignmentPairs-class.html)
+  for more information. This parameter has no effect unless one of the
+  \`strand\`, \`extend\` parameters or a strand-specific \`shift\` are
+  used.
+
+- log1p:
+
+  Whether to log-transform (\`log(x+1)\`) the (scaled) signal. Ignored
+  when the signal is relative to a background.
+
+- exclude:
+
+  An optional GRanges of regions for which overlapping reads should be
+  excluded.
+
+- includeDuplicates:
+
+  Logical, whether to include reads flagged as duplicates.
+
+- includeSecondary:
+
+  Logical; whether to include secondary alignments
+
+- minMapq:
+
+  Minimum mapping quality (1 to 255)
+
+- minFragLength:
+
+  Minimum fragment length (ignored if \`paired=FALSE\`)
+
+- maxFragLength:
+
+  Maximum fragment length (ignored if \`paired=FALSE\`)
+
+- keepSeqLvls:
+
+  An optional vector of seqLevels (i.e. chromosomes) to include.
+
+- splitByChr:
+
+  Whether to process chromosomes separately, and if so by how many
+  chunks. The should not affect the output, and is simply slightly
+  slower and consumes less memory. Can be a logical value (in which case
+  each chromosome is processed separately), but we instead recommend
+  giving a positive integer indicating the number of chunks.
+
+- pseudocount:
+
+  The count to be added before fold-enrichment calculation between
+  signals. Ignored if \`compType="subtract"\`.
+
+- localBackground:
+
+  A (vector of) number of windows around each tile/position for which a
+  local background will be calculated. The background used will be the
+  maximum of the one at the given position or of the mean of each of the
+  local backgrounds.
+
+- only:
+
+  An optional GRanges of regions for which overlapping reads should be
+  included. If set, all other reads are discarded.
+
+- zeroCap:
+
+  Logical; whether to cap values below zero to zero when producing
+  relative signals.
+
+- forceSeqlevelsStyle:
+
+  If specified, forces the use of the specified seqlevel style for the
+  output bigwig. Can take any value accepted by \`seqlevelsStyle\`.
+
+- verbose:
+
+  Logical; whether to print progress messages
+
+- binSummarization:
+
+  The method to summarize nucleotides into each bin, either "mean"
+  (default), "min" or "max".
+
+- ...:
+
+  Passed to \`ScanBamParam\`
+
+## Value
+
+The bigwig filepath. Alternatively, if \`output_bw=NA_character\_\`, the
+coverage data is not written to file but returned.
+
+## Details
+
+\* For single-end ChIPseq data, extend reads to the expected fragment
+size using the \`extend\` argument (i.e. setting extend to the read
+length plus the mean expected fragment size). \* For ATAC-seq data, when
+interested in high-resolution profiling of the Tn5 insertion sites, it
+is customary to shift reads based on their strand, i.e. using
+\`shift=c(4L,-5L)\` and \`type="start"\`. With paired-end data, we
+recommend instead using both ends with \`type="ends"\`. In this case,
+the shifting should occur from both ends inwards, which is best
+accomplished with \`trim=4L\` (rather than using the \`shift\`
+argument). \* The implementation involves reading the reads before
+processing, which can be quite memory-hungry. To avoid this the files
+are read by chunks (composed of chromosomes of balanced sizes),
+controlled by the \`splitByChr\` argument. This reduces memory usage but
+also creates overhead which reduces the speed. In contexts where the
+file is small or memory isn't a problem, using \`splitByChr=FALSE\` will
+achieve the best speed. Otherwise, increasing \`splitByChr\` will
+decrease the memory footprint. \* Consider restricting the read quality
+using \`includeDuplicates=FALSE\` and \`minMapq=20\` for example.
+
+## Author
+
+Pierre-Luc Germain
+
+## Examples
+
+``` r
+# get an example bam file
+bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
+# create bigwig
+bam2bw(bam, "output.bw")
+#> `paired` not specified, assuming single-end reads. Set to paired='auto' to automatically detect.
+#> Reading in signal...
+#> Writing bigwig...
+```

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.107</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.106</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,10 +81,10 @@ Switzerland<br><div class="d-none name"><code>singleRegionPlot.Rmd</code></div>
 <h2 id="plotting-signals-in-a-region">Plotting signals in a region<a class="anchor" aria-label="anchor" href="#plotting-signals-in-a-region"></a>
 </h2>
 <p>The <code>plotSignalTracks</code> function is a wrapper around the
-<em><a href="https://bioconductor.org/packages/3.20/Gviz" class="external-link">Gviz</a></em>
+<em><a href="https://bioconductor.org/packages/3.22/Gviz" class="external-link">Gviz</a></em>
 package, which plots one or more signals along genomic coordinates (in a
 genome-browser like fashion). The function lacks the full flexibility of
-the <em><a href="https://bioconductor.org/packages/3.20/Gviz" class="external-link">Gviz</a></em>
+the <em><a href="https://bioconductor.org/packages/3.22/Gviz" class="external-link">Gviz</a></em>
 package, but presents a considerable simpler interface, with automatic
 default parameters, etc. It has two essential arguments: a (named) list
 of files whose signal to display (can be a mixture of bigwig, bam, or
@@ -97,37 +97,39 @@ determines the relevant track type and setting from the file types.</p>
 <span><span class="co"># get the path to an example bigwig file:</span></span>
 <span><span class="va">bwf1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_rna.bw"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>RNA<span class="op">=</span><span class="va">bwf1</span><span class="op">)</span>, region<span class="op">=</span><span class="st">"8:22165140-22212326"</span>, genomeAxis<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="singleRegionPlot_files/figure-html/signal1-1.png" width="576"></p>
+<p><img src="singleRegionPlot_files/figure-html/signal1-1.png" class="r-plt" alt="" width="576"></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># we could plot multiple tracks as follows:</span></span>
 <span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>track1<span class="op">=</span><span class="va">bwf1</span>, track2<span class="op">=</span><span class="va">bwf1</span><span class="op">)</span>, region<span class="op">=</span><span class="st">"8:22165140-22212326"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="singleRegionPlot_files/figure-html/signal1-2.png" width="576"></p>
+<p><img src="singleRegionPlot_files/figure-html/signal1-2.png" class="r-plt" alt="" width="576"></p>
 <p><code>GRanges</code> objects can also be plotted as annotation tracks
 alongside other data:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">myregions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="st">"8"</span>, <span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/IRanges-constructor.html" class="external-link">IRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">22166000</span>,<span class="fl">22202300</span><span class="op">)</span>, width<span class="op">=</span><span class="fl">3000</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>RNA<span class="op">=</span><span class="va">bwf1</span>, regions<span class="op">=</span><span class="va">myregions</span><span class="op">)</span>, region<span class="op">=</span><span class="st">"8:22165140-22212326"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="singleRegionPlot_files/figure-html/signal2-1.png" width="576"></p>
+<p><img src="singleRegionPlot_files/figure-html/signal2-1.png" class="r-plt" alt="" width="576"></p>
 <p>Colors, track display types, and such parameters can either be set
 for all tracks or for each individual track, for example:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">myregions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="st">"8"</span>, <span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/IRanges-constructor.html" class="external-link">IRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">22166000</span>,<span class="fl">22202300</span><span class="op">)</span>, width<span class="op">=</span><span class="fl">3000</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>RNA<span class="op">=</span><span class="va">bwf1</span>, regions<span class="op">=</span><span class="va">myregions</span><span class="op">)</span>, colors<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red"</span>, <span class="st">"black"</span><span class="op">)</span>,</span>
 <span>                 region<span class="op">=</span><span class="st">"8:22165140-22212326"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="singleRegionPlot_files/figure-html/signal3-1.png" width="576"></p>
+<p><img src="singleRegionPlot_files/figure-html/signal3-1.png" class="r-plt" alt="" width="576"></p>
 <p>For bam files, we can also plot individual reads:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># we fetch an example bam file:</span></span>
 <span><span class="va">bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"ex1.bam"</span>, package<span class="op">=</span><span class="st">"Rsamtools"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"my bam file"</span><span class="op">=</span><span class="va">bam</span><span class="op">)</span>, <span class="st">"seq1:1-1500"</span>, type<span class="op">=</span><span class="st">"alignments"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="singleRegionPlot_files/figure-html/signalAlignments-1.png" width="700"></p>
+<pre><code><span><span class="co">## Warning in call_new_fun_in_cigarillo("sequenceLayer", "project_sequences", : sequenceLayer() is formally deprecated in GenomicAlignments &gt;= 1.45.5 and</span></span>
+<span><span class="co">##   replaced with the project_sequences() function from the new cigarillo package</span></span></code></pre>
+<p><img src="singleRegionPlot_files/figure-html/signalAlignments-1.png" class="r-plt" alt="" width="700"></p>
 <div class="section level3">
 <h3 id="merging-signal-from-different-tracks">Merging signal from different tracks<a class="anchor" aria-label="anchor" href="#merging-signal-from-different-tracks"></a>
 </h3>
 <p>In addition to being displayed one below the other, data tracks can
 be combined in different ways. To do this, the tracks can simply be
 given in a nested fashion:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>track1<span class="op">=</span><span class="va">bwf1</span>, combined<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">bwf1</span>,<span class="va">bwf1</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                 region<span class="op">=</span><span class="st">"8:22165140-22212326"</span><span class="op">)</span></span></code></pre></div>
 <p>In this example we are always using the same track, but the first
@@ -136,19 +138,20 @@ merges the two given tracks. By default, the mean is shown, but this can
 be controlled through the <code>aggregation</code> argument. In addition
 to usual operations, the tracks can be overlayed on top of one another
 (<code>aggregation='overlay'</code>), or shown as a heatmap
-(<code>aggregation='heatmap'</code>).</p>
+(<code>aggregation='heatmap'</code>), or a mean track with heatmap below
+(<code>aggregation="heatmap+mean"</code>).</p>
 </div>
 <div class="section level3">
 <h3 id="using-an-ensdb-object">Using an EnsDb object<a class="anchor" aria-label="anchor" href="#using-an-ensdb-object"></a>
 </h3>
-<p>If an <code>EnsDb</code> object is available (see the <em><a href="https://bioconductor.org/packages/3.20/ensembldb" class="external-link">ensembldb</a></em>
-package for a description of the class and its methods, and the <em><a href="https://bioconductor.org/packages/3.20/AnnotationHub" class="external-link">AnnotationHub</a></em>
+<p>If an <code>EnsDb</code> object is available (see the <em><a href="https://bioconductor.org/packages/3.22/ensembldb" class="external-link">ensembldb</a></em>
+package for a description of the class and its methods, and the <em><a href="https://bioconductor.org/packages/3.22/AnnotationHub" class="external-link">AnnotationHub</a></em>
 package for a convenient way of fetching such annotation objects), two
 additional options are available: first, instead of specifying the
 region as coordinates, one can specify a gene or transcript name, and
 the corresponding region will be fetched. In addition, the genes or
 transcripts can be displayed. For example:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># we fetch the GRCh38 Ensembl 103 annotation (this is not run in the vignette,</span></span>
 <span><span class="co"># as it takes some time to download the annotation the first time is used):</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">AnnotationHub</span><span class="op">)</span></span>
@@ -170,7 +173,7 @@ omitted.</p>
 </h3>
 <p>In addition to the <code>colors</code> and <code>type</code> argument
 (and a number of others), which can customize the appearance of tracks,
-any additional parameters supported by the respective <em><a href="https://bioconductor.org/packages/3.20/Gviz" class="external-link">Gviz</a></em>
+any additional parameters supported by the respective <em><a href="https://bioconductor.org/packages/3.22/Gviz" class="external-link">Gviz</a></em>
 function can be passed through the <code>genes.params</code> (for Gviz’s
 <code>GeneRegionTrack</code>), <code>align.params</code> (for Gviz’s
 <code>AlignmentsTrack</code>, when plotting individual reads), or
@@ -178,10 +181,10 @@ function can be passed through the <code>genes.params</code> (for Gviz’s
 <code>DataTrack</code>).</p>
 <p>For example, if you wish to manually set the same y-axis range for
 all data tracks, this can be done with:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>track1<span class="op">=</span><span class="va">bwf1</span>, track2<span class="op">=</span><span class="va">bwf1</span><span class="op">)</span>, region<span class="op">=</span><span class="st">"8:22165140-22212326"</span>,</span>
 <span>                 tracks.params<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>ylim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">200</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="singleRegionPlot_files/figure-html/unnamed-chunk-2-1.png" width="700"></p>
+<p><img src="singleRegionPlot_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" alt="" width="700"></p>
 <p>Also, in addition to passing filepaths or <code>GRanges</code>, any
 Gviz track(s) can be passed (i.e. objects inheriting the
 <code>GdObject</code> class) can be passed, enabling full track
@@ -192,11 +195,11 @@ customization when needed.</p>
 <div class="section level2">
 <h2 id="session-info">Session info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R version 4.4.3 (2025-02-28)</span></span>
+<pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 24.04.2 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.3 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -216,60 +219,84 @@ customization when needed.</p>
 <span><span class="co">## [8] methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] epiwraps_0.99.107           EnrichedHeatmap_1.36.0     </span></span>
-<span><span class="co">##  [3] ComplexHeatmap_2.22.0       SummarizedExperiment_1.36.0</span></span>
-<span><span class="co">##  [5] Biobase_2.66.0              GenomicRanges_1.58.0       </span></span>
-<span><span class="co">##  [7] GenomeInfoDb_1.42.3         IRanges_2.40.1             </span></span>
-<span><span class="co">##  [9] S4Vectors_0.44.0            BiocGenerics_0.52.0        </span></span>
-<span><span class="co">## [11] MatrixGenerics_1.18.1       matrixStats_1.5.0          </span></span>
-<span><span class="co">## [13] BiocStyle_2.34.0           </span></span>
+<span><span class="co">##  [1] epiwraps_0.99.106           EnrichedHeatmap_1.40.1     </span></span>
+<span><span class="co">##  [3] ComplexHeatmap_2.26.1       SummarizedExperiment_1.40.0</span></span>
+<span><span class="co">##  [5] Biobase_2.70.0              GenomicRanges_1.62.1       </span></span>
+<span><span class="co">##  [7] Seqinfo_1.0.0               IRanges_2.44.0             </span></span>
+<span><span class="co">##  [9] S4Vectors_0.48.0            BiocGenerics_0.56.0        </span></span>
+<span><span class="co">## [11] generics_0.1.4              MatrixGenerics_1.22.0      </span></span>
+<span><span class="co">## [13] matrixStats_1.5.0           BiocStyle_2.38.0           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##   [1] RColorBrewer_1.1-3       rstudioapi_0.17.1        jsonlite_1.9.0          </span></span>
-<span><span class="co">##   [4] shape_1.4.6.1            magrittr_2.0.3           GenomicFeatures_1.58.0  </span></span>
-<span><span class="co">##   [7] rmarkdown_2.29           GlobalOptions_0.1.2      fs_1.6.5                </span></span>
-<span><span class="co">##  [10] BiocIO_1.16.0            zlibbioc_1.52.0          ragg_1.3.3              </span></span>
-<span><span class="co">##  [13] vctrs_0.6.5              memoise_2.0.1            Rsamtools_2.22.0        </span></span>
-<span><span class="co">##  [16] RCurl_1.98-1.16          base64enc_0.1-3          htmltools_0.5.8.1       </span></span>
-<span><span class="co">##  [19] S4Arrays_1.6.0           progress_1.2.3           curl_6.2.1              </span></span>
-<span><span class="co">##  [22] SparseArray_1.6.2        Formula_1.2-5            sass_0.4.9              </span></span>
-<span><span class="co">##  [25] bslib_0.9.0              htmlwidgets_1.6.4        desc_1.4.3              </span></span>
-<span><span class="co">##  [28] plyr_1.8.9               Gviz_1.50.0              httr2_1.1.0             </span></span>
-<span><span class="co">##  [31] cachem_1.1.0             GenomicAlignments_1.42.0 lifecycle_1.0.4         </span></span>
-<span><span class="co">##  [34] iterators_1.0.14         pkgconfig_2.0.3          Matrix_1.7-2            </span></span>
-<span><span class="co">##  [37] R6_2.6.1                 fastmap_1.2.0            GenomeInfoDbData_1.2.13 </span></span>
-<span><span class="co">##  [40] clue_0.3-66              digest_0.6.37            colorspace_2.1-1        </span></span>
-<span><span class="co">##  [43] AnnotationDbi_1.68.0     textshaping_1.0.0        Hmisc_5.2-2             </span></span>
-<span><span class="co">##  [46] RSQLite_2.3.9            filelock_1.0.3           httr_1.4.7              </span></span>
-<span><span class="co">##  [49] abind_1.4-8              compiler_4.4.3           bit64_4.6.0-1           </span></span>
-<span><span class="co">##  [52] doParallel_1.0.17        backports_1.5.0          htmlTable_2.4.3         </span></span>
-<span><span class="co">##  [55] BiocParallel_1.40.0      DBI_1.2.3                UpSetR_1.4.0            </span></span>
-<span><span class="co">##  [58] biomaRt_2.62.1           rappdirs_0.3.3           DelayedArray_0.32.0     </span></span>
-<span><span class="co">##  [61] rjson_0.2.23             tools_4.4.3              foreign_0.8-88          </span></span>
-<span><span class="co">##  [64] nnet_7.3-20              glue_1.8.0               restfulr_0.0.15         </span></span>
-<span><span class="co">##  [67] checkmate_2.3.2          cluster_2.1.8            generics_0.1.3          </span></span>
-<span><span class="co">##  [70] gtable_0.3.6             BSgenome_1.74.0          ensembldb_2.30.0        </span></span>
-<span><span class="co">##  [73] data.table_1.17.0        hms_1.1.3                xml2_1.3.7              </span></span>
-<span><span class="co">##  [76] XVector_0.46.0           foreach_1.5.2            pillar_1.10.1           </span></span>
-<span><span class="co">##  [79] stringr_1.5.1            circlize_0.4.16          dplyr_1.1.4             </span></span>
-<span><span class="co">##  [82] BiocFileCache_2.14.0     lattice_0.22-6           deldir_2.0-4            </span></span>
-<span><span class="co">##  [85] rtracklayer_1.66.0       bit_4.5.0.1              biovizBase_1.54.0       </span></span>
-<span><span class="co">##  [88] tidyselect_1.2.1         locfit_1.5-9.11          pbapply_1.7-2           </span></span>
-<span><span class="co">##  [91] Biostrings_2.74.1        knitr_1.49               gridExtra_2.3           </span></span>
-<span><span class="co">##  [94] bookdown_0.42            ProtGenerics_1.38.0      xfun_0.51               </span></span>
-<span><span class="co">##  [97] stringi_1.8.4            UCSC.utils_1.2.0         lazyeval_0.2.2          </span></span>
-<span><span class="co">## [100] yaml_2.3.10              evaluate_1.0.3           codetools_0.2-20        </span></span>
-<span><span class="co">## [103] interp_1.1-6             GenomicFiles_1.42.0      tibble_3.2.1            </span></span>
-<span><span class="co">## [106] BiocManager_1.30.25      cli_3.6.4                rpart_4.1.24            </span></span>
-<span><span class="co">## [109] systemfonts_1.2.1        munsell_0.5.1            jquerylib_0.1.4         </span></span>
-<span><span class="co">## [112] dichromat_2.0-0.1        Rcpp_1.0.14              dbplyr_2.5.0            </span></span>
-<span><span class="co">## [115] png_0.1-8                XML_3.99-0.18            parallel_4.4.3          </span></span>
-<span><span class="co">## [118] pkgdown_2.1.1            ggplot2_3.5.1            blob_1.2.4              </span></span>
-<span><span class="co">## [121] prettyunits_1.2.0        jpeg_0.1-10              latticeExtra_0.6-30     </span></span>
-<span><span class="co">## [124] AnnotationFilter_1.30.0  bitops_1.0-9             viridisLite_0.4.2       </span></span>
-<span><span class="co">## [127] VariantAnnotation_1.52.0 scales_1.3.0             crayon_1.5.3            </span></span>
-<span><span class="co">## [130] GetoptLong_1.0.5         rlang_1.1.5              cowplot_1.1.3           </span></span>
-<span><span class="co">## [133] KEGGREST_1.46.0</span></span></code></pre>
+<span><span class="co">##   [1] RColorBrewer_1.1-3          rstudioapi_0.18.0          </span></span>
+<span><span class="co">##   [3] jsonlite_2.0.0              shape_1.4.6.1              </span></span>
+<span><span class="co">##   [5] magrittr_2.0.4              GenomicFeatures_1.62.0     </span></span>
+<span><span class="co">##   [7] farver_2.1.2                rmarkdown_2.30             </span></span>
+<span><span class="co">##   [9] GlobalOptions_0.1.3         fs_2.0.0                   </span></span>
+<span><span class="co">##  [11] BiocIO_1.20.0               ragg_1.5.1                 </span></span>
+<span><span class="co">##  [13] vctrs_0.7.2                 memoise_2.0.1              </span></span>
+<span><span class="co">##  [15] Rsamtools_2.26.0            RCurl_1.98-1.18            </span></span>
+<span><span class="co">##  [17] base64enc_0.1-6             htmltools_0.5.9            </span></span>
+<span><span class="co">##  [19] S4Arrays_1.10.1             progress_1.2.3             </span></span>
+<span><span class="co">##  [21] curl_7.0.0                  SparseArray_1.10.9         </span></span>
+<span><span class="co">##  [23] Formula_1.2-5               sass_0.4.10                </span></span>
+<span><span class="co">##  [25] bslib_0.10.0                htmlwidgets_1.6.4          </span></span>
+<span><span class="co">##  [27] desc_1.4.3                  Gviz_1.54.0                </span></span>
+<span><span class="co">##  [29] httr2_1.2.2                 cachem_1.1.0               </span></span>
+<span><span class="co">##  [31] GenomicAlignments_1.46.0    lifecycle_1.0.5            </span></span>
+<span><span class="co">##  [33] iterators_1.0.14            pkgconfig_2.0.3            </span></span>
+<span><span class="co">##  [35] Matrix_1.7-4                R6_2.6.1                   </span></span>
+<span><span class="co">##  [37] fastmap_1.2.0               clue_0.3-67                </span></span>
+<span><span class="co">##  [39] digest_0.6.39               TFMPvalue_1.0.0            </span></span>
+<span><span class="co">##  [41] colorspace_2.1-2            AnnotationDbi_1.72.0       </span></span>
+<span><span class="co">##  [43] textshaping_1.0.5           Hmisc_5.2-5                </span></span>
+<span><span class="co">##  [45] RSQLite_2.4.6               seqLogo_1.76.0             </span></span>
+<span><span class="co">##  [47] filelock_1.0.3              httr_1.4.8                 </span></span>
+<span><span class="co">##  [49] abind_1.4-8                 compiler_4.5.3             </span></span>
+<span><span class="co">##  [51] bit64_4.6.0-1               doParallel_1.0.17          </span></span>
+<span><span class="co">##  [53] backports_1.5.0             htmlTable_2.4.3            </span></span>
+<span><span class="co">##  [55] S7_0.2.1                    BiocParallel_1.44.0        </span></span>
+<span><span class="co">##  [57] DBI_1.3.0                   biomaRt_2.66.2             </span></span>
+<span><span class="co">##  [59] rappdirs_0.3.4              DelayedArray_0.36.0        </span></span>
+<span><span class="co">##  [61] rjson_0.2.23                gtools_3.9.5               </span></span>
+<span><span class="co">##  [63] caTools_1.18.3              tools_4.5.3                </span></span>
+<span><span class="co">##  [65] foreign_0.8-91              nnet_7.3-20                </span></span>
+<span><span class="co">##  [67] glue_1.8.0                  restfulr_0.0.16            </span></span>
+<span><span class="co">##  [69] checkmate_2.3.4             cluster_2.1.8.2            </span></span>
+<span><span class="co">##  [71] TFBSTools_1.48.0            gtable_0.3.6               </span></span>
+<span><span class="co">##  [73] BSgenome_1.78.0             ensembldb_2.34.0           </span></span>
+<span><span class="co">##  [75] data.table_1.18.2.1         hms_1.1.4                  </span></span>
+<span><span class="co">##  [77] XVector_0.50.0              motifmatchr_1.32.0         </span></span>
+<span><span class="co">##  [79] foreach_1.5.2               pillar_1.11.1              </span></span>
+<span><span class="co">##  [81] stringr_1.6.0               circlize_0.4.17            </span></span>
+<span><span class="co">##  [83] dplyr_1.2.0                 BiocFileCache_3.0.0        </span></span>
+<span><span class="co">##  [85] lattice_0.22-9              deldir_2.0-4               </span></span>
+<span><span class="co">##  [87] rtracklayer_1.70.1          bit_4.6.0                  </span></span>
+<span><span class="co">##  [89] biovizBase_1.58.0           DirichletMultinomial_1.52.0</span></span>
+<span><span class="co">##  [91] tidyselect_1.2.1            locfit_1.5-9.12            </span></span>
+<span><span class="co">##  [93] pbapply_1.7-4               Biostrings_2.78.0          </span></span>
+<span><span class="co">##  [95] knitr_1.51                  gridExtra_2.3              </span></span>
+<span><span class="co">##  [97] bookdown_0.46               ProtGenerics_1.42.0        </span></span>
+<span><span class="co">##  [99] xfun_0.57                   stringi_1.8.7              </span></span>
+<span><span class="co">## [101] UCSC.utils_1.6.1            lazyeval_0.2.2             </span></span>
+<span><span class="co">## [103] yaml_2.3.12                 evaluate_1.0.5             </span></span>
+<span><span class="co">## [105] codetools_0.2-20            cigarillo_1.0.0            </span></span>
+<span><span class="co">## [107] interp_1.1-6                GenomicFiles_1.46.0        </span></span>
+<span><span class="co">## [109] tibble_3.3.1                BiocManager_1.30.27        </span></span>
+<span><span class="co">## [111] cli_3.6.5                   rpart_4.1.24               </span></span>
+<span><span class="co">## [113] systemfonts_1.3.2           jquerylib_0.1.4            </span></span>
+<span><span class="co">## [115] dichromat_2.0-0.1           Rcpp_1.1.1                 </span></span>
+<span><span class="co">## [117] GenomeInfoDb_1.46.2         dbplyr_2.5.2               </span></span>
+<span><span class="co">## [119] png_0.1-9                   XML_3.99-0.23              </span></span>
+<span><span class="co">## [121] parallel_4.5.3              pkgdown_2.2.0              </span></span>
+<span><span class="co">## [123] ggplot2_4.0.2               blob_1.3.0                 </span></span>
+<span><span class="co">## [125] prettyunits_1.2.0           jpeg_0.1-11                </span></span>
+<span><span class="co">## [127] latticeExtra_0.6-31         AnnotationFilter_1.34.0    </span></span>
+<span><span class="co">## [129] bitops_1.0-9                pwalign_1.6.0              </span></span>
+<span><span class="co">## [131] viridisLite_0.4.3           VariantAnnotation_1.56.0   </span></span>
+<span><span class="co">## [133] scales_1.4.0                crayon_1.5.3               </span></span>
+<span><span class="co">## [135] GetoptLong_1.1.0            rlang_1.1.7                </span></span>
+<span><span class="co">## [137] cowplot_1.2.0               KEGGREST_1.50.0</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -282,7 +309,7 @@ customization when needed.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

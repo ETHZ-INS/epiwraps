@@ -1,0 +1,181 @@
+# epiwraps: smooth epigenomics data analysis and visualization with Bioconductor
+
+## Introduction
+
+Bioconductor offers powerful packages for the analysis and visualization
+of (epi)genomic data, however they are often not always easy to approach
+for users without an extensive bioinformatics background. The `epiwraps`
+package started off as a set of wrappers for the visualization of
+epigenomics data (in particular ATAC/ChIP-seq), meant to facilitate the
+teaching of regulatory genomics through hands-on exploration of such
+data. It has now evolved into a set of tools around this task, including
+missing R-based alternatives for some important steps and a more unified
+interface.
+
+**Note that the package and documentation are both still under heavy
+development!**
+
+### Recent changes
+
+Version \>0.99.80 introduced some major changes, in particular the
+introduction of `EnrichmentSE` objects, which are now the default output
+of `signal2Matrix` and facilitate manipulations, as well as renaming of
+some normalization functions under a more standardized interface. Please
+consult the vignette to update your workflows.
+
+### Installation
+
+Install with:
+
+``` r
+BiocManager::install("ETHZ-INS/epiwraps")
+```
+
+## Overview
+
+While the package’s functions accept many input formats, much of the
+work usually done involving it uses bigwig files, and the package covers
+both the flexible
+[generation](https://ethz-ins.github.io/epiwraps/articles/bam2bw.html)
+of such files, as well as their use for extracting and plotting data,
+whether in a [single
+region](https://ethz-ins.github.io/epiwraps/articles/singleRegionPlot.html)
+or [across many
+regions](https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html).
+
+This is exemplified in the following figure:
+
+![](articles/example_bigwigs_hm.png)
+
+All columns are based on the same bam file, but select and/or summarize
+fragments differently. For example, the heatmap of insertion sites of
+nucleosome-free fragments was based on a bigwig file generated using:
+
+``` r
+bam2bw("aligned.bam", output_bw="NF_cuts.bw", paired=TRUE, trim=4L,
+       binWidth=1L, minFragLength=25, maxFragLength=120, type="ends"`)
+```
+
+More information about bigwig file generation is available in the
+[bam2bw
+vignette](https://ethz-ins.github.io/epiwraps/articles/bam2bw.html).
+
+For information on the extraction of signal from such files (as well as
+other format) and plotting of such heatmaps, see the [vignette to this
+effect](https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html).
+
+# Package index
+
+## All functions
+
+- [`TSSenrichment()`](https://ethz-ins.github.io/epiwraps/reference/TSSenrichment.md)
+  : TSSenrichment
+- [`addAssayToESE()`](https://ethz-ins.github.io/epiwraps/reference/addAssayToESE.md)
+  : addAssayToESE
+- [`annotateRegions()`](https://ethz-ins.github.io/epiwraps/reference/annotateRegions.md)
+  : annotateRegions
+- [`bam2bw()`](https://ethz-ins.github.io/epiwraps/reference/bam2bw.md)
+  : bam2bw: create a coverage bigwig file from an alignment bam file.
+- [`bamChrChunkApply()`](https://ethz-ins.github.io/epiwraps/reference/bamChrChunkApply.md)
+  : bamChrChunkApply
+- [`breakStrings()`](https://ethz-ins.github.io/epiwraps/reference/breakStrings.md)
+  : breakStrings
+- [`callPeaksExperimental()`](https://ethz-ins.github.io/epiwraps/reference/callPeaksExperimental.md)
+  : callPeaksExperimental
+- [`clusterSignalMatrices()`](https://ethz-ins.github.io/epiwraps/reference/clusterSignalMatrices.md)
+  : clusterSignalMatrices: clusters the regions of a (set of) signal
+  matrices.
+- [`computeDeviationsFaster()`](https://ethz-ins.github.io/epiwraps/reference/computeDeviationsFaster.md)
+  : computeDeviationsFaster
+- [`estimateFragSize()`](https://ethz-ins.github.io/epiwraps/reference/estimateFragSize.md)
+  : estimateFragSize
+- [`exampleDNAme`](https://ethz-ins.github.io/epiwraps/reference/exampleDNAme.md)
+  [`geneBodies`](https://ethz-ins.github.io/epiwraps/reference/exampleDNAme.md)
+  : Example DNAme data on some active gene bodies
+- [`exampleESE`](https://ethz-ins.github.io/epiwraps/reference/exampleESE.md)
+  : Example EnrichmentSE object
+- [`formatGenomicDist()`](https://ethz-ins.github.io/epiwraps/reference/formatGenomicDist.md)
+  : formatGenomicDist
+- [`frag2bw()`](https://ethz-ins.github.io/epiwraps/reference/frag2bw.md)
+  : frag2bw
+- [`fragSizesDist()`](https://ethz-ins.github.io/epiwraps/reference/fragSizesDist.md)
+  : fragSizesDist
+- [`getCovStats()`](https://ethz-ins.github.io/epiwraps/reference/getCovStats.md)
+  : getCovStats
+- [`getEmpiricalFDR()`](https://ethz-ins.github.io/epiwraps/reference/getEmpiricalFDR.md)
+  : getEmpiricalFDR
+- [`getNormFactors()`](https://ethz-ins.github.io/epiwraps/reference/getNormFactors.md)
+  [`bwNormFactors()`](https://ethz-ins.github.io/epiwraps/reference/getNormFactors.md)
+  : getNormFactors : estimate normalization factors from genomic signal
+  files
+- [`getSignalMatrices()`](https://ethz-ins.github.io/epiwraps/reference/getSignalMatrices.md)
+  : getSignalMatrices
+- [`importBedlike()`](https://ethz-ins.github.io/epiwraps/reference/importBedlike.md)
+  : importBedlike
+- [`inject()`](https://ethz-ins.github.io/epiwraps/reference/inject.md)
+  : Inject (insert) values at positions in a vector
+- [`meltSignals()`](https://ethz-ins.github.io/epiwraps/reference/meltSignals.md)
+  : meltSignals
+- [`mergeSignalMatrices()`](https://ethz-ins.github.io/epiwraps/reference/mergeSignalMatrices.md)
+  : mergeSignalMatrices: aggregates two or more signal matrices.
+- [`ml2ESE()`](https://ethz-ins.github.io/epiwraps/reference/ml2ESE.md)
+  : Creates an EnrichmentSE from a list of normalizedMatrix objects
+- [`motifCoOccurence()`](https://ethz-ins.github.io/epiwraps/reference/motifCoOccurence.md)
+  : motifCoOccurence
+- [`motifFootprint()`](https://ethz-ins.github.io/epiwraps/reference/motifFootprint.md)
+  : motifFootprint
+- [`peakCountsFromBAM()`](https://ethz-ins.github.io/epiwraps/reference/peakCountsFromBAM.md)
+  : peakCountsFromBAM
+- [`peakPbCountsSE()`](https://ethz-ins.github.io/epiwraps/reference/peakPbCountsSE.md)
+  : peakPbCountsSE
+- [`plotCorFromCovStats()`](https://ethz-ins.github.io/epiwraps/reference/plotCorFromCovStats.md)
+  : plotCorFromCovStats
+- [`plotCovStats()`](https://ethz-ins.github.io/epiwraps/reference/plotCovStats.md)
+  : plotCovStats
+- [`plotEnrichedHeatmaps()`](https://ethz-ins.github.io/epiwraps/reference/plotEnrichedHeatmaps.md)
+  : plotEnrichedHeatmaps: Plots heatmaps of signals around a set of
+  regions
+- [`plotSignalTracks()`](https://ethz-ins.github.io/epiwraps/reference/plotSignalTracks.md)
+  : plotSignalTracks
+- [`reduceRleLists()`](https://ethz-ins.github.io/epiwraps/reference/reduceRleLists.md)
+  : reduceRleLists
+- [`reduceWithResplit()`](https://ethz-ins.github.io/epiwraps/reference/reduceWithResplit.md)
+  : Merge regions, re-splitting large merges using local overlap minima
+- [`regionCAT()`](https://ethz-ins.github.io/epiwraps/reference/regionCAT.md)
+  : regionCAT
+- [`regionOverlaps()`](https://ethz-ins.github.io/epiwraps/reference/regionOverlaps.md)
+  : regionOverlaps
+- [`regionsToUpset()`](https://ethz-ins.github.io/epiwraps/reference/regionsToUpset.md)
+  : regionsToUpset
+- [`renormalizeBorders()`](https://ethz-ins.github.io/epiwraps/reference/renormalizeSignalMatrices.md)
+  [`renormalizeSignalMatrices()`](https://ethz-ins.github.io/epiwraps/reference/renormalizeSignalMatrices.md)
+  : renormalizeSignalMatrices
+- [`resizeMatrix()`](https://ethz-ins.github.io/epiwraps/reference/resizeMatrix.md)
+  : resize a numeric matrix to given dimensions
+- [`showTrackInfo()`](https://ethz-ins.github.io/epiwraps/reference/showTrackInfo.md)
+  : showTrackInfo
+- [`signal2Matrix()`](https://ethz-ins.github.io/epiwraps/reference/signal2Matrix.md)
+  : signal2Matrix: reads the signals in/around a set of genomic regions.
+- [`signalsAcrossSamples()`](https://ethz-ins.github.io/epiwraps/reference/signalsAcrossSamples.md)
+  : signalsAcrossSamples
+- [`tabixChrApply()`](https://ethz-ins.github.io/epiwraps/reference/tabixChrApply.md)
+  : tabixChrApply
+- [`tileRle()`](https://ethz-ins.github.io/epiwraps/reference/tileRle.md)
+  : tileRle
+- [`views2Matrix()`](https://ethz-ins.github.io/epiwraps/reference/views2Matrix.md)
+  : views2Matrix
+
+# Articles
+
+### All vignettes
+
+- [Generating bigwig tracks with
+  bam2bw](https://ethz-ins.github.io/epiwraps/articles/bam2bw.md):
+- [Miscellaneous epiwraps
+  functions](https://ethz-ins.github.io/epiwraps/articles/misc.md):
+- [Visualizing signals across many
+  regions](https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.md):
+- [Normalizing genomic
+  signals](https://ethz-ins.github.io/epiwraps/articles/normalization.md):
+- [Visualizing signals in a single
+  region](https://ethz-ins.github.io/epiwraps/articles/singleRegionPlot.md):

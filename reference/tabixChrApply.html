@@ -11,7 +11,7 @@ avoid loading all alignments into memory, or to parallelize reads processing."><
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.107</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.106</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,8 @@ avoid loading all alignments into memory, or to parallelize reads processing.</p
 <span>  keepSeqLvls <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  exclude <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  only <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  BPPARAM <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  progress <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -79,14 +80,24 @@ avoid loading all alignments into memory, or to parallelize reads processing.</p
 <dd><p>An optional vector of seqLevels to keep</p></dd>
 
 
+<dt id="arg-exclude">exclude<a class="anchor" aria-label="anchor" href="#arg-exclude"></a></dt>
+<dd><p>An optional GRanges of regions for which overlapping reads
+should be excluded.</p></dd>
+
+
 <dt id="arg-only">only<a class="anchor" aria-label="anchor" href="#arg-only"></a></dt>
-<dd></dd>
+<dd><p>An optional GRanges of regions for which overlapping reads should
+be included. If set, all other reads are discarded.</p></dd>
 
 
 <dt id="arg-bpparam">BPPARAM<a class="anchor" aria-label="anchor" href="#arg-bpparam"></a></dt>
 <dd><p>A `BiocParallel` parameter object for multithreading. Note
 that if used, memory usage will be high; in this context we recommend a
 high `nChunks`.</p></dd>
+
+
+<dt id="arg-progress">progress<a class="anchor" aria-label="anchor" href="#arg-progress"></a></dt>
+<dd><p>Logical; whether to show a progress bar.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -98,6 +109,34 @@ high `nChunks`.</p></dd>
     <p>A list of whatever `fn` returns</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># generate dummy regions and save them to a temp file:</span></span></span>
+<span class="r-in"><span><span class="va">frags</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".tsv"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>chr<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, each<span class="op">=</span><span class="fl">10</span><span class="op">)</span>, start<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">100</span><span class="op">*</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">d</span><span class="op">$</span><span class="va">end</span> <span class="op">&lt;-</span> <span class="va">d</span><span class="op">$</span><span class="va">start</span> <span class="op">+</span> <span class="fl">15L</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">d</span>, <span class="va">frags</span>, col.names<span class="op">=</span><span class="cn">FALSE</span>, row.names<span class="op">=</span><span class="cn">FALSE</span>, sep<span class="op">=</span><span class="st">"\t"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># tabix-index it</span></span></span>
+<span class="r-in"><span><span class="va">frags</span> <span class="op">&lt;-</span> <span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/zip.html" class="external-link">bgzip</a></span><span class="op">(</span><span class="va">frags</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/indexTabix.html" class="external-link">indexTabix</a></span><span class="op">(</span><span class="va">frags</span>, format <span class="op">=</span> <span class="st">"bed"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpTktJrD/file389b267a9e40.tsv.bgz.tbi"</span>
+<span class="r-in"><span><span class="co"># now we can do something chunk-wise, e.g. extract coverage:</span></span></span>
+<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">tabixChrApply</span><span class="op">(</span><span class="va">frags</span>, fn<span class="op">=</span><span class="va">coverage</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># aggregate the chunk results into an RleList object:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="reduceRleLists.html">reduceRleLists</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> RleList of length 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $`"a"`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> integer-Rle of length 1015 with 20 runs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Lengths: 100  15  85  15  85  15  85  15 ...  85  15  85  15  85  15  85  15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Values :   0   1   0   1   0   1   0   1 ...   0   1   0   1   0   1   0   1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $`"b"`</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> integer-Rle of length 1015 with 20 runs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Lengths: 100  15  85  15  85  15  85  15 ...  85  15  85  15  85  15  85  15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Values :   0   1   0   1   0   1   0   1 ...   0   1   0   1   0   1   0   1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
@@ -107,7 +146,7 @@ high `nChunks`.</p></dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>
