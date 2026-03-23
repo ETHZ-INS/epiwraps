@@ -29,6 +29,7 @@ Imports:
     ensembldb,
     AnnotationFilter,
     matrixStats,
+    motifmatchr,
     circlize,
     viridisLite,
     ggplot2,
