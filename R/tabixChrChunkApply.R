@@ -20,7 +20,7 @@
 #'
 #' @return A list of whatever `fn` returns
 #' @export
-#' @importFrom Rsamtools TabixFile seqnamesTabix
+#' @importFrom Rsamtools TabixFile seqnamesTabix bgzip indexTabix
 #' @importFrom rtracklayer path import
 #' @importFrom BiocParallel bpnworkers bplapply
 #' @importFrom pbapply pblapply

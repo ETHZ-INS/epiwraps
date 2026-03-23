@@ -19,8 +19,10 @@ motifCoOccurence(
 )
 }
 \arguments{
-\item{motifs}{A list of motifs (only those specified in `pairs` will be 
-used).}
+\item{motifs}{A named `PFMatrixList` or `PWMatrixList` object containing 
+motifs (only those specified in `pairs` will be used). If you're not 
+familiar with these objects, see the `TFBSTools` package, and the 
+`univervalmotif` package on how to convert motifs.}
 
 \item{pairs}{A list of pairs of motifs for which to compute co-occurence.
 Specifically, this should be a (optionally named) list of character vectors
