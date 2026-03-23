@@ -160,9 +160,8 @@ getNormFactors <- function(x, method=c("background","SES","enriched","top",
 #' @describeIn getNormFactors deprecated in favor of getNormFactors
 #' @export
 bwNormFactors <- function(x, ...){
-  .Deprecated(old="bwNormFactors", new="getNormFactors",
-              msg=paste("bwNormFactors is deprecated, please gradually switch",
-                        "to `getNormFactors`."))
+  message("bwNormFactors is deprecated, please gradually switch to ",
+          "`getNormFactors`.")
   getNormFactors(x, ...)
 }
 
@@ -318,10 +317,8 @@ bwNormFactors <- function(x, ...){
 #' @export
 #' @describeIn renormalizeSignalMatrices deprecated > renormalizeSignalMatrices
 renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
-  .Deprecated(
-    old="renormalizeBorders", new="renormalizeSignalMatrices",
-    msg=paste('renormalizeBorders is deprecated, please gradually',
-              'switch to `renormalizeSignalMatrices(..., method="border"`.'))
+  message('renormalizeBorders is deprecated, please gradually switch to ',
+          '`renormalizeSignalMatrices(..., method="border")`.')
   renormalizeSignalMatrices(ml, trim=trim, assay=assay, nWindows=nWindows,
                             method="border")
 }

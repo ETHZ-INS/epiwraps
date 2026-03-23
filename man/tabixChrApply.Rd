@@ -45,3 +45,17 @@ Runs a function on reads/fragments from each chromosomes of a Tabix-indexed
 fragment file. This is especially used by other functions to 
 avoid loading all alignments into memory, or to parallelize reads processing.
 }
+\examples{
+# generate dummy regions and save them to a temp file:
+frags <- tempfile(fileext = ".tsv")
+d <- data.frame(chr=rep(letters[1:2], each=10), start=rep(100*(1:10),2))
+d$end <- d$start + 15L
+write.table(d, frags, col.names=FALSE, row.names=FALSE, sep="\t")
+# tabix-index it
+frags <- Rsamtools::bgzip(frags)
+Rsamtools::indexTabix(frags, format = "bed")
+# now we can do something chunk-wise, e.g. extract coverage:
+res <- tabixChrApply(frags, fn=coverage)
+# aggregate the chunk results into an RleList object:
+reduceRleLists(res)
+}

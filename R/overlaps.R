@@ -57,7 +57,7 @@ regionsToUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
           y <- importBedlike(x)
         }
         if(!is(y,"GRanges"))
-          stop(paste0(y," does not appear to contain genomic ranges."))
+          stop(y," does not appear to contain genomic ranges.")
         x <- y
       }
       x

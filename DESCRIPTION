@@ -55,6 +55,7 @@ Encoding: UTF-8
 Config/testthat/edition: 3
 RoxygenNote: 7.3.3
 URL: https://ethz-ins.github.io/epiwraps/
-BiocViews: Epigenetics, GeneRegulation, Visualization
+BugReports : http://github.com/ETHZ-INS/epiwraps/issues
+biocViews: Epigenetics, Sequencing, Normalization, Visualization
 LinkingTo: Rcpp, RcppParallel
 SystemRequirements: GNU make

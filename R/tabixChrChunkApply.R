@@ -24,6 +24,19 @@
 #' @importFrom rtracklayer path import
 #' @importFrom BiocParallel bpnworkers bplapply
 #' @importFrom pbapply pblapply
+#' @examples
+#' # generate dummy regions and save them to a temp file:
+#' frags <- tempfile(fileext = ".tsv")
+#' d <- data.frame(chr=rep(letters[1:2], each=10), start=rep(100*(1:10),2))
+#' d$end <- d$start + 15L
+#' write.table(d, frags, col.names=FALSE, row.names=FALSE, sep="\t")
+#' # tabix-index it
+#' frags <- Rsamtools::bgzip(frags)
+#' Rsamtools::indexTabix(frags, format = "bed")
+#' # now we can do something chunk-wise, e.g. extract coverage:
+#' res <- tabixChrApply(frags, fn=coverage)
+#' # aggregate the chunk results into an RleList object:
+#' reduceRleLists(res)
 tabixChrApply <- function(x, fn, keepSeqLvls=NULL, exclude=NULL, only=NULL,
                           BPPARAM=NULL, progress=TRUE, ...){
   x <- TabixFile(x)

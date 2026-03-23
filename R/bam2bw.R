@@ -562,8 +562,8 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
     scaling <- sum(unlist(lapply(res, FUN=function(x) metadata(x)$reads )),
                    na.rm=TRUE)/10^6
     if(is.na(scaling) || !isTRUE(scaling>0))
-      stop(paste("Cannot establish scaling factor; object most likely doesn't",
-                 "contain a metadata(x)$reads."))
+      stop("Cannot establish scaling factor; object most likely doesn't ",
+           "contain a metadata(x)$reads.")
   }
   if(is(res[[1]], "GRanges")){
     res <- unlist(GRangesList(res))
@@ -586,6 +586,22 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
     }
   }
   res
+}
+
+#' reduceRleLists
+#'
+#' @param res A list of RleList objects
+#' @param fn The function to use to combine them
+#'
+#' @returns A combined RleList object.
+#' @export
+#' @examples
+#' list_of_rlelists <- list(
+#'   RleList(A=c(0,0,1,0,0), B=c(0,0,0,0,1)),
+#'   RleList(A=c(1,1,1,0,0), C=c(0,1,1,1,1)) )
+#' reduceRleLists(list_of_rlelists)
+reduceRleLists <- function(res, fn="+"){
+  .reduceRleLists(res, fn)
 }
 
 .reduceRleLists <- function(res, fn="+"){
