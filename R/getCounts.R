@@ -1,4 +1,4 @@
-#' getCounts
+#' peakCountsFromBAM
 #' 
 #' Creates a SummarizedExperiment of fragment (or insertion) counts from bam 
 #' files that overlap given regions.
@@ -32,8 +32,9 @@
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 #' # create regions of interest
 #' peaks <- GRanges(c("seq1","seq1","seq2"), IRanges(c(400,900,500), width=100))
-#' getCounts(bam, peaks, paired=FALSE)
-getCounts <- function(bam_files, regions, paired, extend=0L, shift=0L, 
+#' peakCountsFromBAM(bam, peaks, paired=FALSE)
+peakCountsFromBAM <- function(
+                      bam_files, regions, paired, extend=0L, shift=0L, 
                       type=c("full","center","start","end","ends"),
                       ov.type="any", maxgap=-1L, minoverlap=1L,
                       ignore.strand=TRUE, strandMode=1, includeDuplicates=TRUE, 
@@ -66,7 +67,7 @@ getCounts <- function(bam_files, regions, paired, extend=0L, shift=0L,
                       isSecondaryAlignment=ifelse(includeSecondary,NA,FALSE),
                       isNotPassingQualityControls=FALSE)
   seqs <- Rsamtools::scanBamHeader(bam_files[[1]])[[1]]$targets
-  seqs <- seqs[.checkMissingSeqLevels(names(seqs), seqlevelsInUse(peaks),
+  seqs <- seqs[.checkMissingSeqLevels(names(seqs), seqlevelsInUse(regions),
                                       argName="regions")]
   
   if(is.null(randomAcc))
@@ -116,5 +117,73 @@ getCounts <- function(bam_files, regions, paired, extend=0L, shift=0L,
   row.names(cnts) <- as.character(granges(regions))
   se <- SummarizedExperiment(list(counts=cnts), rowRanges=regions)
   se$depth <- depths
+  se
+}
+
+
+#' peakPbCountsSE
+#' 
+#' Generate a pseudobulk peak counts SummarizedExperiment from a fragment file.
+#'
+#' @param fragfile The path to a Tabix-indexed fragment file.
+#' @param peaks A GRanges of the regions in which to count.
+#' @param bcmap A named vector, indicating the pseudobulk sample (values) in 
+#'   which to include each barcode (names).
+#' @param genome A optional genome object or path to a genom fasta file. If
+#'   included, GC bias will be added to the rowData of the output object.
+#' @param insertions If TRUE, (shifted) Tn5 insertions events are counted 
+#'   instead of fragments. This means that each fragment gets counted twice
+#'   (for both ends). Default FALSE.
+#' @param minFragLength Minimum fragment length for a fragment to be counted.
+#' @param maxFragLength Maximum fragment length for a fragment to be counted.
+#'
+#' @returns A \link[SummarizedExperiment]{RangedSummarizedExperiment} with a 
+#'   'counts' assay, and columns corresponding to each unique value of `bcmap`.
+#' @export
+peakPbCountsSE <- function(fragfile, peaks, bcmap, insertions=FALSE, 
+                           genome=NULL, minFragLength=1L, maxFragLength=5000L){
+  if(is.data.frame(bcmap) && !is.null(row.names(bcmap)) && 
+     "group" %in% colnames(bcmap))
+    bcmap <- setNames(bcmap$group, row.names(bcmap))
+  
+  stopifnot(length(bcmap)>1 && !is.null(names(bcmap)) &&
+              (is.character(bcmap) || is.factor(bcmap)))
+  
+  frags <- Rsamtools::TabixFile(fragfile)
+  resl <- tabixChrApply(frags, fn=function(x){
+    x <- x[which(x$name %in% names(bcmap))]
+    x$name <- factor(x$name, names(bcmap))
+    x <- x[!is.na(x$name)]
+    sapply(split(x, bcmap[as.integer(x$name)]), \(y){
+      y <- y[which(width(y)>=minFragLength & width(y)<=maxFragLength)]
+      if(insertions){
+        y <- epiwraps:::.align2cuts(resize(y, fix="center", width(y)-8L))
+      }
+      countOverlaps(peaks, y)
+    })
+  })
+  gc(full=TRUE, verbose=FALSE)
+  mat <- sapply(setNames(unique(bcmap),unique(bcmap)), \(x){
+    y <- lapply(resl, \(y){
+      if(!is.null(dim(y)) && x %in% colnames(y)) return(y[,x])
+      NULL
+    })
+    y <- y[!sapply(y,is.null)]
+    Reduce("+",y)
+  })
+  
+  se <- SummarizedExperiment(list(counts=mat), rowRanges=peaks)
+
+  if(!is.null(genome)){
+    if(is.character(genome) && length(genome)==1)
+      genome <- Rsamtools::FaFile(genome)
+    se <- tryCatch({
+      chromVAR::addGCBias(se, genome=genome)
+    }, error=function(e){
+      warning("Failed to add GC bias to object: ", e)
+      se
+    })
+  }
+  
   se
 }

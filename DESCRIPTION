@@ -1,8 +1,8 @@
 Package: epiwraps
 Type: Package
 Title: epiwraps: Wrappers for plotting and dealing with epigenomics data
-Version: 0.99.107
-Date: 2025-03-03
+Version: 0.99.105
+Date: 2026-03-23
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
             role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")),
@@ -37,12 +37,11 @@ Imports:
     dplyr,
     stats,
     pbapply,
-    methods,
+    methods
 Suggests: 
     knitr,
     rmarkdown,
     BiocStyle,
-    UpSetR,
     magick,
     testthat (>= 3.0.0)
 Description:
@@ -54,6 +53,9 @@ License: GPL-3
 VignetteBuilder: knitr
 Encoding: UTF-8
 Config/testthat/edition: 3
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.3
 URL: https://ethz-ins.github.io/epiwraps/
-BiocViews: Epigenetics, GeneRegulation, Visualization
+BugReports : http://github.com/ETHZ-INS/epiwraps/issues
+biocViews: Epigenetics, Sequencing, Normalization, Visualization
+LinkingTo: Rcpp, RcppParallel
+SystemRequirements: GNU make

@@ -1,11 +1,5 @@
 #' Merge regions, re-splitting large merges using local overlap minima
 #'
-#' This is an alternative to something like 
-#' \code{reduce(unlist(GRangesList(peaks)))} for merging overlapping regions"
-#' it tries to break up large merged regions based on the profile of overlap
-#' with the un-merged regions. We typically use this to merge for instance peaks
-#' called on different samples.
-#'
 #' @param peaks A list of \code{\link[GenomicRanges]{GRanges-class}}, or a 
 #'   \code{\link[GenomicRanges]{GRanges-class}} containing overlapping regions.
 #' @param softMaxSize The (merged) peak size below which re-splitting will be 

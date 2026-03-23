@@ -1,11 +1,13 @@
 #' computeDeviationsFaster
 #' 
 #' A faster version of \code{\link[chromVAR]{computeDeviations}} (see details).
+#' This is kept for legacy/backward compatibility, and users should rather use 
+#' the `betterChromVAR` package.
 #'
 #' @param counts A matrix of read counts per region(rows)/sample(columns), or a
 #'   SummarizedExperiment with this as first assay, as produced by 
-#'   \code{\link{getCounts}}. Can also be already normalized if 
-#'   `normalize=FALSE`.
+#'   \code{\link{getCounts}} or \code{\link{peakPbCountsSE}}. Can also be 
+#'   already normalized if `normalize=FALSE`.
 #' @param motifMatches A matrix of motif matches (either logical or with 
 #'   something akin to binding probabilities), or a SummarizedExperiment 
 #'   containing such an assay.
@@ -42,14 +44,15 @@
 #' roughly 20% of the original).
 #' 
 #' @author Pierre-Luc Germain
+#' @importFrom Matrix rowMeans colSums
 #' @export
 computeDeviationsFaster <- function(counts, motifMatches, backgrounds,
                                     normalize=TRUE, welford=NULL, verbose=TRUE,
                                     BPPARAM=SerialParam(progress=TRUE)){
   stopifnot(nrow(counts)==nrow(motifMatches) &&
               nrow(counts)==nrow(backgrounds))
-  stopifnot(min(b)>=1 & max(b)<=nrow(b))
-  if(!is.integer(b[1,1]))
+  stopifnot(min(backgrounds)>=1 & max(backgrounds)<=nrow(backgrounds))
+  if(!is.numeric(backgrounds[1,1]))
     stop("`backgrounds` should be a matrix of integers.")
   
   expectedMem <- .computeDeviationsMemoryUsage(counts, motifMatches, 
@@ -66,7 +69,7 @@ computeDeviationsFaster <- function(counts, motifMatches, backgrounds,
     if(os>0.2){
       os <- ifelse(os<0.1, paste0(round(os*1000,1), " MB"),
                    paste0(round(os,2), " GB"))
-      message("Projected memory usage:", os)
+      message("Projected memory usage: ", os)
     }
   }
   
@@ -87,7 +90,7 @@ computeDeviationsFaster <- function(counts, motifMatches, backgrounds,
   }
   if(normalize){
     # normalize the counts:
-    counts <- t(10000*t(counts)/colSums(counts))
+    counts <- t(10000*t(counts)/Matrix::colSums(counts))
   }
   
   if(inherits(motifMatches, "SummarizedExperiment"))
@@ -96,7 +99,7 @@ computeDeviationsFaster <- function(counts, motifMatches, backgrounds,
     warning("motifMatches should be either binary or weights from 0 to 1.")
   
   # Ensure that the reordering is done on the least costly matrix
-  doVariant <- ((is(mi, "sparseMatrix")-is(counts, "sparseMatrix"))+
+  doVariant <- ((is(motifMatches, "sparseMatrix")-is(counts, "sparseMatrix"))+
                   (ncol(motifMatches)>ncol(counts))) > 0
   if(doVariant && is(counts, "CsparseMatrix")){
     counts <- as(counts, "RsparseMatrix")
@@ -107,7 +110,8 @@ computeDeviationsFaster <- function(counts, motifMatches, backgrounds,
   # computing background devs:
   if(welford){
     res <- bplapply(split(seq_len(ncol(backgrounds)), BPPARAM$workers),
-                    BPPARAM=BPPARAM, FUN=function(idxs){
+                  BPPARAM=BPPARAM, 
+                  FUN=function(idxs){
                       .computeBgDevChunkWelford(idxs, backgrounds, motifMatches,
                                                 counts, doVariant=doVariant)
                     })
@@ -120,13 +124,13 @@ computeDeviationsFaster <- function(counts, motifMatches, backgrounds,
     # computing background devs:
     res <- bplapply(seq_len(ncol(backgrounds)), BPPARAM=BPPARAM, 
                     FUN=function(i){
-                      if(doVariant){
-                        o <- t(crossprod(counts[backgrounds[,i],],motifMatches))
-                      }else{
-                        o <- crossprod(motifMatches[backgrounds[,i],],counts)
-                      }
-                      expect <- rowMeans(o)
-                      (o-expect)/expect
+            if(doVariant){
+              o <- t(Matrix::crossprod(counts[backgrounds[,i],],motifMatches))
+            }else{
+              o <- Matrix::crossprod(motifMatches[backgrounds[,i],],counts)
+            }
+            expect <- Matrix::rowMeans(o)
+            (o-expect)/expect
                     })
     # mean and sd across bg iterations:
     m <- Reduce("+",res)/length(res)
@@ -135,8 +139,8 @@ computeDeviationsFaster <- function(counts, motifMatches, backgrounds,
   rm(res)
   
   # computing observed deviations:
-  o <- crossprod(motifMatches,counts)
-  expect <- rowMeans(o)
+  o <- Matrix::crossprod(motifMatches,counts)
+  expect <- Matrix::rowMeans(o)
   deviations <- (o-expect)/expect
   
   al <- list( #bg.means=m, bg.sds=sds, o=o, raw.devs=deviations,
@@ -163,11 +167,11 @@ computeDeviationsFaster <- function(counts, motifMatches, backgrounds,
   
   for(i in bgindices){
     if(doVariant){
-      o <- t(crossprod(counts[backgrounds[,i],],motifMatches))
+      o <- t(Matrix::crossprod(counts[backgrounds[,i],],motifMatches))
     }else{
-      o <- crossprod(motifMatches[backgrounds[,i],],counts)
+      o <- Matrix::crossprod(motifMatches[backgrounds[,i],],counts)
     }
-    expect <- rowMeans(o)
+    expect <- Matrix::rowMeans(o)
     o <- (o-expect)/expect
     # Welford's online algorithm:
     n <- n + 1L

@@ -71,7 +71,7 @@
 #' @param only An optional GRanges of regions for which overlapping reads should
 #'   be included. If set, all other reads are discarded.
 #' @param binSummarization The method to summarize nucleotides into each bin,
-#'   either "max" (default), "min" or "mean".
+#'   either "mean" (default), "min" or "max".
 #' @param verbose Logical; whether to print progress messages
 #' @param ... Passed to `ScanBamParam`
 #' 
@@ -299,7 +299,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
 #'   be included. If set, all other reads are discarded.
 #' @param format The format of the fragment file.
 #' @param binSummarization The method to summarize nucleotides into each bin,
-#'   either "max" (default), "min" or "mean".
+#'   either "mean" (default), "min" or "max".
 #' @param verbose Logical; whether to print progress messages
 #' 
 #' @return The bigwig filepath. Alternatively, if `output_bw=NA_character_`, 
@@ -324,7 +324,7 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
                     exclude=NULL, minFragLength=1L, maxFragLength=5000L,
                     keepSeqLvls=NULL, useScore=FALSE, forceSeqlevelsStyle=NULL,
                     only=NULL, format="bed",
-                    binSummarization=c("max","min","mean"), verbose=TRUE){
+                    binSummarization=c("mean","max","min"), verbose=TRUE){
   
   binSummarization <- match.arg(binSummarization)
   strand <- match.arg(strand)
@@ -562,8 +562,8 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
     scaling <- sum(unlist(lapply(res, FUN=function(x) metadata(x)$reads )),
                    na.rm=TRUE)/10^6
     if(is.na(scaling) || !isTRUE(scaling>0))
-      stop(paste("Cannot establish scaling factor; object most likely doesn't",
-                 "contain a metadata(x)$reads."))
+      stop("Cannot establish scaling factor; object most likely doesn't ",
+           "contain a metadata(x)$reads.")
   }
   if(is(res[[1]], "GRanges")){
     res <- unlist(GRangesList(res))
@@ -586,6 +586,22 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
     }
   }
   res
+}
+
+#' reduceRleLists
+#'
+#' @param res A list of RleList objects
+#' @param fn The function to use to combine them
+#'
+#' @returns A combined RleList object.
+#' @export
+#' @examples
+#' list_of_rlelists <- list(
+#'   RleList(A=c(0,0,1,0,0), B=c(0,0,0,0,1)),
+#'   RleList(A=c(1,1,1,0,0), C=c(0,1,1,1,1)) )
+#' reduceRleLists(list_of_rlelists)
+reduceRleLists <- function(res, fn="+"){
+  .reduceRleLists(res, fn)
 }
 
 .reduceRleLists <- function(res, fn="+"){
@@ -615,11 +631,12 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
   }
   if(is.numeric(x)) x <- Rle(x)
   stopifnot(is(x,"RleList") || is(x,"Rle"))
-  if(length(windows)==1) return(runmean(x, k=windows, endrule = "constant"))
-  do.call(pmax, lapply(windows, FUN=function(w){
-    if(w==1) return(x)
-    runmean(x, k=w, endrule = "constant")
-  }))
+  x <- lapply(windows, FUN=function(k){
+    if(k==1) return(x)
+    runmean(x, k=k, endrule=ifelse(k%/%2==k/2, "drop", "constant"))
+  })
+  if(length(x)==1) return(x[[1]])
+  do.call(pmax, x)
 }
 
 .align2cuts <- function(x){

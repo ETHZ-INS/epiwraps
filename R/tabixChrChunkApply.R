@@ -13,7 +13,9 @@
 #'   high `nChunks`.
 #' @param only An optional GRanges of regions for which overlapping reads should
 #'   be included. If set, all other reads are discarded.
-#' @param only 
+#' @param progress Logical; whether to show a progress bar.
+#' @param exclude An optional GRanges of regions for which overlapping reads 
+#'   should be excluded.
 #' @param ... Passed to `fn`
 #'
 #' @return A list of whatever `fn` returns
@@ -22,8 +24,21 @@
 #' @importFrom rtracklayer path import
 #' @importFrom BiocParallel bpnworkers bplapply
 #' @importFrom pbapply pblapply
+#' @examples
+#' # generate dummy regions and save them to a temp file:
+#' frags <- tempfile(fileext = ".tsv")
+#' d <- data.frame(chr=rep(letters[1:2], each=10), start=rep(100*(1:10),2))
+#' d$end <- d$start + 15L
+#' write.table(d, frags, col.names=FALSE, row.names=FALSE, sep="\t")
+#' # tabix-index it
+#' frags <- Rsamtools::bgzip(frags)
+#' Rsamtools::indexTabix(frags, format = "bed")
+#' # now we can do something chunk-wise, e.g. extract coverage:
+#' res <- tabixChrApply(frags, fn=coverage)
+#' # aggregate the chunk results into an RleList object:
+#' reduceRleLists(res)
 tabixChrApply <- function(x, fn, keepSeqLvls=NULL, exclude=NULL, only=NULL,
-                          BPPARAM=SerialParam(), ...){
+                          BPPARAM=NULL, progress=TRUE, ...){
   x <- TabixFile(x)
   if(!is.null(exclude)) stopifnot(is(exclude, "GRanges"))
   if(!is.null(only)) stopifnot(is(only, "GRanges"))
@@ -52,8 +67,9 @@ head(paste(missingLvls, collapse=", "), 3)))
     slvls <- keepSeqLvls
   }
   
-  if(BiocParallel::bpnworkers(BPPARAM)==1){
-    return(pblapply(slvls, FUN=f2, postfn=fn, ...))
+  if(is.null(BPPARAM) || BiocParallel::bpnworkers(BPPARAM)==1){
+    if(progress) return(pblapply(slvls, FUN=f2, postfn=fn, ...))
+    return(lapply(slvls, FUN=f2, postfn=fn, ...))
   }
   bplapply(slvls, FUN=f2, postfn=fn, ..., BPPARAM=BPPARAM)
 }

@@ -85,10 +85,10 @@ showTrackInfo <- function(x, assay="input", doPrint=TRUE){
   stopifnot(is(x,"list") & all(vapply(x, FUN.VALUE=logical(1), 
                                       class2="normalizedMatrix", FUN=is)))
   out <- lapply(x, FUN=function(x){
-    upstream_index = attr(x, "upstream_index")
-    downstream_index = attr(x, "upstream_index")
-    target_index_len = length(attr(x, "target_index"))
-    extend = attr(x, "extend")
+    upstream_index <- attr(x, "upstream_index")
+    downstream_index <- attr(x, "upstream_index")
+    target_index_len <- length(attr(x, "target_index"))
+    extend <- attr(x, "extend")
     out <- paste0("  ", 
                   paste0(c("-","+"), formatGenomicDist(extend),collapse="/"),
                   " (")
@@ -130,7 +130,8 @@ showTrackInfo <- function(x, assay="input", doPrint=TRUE){
 #' @param assayName The name of the assay, defaults to 'input'
 #' @param addScore Logical; whether to add an enriched_score assay.
 #' @param ... Passed to `SummarizedExperiment()`
-#'
+#' @return An `EnrichedSE` object, inheriting from a 
+#'   \link[SummarizedExperment]{RangedSummarizedExperiment}.
 #' @importFrom SummarizedExperiment assays<- assay<- assays
 #' @export
 #' @examples

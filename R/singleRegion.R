@@ -155,7 +155,7 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
     if(is.null(genes.params$transcriptAnnotation))
       genes.params$transcriptAnnotation <- ifelse(transcripts=="collapsed",
                                                   "symbol","transcript")
-    if(transcripts=="collapsed") genes.params$collapseTranscripts="meta"
+    if(transcripts=="collapsed") genes.params$collapseTranscripts <- "meta"
     if(transcripts=="coding")
       ggr <- ggr[ggr$transcript %in% 
                    unique(ggr$transcript[ggr$feature=="protein_coding"])]
@@ -310,12 +310,12 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
 signalsAcrossSamples <- function(files, region, ignore.strand=TRUE){
   region <- .parseRegion(region, asGR=TRUE)
   files <- lapply(files, which=region, rtracklayer::import.bw)
-  grs <- lapply(files,FUN=function(x) x[x$score>0])
+  grs <- lapply(files, FUN=function(x) x[x$score>0])
   grs <- lapply(grs, FUN=function(x){
     keepSeqlevels(x, seqnames(region), pruning.mode="coarse")
   })
   gr <- disjoin(unlist(GRangesList(grs)), ignore.strand=ignore.strand)
-  m <- sapply(grs, FUN=function(x){
+  m <- vapply(grs, FUN.VALUE=numeric(length(gr)), FUN=function(x){
     o <- findOverlaps(gr,x, ignore.strand=ignore.strand)
     y <- rep(0,length(gr))
     y[o@from] <- x$score[o@to]

@@ -18,6 +18,10 @@ object of `ml`.}
 
 \item{...}{Passed to `SummarizedExperiment()`}
 }
+\value{
+An `EnrichedSE` object, inheriting from a 
+  \link[SummarizedExperment]{RangedSummarizedExperiment}.
+}
 \description{
 Creates an EnrichmentSE from a list of normalizedMatrix objects
 }

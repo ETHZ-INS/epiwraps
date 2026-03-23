@@ -10,7 +10,8 @@ tabixChrApply(
   keepSeqLvls = NULL,
   exclude = NULL,
   only = NULL,
-  BPPARAM = SerialParam(),
+  BPPARAM = NULL,
+  progress = TRUE,
   ...
 )
 }
@@ -22,11 +23,17 @@ tabixChrApply(
 
 \item{keepSeqLvls}{An optional vector of seqLevels to keep}
 
-\item{only}{}
+\item{exclude}{An optional GRanges of regions for which overlapping reads 
+should be excluded.}
+
+\item{only}{An optional GRanges of regions for which overlapping reads should
+be included. If set, all other reads are discarded.}
 
 \item{BPPARAM}{A `BiocParallel` parameter object for multithreading. Note 
 that if used, memory usage will be high; in this context we recommend a 
 high `nChunks`.}
+
+\item{progress}{Logical; whether to show a progress bar.}
 
 \item{...}{Passed to `fn`}
 }
@@ -37,4 +44,18 @@ A list of whatever `fn` returns
 Runs a function on reads/fragments from each chromosomes of a Tabix-indexed 
 fragment file. This is especially used by other functions to 
 avoid loading all alignments into memory, or to parallelize reads processing.
+}
+\examples{
+# generate dummy regions and save them to a temp file:
+frags <- tempfile(fileext = ".tsv")
+d <- data.frame(chr=rep(letters[1:2], each=10), start=rep(100*(1:10),2))
+d$end <- d$start + 15L
+write.table(d, frags, col.names=FALSE, row.names=FALSE, sep="\t")
+# tabix-index it
+frags <- Rsamtools::bgzip(frags)
+Rsamtools::indexTabix(frags, format = "bed")
+# now we can do something chunk-wise, e.g. extract coverage:
+res <- tabixChrApply(frags, fn=coverage)
+# aggregate the chunk results into an RleList object:
+reduceRleLists(res)
 }
