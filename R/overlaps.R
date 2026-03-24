@@ -86,6 +86,11 @@ regionsToUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
 #' genomic ranges.
 #' 
 #' @param listOfRegions A named list of two or more (non-empty) `GRanges`
+#' @param mode Either 'reduced' or 'pairwise'. 'reduced' first uses `reduce` to
+#'   get a set of reference regions which are, based on overlap, contained or 
+#'   not in the different sets. It is thus symmetrical. `pairwise` does pairwise
+#'   overlap between the sets of regions; it is asymmetrical and slower to 
+#'   compute.
 #' @param ignore.strand Logical; whether to ignore strand for overlaps
 #' @param color Heatmap colorscale
 #' @param cluster Logical; whether to cluster rows/columns
@@ -104,12 +109,19 @@ regionsToUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
 #'   GRanges("seq1", IRanges(runif(x,1,1000), width=20))
 #' })
 #' regionOverlaps(grl)
-regionOverlaps <- function(listOfRegions, ignore.strand=TRUE, 
-                           cluster=length(listOfRegions)>2,
+regionOverlaps <- function(listOfRegions, mode=c("reduced","pairwise"),
+                           ignore.strand=TRUE, cluster=length(listOfRegions)>2,
                            color=viridis::plasma(100),
                            number_color="black", ...){
   stopifnot(length(listOfRegions)>1 && all(lengths(listOfRegions)>0) &&
               all(sapply(listOfRegions,class2="GRanges",is)))
+  mode <- match.arg(mode)
+  if(mode=="reference"){
+    r <- reduce(GRangesList(listOfRegions), ignore.strand=ignore.strand)
+    m <- sapply(listOfRegions, \(x) overlapsAny(r, m,
+                                                ignore.strand=ignore.strand))
+    o <- t(m) %*% m
+  }
   o <- suppressWarnings(sapply(listOfRegions, FUN=function(x){
     sapply(listOfRegions, FUN=function(y){
       if(identical(x,y)) return(length(x))
