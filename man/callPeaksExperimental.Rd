@@ -111,6 +111,8 @@ for instance with `nChunks=10`.
 The function uses \code{\link{bamChrChunkApply}} to obtain the coverages,
 and can accept any argument of that function. This means for instance that 
 the `mapqFilter` argument can be used to restrict the reads used.
+
+To export as a narrowPeak file, see \code{\link{exportNarrowPeaks}}.
 }
 \examples{
 # we use the example bam file from the Rsamtools package:

@@ -63,6 +63,8 @@
 #' and can accept any argument of that function. This means for instance that 
 #' the `mapqFilter` argument can be used to restrict the reads used.
 #' 
+#' To export as a narrowPeak file, see \code{\link{exportNarrowPeaks}}.
+#' 
 #' @importFrom IRanges Views viewMaxs viewMeans slice viewRangeMaxs relist IntegerList
 #' @importFrom stats setNames pnorm ppois optim density
 #' @importFrom S4Vectors mean.Rle
@@ -427,11 +429,37 @@ callPeaksExperimental <- function(
   sort(c(xO, gr))
 }
 
+#' exportNarrowPeaks
+#'
+#' @param p A GRanges, as produced by `callPeaksExperimental`
+#' @param file The path to the file where to save
+#'
+#' @returns Invisible file path.
+#' @export
+#' @examples
+#' # call some peaks:
+#' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
+#' peaks <- callPeaksExperimental(bam, paired=TRUE)
+#' # save them:
+#' filepath <- tempfile(fileext="narrowPeak")
+#' exportNarrowPeaks(peaks, filepath)
+exportNarrowPeaks <- function(p, file){
+  stopifnot(is(p, "GRanges"))
+  stopifnot(is.character(file) && length(file)==1)
+  if(all(c("log10p", "log10FE", "score") %in% colnames(mcols(p))))
+    p <- .customPeaks2NarrowPeak(p)
+  p <- as.data.frame(p)
+  fields <- c("seqnames", "start", "end", "name", "score", "strand",
+              "foldEnrichment", "log10p", "log10FDR", "pointSource")
+  stopifnot(all(fields %in% colnames(p)))
+  p <- p[,fields]
+  write.table(p, file, row.names=FALSE, col.names=FALSE, sep="\t", quote=FALSE)
+}
  
 .customPeaks2NarrowPeak <- function(r){
   r$name <- Rle(rep(factor("."),length(r)))
   r$pointSource <- r$summit-start(r)
-  r$foldEnrichment <- 10^r$log10FE
+  r$foldEnrichment <- round(10^r$log10FE, 2)
   mcols(r) <- mcols(r)[,c("name","score","foldEnrichment","log10p","log10FDR",
                           "pointSource")]
   r
