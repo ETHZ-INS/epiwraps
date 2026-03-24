@@ -223,7 +223,7 @@ callPeaksExperimental <- function(
   
   r$score <- as.integer(round(1000*(r$log10FE/quantile(r$log10FE, .99))))
   r$score[r$score>1000L] <- 1000L
-  if(outFormat=="NarrowPeak")  r <- .customPeaks2NarrowPeaks(r)
+  if(outFormat=="narrowPeak")  r <- .customPeaks2NarrowPeak(r)
   r
 }
 
@@ -356,6 +356,14 @@ callPeaksExperimental <- function(
   }
   if(verbose) message(length(r), " peaks after filtering")
   
+  if(length(r) > 0){
+    r <- sort(r, ignore.strand=TRUE)
+    v_final <- Views(co, r)
+    r$summit <- unlist(viewWhichMaxs(v_final), use.names=FALSE)
+  } else {
+    r$summit <- integer(0)
+  }
+
   totCov <- sum(as.numeric(sum(co)))
   rm(co,ctrl)
   gc(verbose=FALSE)
