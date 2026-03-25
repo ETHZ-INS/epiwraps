@@ -1,12 +1,12 @@
 #' callPeaks
 #' 
 #' This is a native R peak caller loosely based on the general MACS2/3 strategy 
-#' (Zhang et al., Genome Biology 2008). It can work from BAM files or from 
-#' coverage tracks. The results are highly concordant with MACS, although the 
-#' significance estimates are slightly more conservative, the peak resolution
-#' differs, and the function requires much more memory (see details). We believe
-#' its calls are slightly better than MACS3 in the absence of a control, and 
-#' slightly worse when using a control.
+#' (Zhang et al., Genome Biology 2008). It can work from BAM files, fragment 
+#' files, or from coverage tracks. The results are highly concordant with MACS, 
+#' although the significance estimates are slightly more conservative, the peak 
+#' resolution differs, and the function requires much more memory (see details).
+#' We believe its calls are slightly better than MACS3 in the absence of a 
+#' control, and slightly worse when using a control.
 #'
 #' @param bam A signal bam file (which should be accompanied by an index file).
 #'   Alternatively, a TABIX-indexed fragment file, or an RleList object.
@@ -92,7 +92,7 @@
 callPeaks <- function(
       bam, ctrl=NULL, paired, type=c("narrow","broad"), fragLength=200L,
       globalNullH=FALSE, gsize=NULL, blacklist=NULL, binSize=10L, nChunks=8L,
-      flags=scanBamFlag(isDuplicate=FALSE), minPeakCount=5L, minFoldEnr=1.3,
+      flags=scanBamFlag(isDuplicate=FALSE), minPeakCount=5L, minFoldEnr=1.4,
       pthres=10^-5, maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=0.5,
       useStrand=!paired, outFormat=c("narrowPeak", "custom"), verbose=TRUE,
       ...){
