@@ -1,10 +1,10 @@
 #' callPeaks
 #' 
 #' This is a native R peak caller loosely based on the general MACS2/3 strategy 
-#' (Zhang et al., Genome Biology 2008). The results are highly concordant with
-#' the latter, although the significance estimates are slightly more 
-#' conservative, and the function requires a good amount of memory (see 
-#' details).
+#' (Zhang et al., Genome Biology 2008). It can work from BAM files or from 
+#' coverage tracks. The results are highly concordant with MACS, although the 
+#' significance estimates are slightly more conservative and the function 
+#' requires much more memory (see details).
 #'
 #' @param bam A signal bam file (which should be accompanied by an index file).
 #'   Alternatively, a TABIX-indexed fragment file, or an RleList object.
@@ -46,8 +46,8 @@
 #' @param verbose Logical; whether to output progress messages
 #' @param ... Passed to \code{\link{bamChrChunkApply}}
 #'
-#' @return A `GRanges`. If `outFormat="narrowPeak"`, the metadata columns will
-#'   follow the narrowPeak format specification.
+#' @return A `GRanges`, by default following the narrowPeak format 
+#'   specification.
 #' 
 #' @details 
 #' Unless `globalNullH=TRUE`, this function uses MACS' local lambda (defined by
@@ -72,7 +72,8 @@
 #' 
 #' The function uses \code{\link{bamChrChunkApply}} to obtain the coverages,
 #' and can accept any argument of that function. This means for instance that 
-#' the `mapqFilter` argument can be used to restrict the reads used.
+#' the `mapqFilter` argument can be used to restrict the reads used, or a 
+#' `BPPARAM` argument to enable multi-threading (beware of memory consumption!).
 #' 
 #' To export as a narrowPeak file, see \code{\link{exportNarrowPeaks}}.
 #' 
@@ -90,7 +91,7 @@ callPeaks <- function(
       globalNullH=FALSE, gsize=NULL, blacklist=NULL, binSize=10L, nChunks=8L,
       flags=scanBamFlag(isDuplicate=FALSE), minPeakCount=5L, minFoldEnr=1.3,
       pthres=10^-5, maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=0.5,
-      useStrand=!paired, outFormat=c("custom", "narrowPeak"), verbose=TRUE,
+      useStrand=!paired, outFormat=c("narrowPeak", "custom"), verbose=TRUE,
       ...){
   type <- match.arg(type)
   if(is.null(maxSize)){

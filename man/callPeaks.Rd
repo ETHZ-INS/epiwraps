@@ -23,7 +23,7 @@ callPeaks(
   bgWindow = c(1, 5, 10) * 1000,
   pseudoCount = 0.5,
   useStrand = !paired,
-  outFormat = c("custom", "narrowPeak"),
+  outFormat = c("narrowPeak", "custom"),
   verbose = TRUE,
   ...
 )
@@ -90,15 +90,15 @@ estimate the peak boundaries with single-end data.}
 \item{...}{Passed to \code{\link{bamChrChunkApply}}}
 }
 \value{
-A `GRanges`. If `outFormat="narrowPeak"`, the metadata columns will
-  follow the narrowPeak format specification.
+A `GRanges`, by default following the narrowPeak format 
+  specification.
 }
 \description{
 This is a native R peak caller loosely based on the general MACS2/3 strategy 
-(Zhang et al., Genome Biology 2008). The results are highly concordant with
-the latter, although the significance estimates are slightly more 
-conservative, and the function requires a good amount of memory (see 
-details).
+(Zhang et al., Genome Biology 2008). It can work from BAM files or from 
+coverage tracks. The results are highly concordant with MACS, although the 
+significance estimates are slightly more conservative and the function 
+requires much more memory (see details).
 }
 \details{
 Unless `globalNullH=TRUE`, this function uses MACS' local lambda (defined by
@@ -123,7 +123,8 @@ divided by `nChunks-1`.
 
 The function uses \code{\link{bamChrChunkApply}} to obtain the coverages,
 and can accept any argument of that function. This means for instance that 
-the `mapqFilter` argument can be used to restrict the reads used.
+the `mapqFilter` argument can be used to restrict the reads used, or a 
+`BPPARAM` argument to enable multi-threading (beware of memory consumption!).
 
 To export as a narrowPeak file, see \code{\link{exportNarrowPeaks}}.
 }
