@@ -3,8 +3,10 @@
 #' This is a native R peak caller loosely based on the general MACS2/3 strategy 
 #' (Zhang et al., Genome Biology 2008). It can work from BAM files or from 
 #' coverage tracks. The results are highly concordant with MACS, although the 
-#' significance estimates are slightly more conservative and the function 
-#' requires much more memory (see details).
+#' significance estimates are slightly more conservative, the peak resolution
+#' differs, and the function requires much more memory (see details). We believe
+#' its calls are slightly better than MACS3 in the absence of a control, and 
+#' slightly worse when using a control.
 #'
 #' @param bam A signal bam file (which should be accompanied by an index file).
 #'   Alternatively, a TABIX-indexed fragment file, or an RleList object.
@@ -36,8 +38,9 @@
 #' @param flags An optional \link[Rsamtools]{scanBamFlag} object to filter the 
 #'   reads. By default, reads flagged as optical duplicates are excluded.
 #' @param maxSize The loose maximum size of a peak. This is the size above which
-#'   the method will attempt to break up peaks into smaller ones. By default, it
-#'   is 1000 for `type="narrow"`, and 5000 for `type="broad"`.
+#'   the method will attempt to break up peaks into smaller ones. The default 
+#'   is 5000 for `type="broad"`, and will depend on the estimated fragment size
+#'   for narrow peak calls.
 #' @param pseudoCount The pseudocount to use when computing logFC.
 #' @param useStrand Logical; whether to use strand information to better 
 #'   estimate the peak boundaries with single-end data.
@@ -56,13 +59,13 @@
 #' As a consequence, significance is estimated based on the peak's maximum 
 #' coverage, which is very similar for narrow peaks, but very different for 
 #' broad peaks, which will not produce astronomical p-values as is the case 
-#' with MACS. In the absence of a control, the peaks called with this function 
-#' are slightly more reproducible across biological replicates. With a control, 
-#' however, the 
+#' with MACS. Peak sizes will also differ and the distribution tends to be 
+#' narrower (i.e. fewer small and very large peaks).
 #' 
 #' Because FDR calculation is so tricky for peak calling, the function uses an 
-#' uncorrected p-value threshold. If desired, users can further filter based on
-#' the FDR. For more powerful FDR, we recommend the use of `blacklist`.
+#' uncorrected p-value threshold for its output. If desired, users can further 
+#' filter based on the FDR. We recommend including a `blacklist` for FDR 
+#' estimation.
 #' 
 #' On a single thread, the function is nearly as fast as MACS2/3, but uses much 
 #' more memory, chiefly due to the fact that reads are read into memory in 
@@ -96,7 +99,7 @@ callPeaks <- function(
   type <- match.arg(type)
   if(is.null(maxSize)){
     maxSize <- ifelse(type=="narrow",
-                      ifelse(is.null(fragLength), 400L, fragLength*2),
+                      ifelse(is.null(fragLength), 400L, fragLength),
                       5000L)
   }
   outFormat <- match.arg(outFormat)
@@ -261,7 +264,7 @@ callPeaks <- function(
 
 .cpGetCandidates <- function(x, ctrl=NULL, isPaired=FALSE, blacklist=NULL, 
                              binSize=5L, fragLength=300L, minPeakCount=5L, 
-                             minSize=10L, maxSize=2000L, minFoldEnr=1.3, 
+                             minSize=10L, maxSize=2000L, minFoldEnr=1.4, 
                              bgWindow=c(1,5,10)*1000, pseudoCount=1L, nf=nf,
                              useStrand=TRUE, breakPeaks=TRUE, globalBg=FALSE,
                              flgs2=scanBamFlag(), verbose=FALSE, ...){
@@ -318,8 +321,8 @@ callPeaks <- function(
   if(breakPeaks){
     r2 <- r[width(r)>maxSize]
     minW <- 25L
-    if(!is.null(fsq)) minW <- round(fsq[5]/3)
-    if(!is.null(fragLength)) minW <- round(fragLength/3)
+    if(!is.null(fsq)) minW <- round(fsq[3])
+    if(!is.null(fragLength)) minW <- round(fragLength/4)
     r2 <- suppressWarnings({
       .breakRegions2(r2, v=r2$cov, minW=minW, maxW=maxSize)
     })
@@ -396,7 +399,7 @@ callPeaks <- function(
     x <- (r$wNeg-r$wPos)[which(r$maxPos>(2*minC) & r$maxNeg>(2*minC))]
     x <- x[x>0]
     if(length(x) < 5){ 
-      if(is.null(maxW)) maxW <- 500L
+      if(is.null(maxW)) maxW <- 300L
       if(is.null(minW)) minW <- 25L
     } else {
       if(is.null(maxW)) maxW <- as.integer(round(quantile(x, 0.95)))

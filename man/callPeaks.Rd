@@ -72,8 +72,9 @@ considered. Decreasing this can substantially increase the running time.}
 \item{pthres}{The p-value threshold to use.}
 
 \item{maxSize}{The loose maximum size of a peak. This is the size above which
-the method will attempt to break up peaks into smaller ones. By default, it
-is 1000 for `type="narrow"`, and 5000 for `type="broad"`.}
+the method will attempt to break up peaks into smaller ones. The default 
+is 5000 for `type="broad"`, and will depend on the estimated fragment size
+for narrow peak calls.}
 
 \item{bgWindow}{The windows to consider (in addition to the peak itself) 
 for local background.}
@@ -97,8 +98,10 @@ A `GRanges`, by default following the narrowPeak format
 This is a native R peak caller loosely based on the general MACS2/3 strategy 
 (Zhang et al., Genome Biology 2008). It can work from BAM files or from 
 coverage tracks. The results are highly concordant with MACS, although the 
-significance estimates are slightly more conservative and the function 
-requires much more memory (see details).
+significance estimates are slightly more conservative, the peak resolution
+differs, and the function requires much more memory (see details). We believe
+its calls are slightly better than MACS3 in the absence of a control, and 
+slightly worse when using a control.
 }
 \details{
 Unless `globalNullH=TRUE`, this function uses MACS' local lambda (defined by
@@ -107,13 +110,13 @@ sliding windows, if works on the running list encoding of the coverage(s).
 As a consequence, significance is estimated based on the peak's maximum 
 coverage, which is very similar for narrow peaks, but very different for 
 broad peaks, which will not produce astronomical p-values as is the case 
-with MACS. In the absence of a control, the peaks called with this function 
-are slightly more reproducible across biological replicates. With a control, 
-however, the 
+with MACS. Peak sizes will also differ and the distribution tends to be 
+narrower (i.e. fewer small and very large peaks).
 
 Because FDR calculation is so tricky for peak calling, the function uses an 
-uncorrected p-value threshold. If desired, users can further filter based on
-the FDR. For more powerful FDR, we recommend the use of `blacklist`.
+uncorrected p-value threshold for its output. If desired, users can further 
+filter based on the FDR. We recommend including a `blacklist` for FDR 
+estimation.
 
 On a single thread, the function is nearly as fast as MACS2/3, but uses much 
 more memory, chiefly due to the fact that reads are read into memory in 
