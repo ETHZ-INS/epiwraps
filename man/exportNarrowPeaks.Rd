@@ -7,7 +7,7 @@
 exportNarrowPeaks(p, file)
 }
 \arguments{
-\item{p}{A GRanges, as produced by `callPeaksExperimental`}
+\item{p}{A GRanges, as produced by `callPeaks`}
 
 \item{file}{The path to the file where to save}
 }
@@ -20,7 +20,7 @@ exportNarrowPeaks
 \examples{
 # call some peaks:
 bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
-peaks <- callPeaksExperimental(bam, paired=TRUE)
+peaks <- callPeaks(bam, paired=TRUE)
 # save them:
 filepath <- tempfile(fileext="narrowPeak")
 exportNarrowPeaks(peaks, filepath)

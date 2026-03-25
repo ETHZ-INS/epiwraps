@@ -1,7 +1,7 @@
-#' callPeaksExperimental
+#' callPeaks
 #' 
 #' This is a native R peak caller loosely based on the general MACS2 strategy 
-#' (Zhang et al., Genome Biology 2008).
+#' (Zhang et al., Genome Biology 2008). The results 
 #'
 #' @param bam A signal bam file (which should be accompanied by an index file).
 #'   Alternatively, a TABIX-indexed fragment file, or an RleList object.
@@ -52,9 +52,14 @@
 #' coverage, which is very similar for narrow peaks, but very different for 
 #' broad peaks, which will not produce astronomical p-values as is the case 
 #' with MACS.
-#' The function takes about twice as long to run as MACS2, and uses more memory.
-#' It can however be multithreaded relatively efficiently using the `BPPARAM`
-#' argument (passed to \code{\link{bamChrChunkApply}}). 
+#' 
+#' Because FDR calculation is so tricky for peak calling, the function uses an 
+#' uncorrected p-value threshold. If desired, users can further filter based on
+#' the FDR. For more powerful FDR, we recommend the use of `blacklist`.
+#' 
+#' On a single thread, the function takes a bit longer to run as MACS2, and 
+#' uses more memory. It can however be multithreaded relatively efficiently 
+#' using the `BPPARAM` argument (passed to \code{\link{bamChrChunkApply}}). 
 #' If dealing with very large files and memory usage is a problem, be sure not 
 #' to multi-thread, and consider increasing the number of processing chunks, 
 #' for instance with `nChunks=10`.
@@ -72,16 +77,16 @@
 #' @examples
 #' # we use the example bam file from the Rsamtools package:
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
-#' peaks <- callPeaksExperimental(bam, paired=TRUE)
+#' peaks <- callPeaks(bam, paired=TRUE)
 #' # If you are calling peaks on multiple IPs against the same input, you can 
 #' # save time by pre-loading the input coverage input memory, e.g. :
 #' # input.cov <- bam2bw("input.bam", output_bw=NA, scaling=FALSE, paired=TRUE)
-#' # peaks <- callPeaksExperimental("IP.bam", ctrl=input.cov, paired=TRUE)
-callPeaksExperimental <- function(
+#' # peaks <- callPeaks("IP.bam", ctrl=input.cov, paired=TRUE)
+callPeaks <- function(
       bam, ctrl=NULL, paired, type=c("narrow","broad"), fragLength=NULL,
       globalNullH=FALSE, gsize=NULL, blacklist=NULL, binSize=10L,
       flags=scanBamFlag(isDuplicate=FALSE), minPeakCount=5L, minFoldEnr=1.3,
-      pthres=10^-3, maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=0.5,
+      pthres=10^-5, maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=0.5,
       useStrand=!paired, outFormat=c("custom", "narrowPeak"), verbose=TRUE,
       ...){
   type <- match.arg(type)
@@ -208,7 +213,7 @@ callPeaksExperimental <- function(
                               use.names=FALSE))/gsize
     }
 
-    if(type=="narrow"){
+    if(FALSE && type=="narrow"){
       if(all(c("maxPos","maxNeg") %in% colnames(mcols(r)))){
         p <- pmax(p, ppois(2*r$maxPos+pseudoCount, adjbg, lower.tail=FALSE),
                   ppois(2*r$maxNeg+pseudoCount, adjbg, lower.tail=FALSE))
@@ -431,7 +436,7 @@ callPeaksExperimental <- function(
 
 #' exportNarrowPeaks
 #'
-#' @param p A GRanges, as produced by `callPeaksExperimental`
+#' @param p A GRanges, as produced by `callPeaks`
 #' @param file The path to the file where to save
 #'
 #' @returns Invisible file path.
@@ -439,7 +444,7 @@ callPeaksExperimental <- function(
 #' @examples
 #' # call some peaks:
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
-#' peaks <- callPeaksExperimental(bam, paired=TRUE)
+#' peaks <- callPeaks(bam, paired=TRUE)
 #' # save them:
 #' filepath <- tempfile(fileext="narrowPeak")
 #' exportNarrowPeaks(peaks, filepath)
