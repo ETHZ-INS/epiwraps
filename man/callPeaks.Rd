@@ -9,11 +9,12 @@ callPeaks(
   ctrl = NULL,
   paired,
   type = c("narrow", "broad"),
-  fragLength = NULL,
+  fragLength = 200L,
   globalNullH = FALSE,
   gsize = NULL,
   blacklist = NULL,
   binSize = 10L,
+  nChunks = 8L,
   flags = scanBamFlag(isDuplicate = FALSE),
   minPeakCount = 5L,
   minFoldEnr = 1.3,
@@ -31,8 +32,8 @@ callPeaks(
 \item{bam}{A signal bam file (which should be accompanied by an index file).
 Alternatively, a TABIX-indexed fragment file, or an RleList object.}
 
-\item{ctrl}{An optional (but highly recommended) path to a control bam file. 
-Alternatively, an RleList object.}
+\item{ctrl}{An optional path to a control bam file. Alternatively, an 
+RleList object.}
 
 \item{paired}{Logical, whether the reads are paired.}
 
@@ -55,6 +56,9 @@ signal and control peaks, this also has an important impact on the
 empirical FDR (when `ctrl` is given).}
 
 \item{binSize}{Binsize used to estimate peak shift.}
+
+\item{nChunks}{The number of processing chunks. Increasing this will reduce
+memory usage.}
 
 \item{flags}{An optional \link[Rsamtools]{scanBamFlag} object to filter the 
 reads. By default, reads flagged as optical duplicates are excluded.}
@@ -90,8 +94,11 @@ A `GRanges`. If `outFormat="narrowPeak"`, the metadata columns will
   follow the narrowPeak format specification.
 }
 \description{
-This is a native R peak caller loosely based on the general MACS2 strategy 
-(Zhang et al., Genome Biology 2008). The results
+This is a native R peak caller loosely based on the general MACS2/3 strategy 
+(Zhang et al., Genome Biology 2008). The results are highly concordant with
+the latter, although the significance estimates are slightly more 
+conservative, and the function requires a good amount of memory (see 
+details).
 }
 \details{
 Unless `globalNullH=TRUE`, this function uses MACS' local lambda (defined by
@@ -100,18 +107,19 @@ sliding windows, if works on the running list encoding of the coverage(s).
 As a consequence, significance is estimated based on the peak's maximum 
 coverage, which is very similar for narrow peaks, but very different for 
 broad peaks, which will not produce astronomical p-values as is the case 
-with MACS.
+with MACS. In the absence of a control, the peaks called with this function 
+are slightly more reproducible across biological replicates. With a control, 
+however, the 
 
 Because FDR calculation is so tricky for peak calling, the function uses an 
 uncorrected p-value threshold. If desired, users can further filter based on
 the FDR. For more powerful FDR, we recommend the use of `blacklist`.
 
-On a single thread, the function takes a bit longer to run as MACS2, and 
-uses more memory. It can however be multithreaded relatively efficiently 
-using the `BPPARAM` argument (passed to \code{\link{bamChrChunkApply}}). 
-If dealing with very large files and memory usage is a problem, be sure not 
-to multi-thread, and consider increasing the number of processing chunks, 
-for instance with `nChunks=10`.
+On a single thread, the function is nearly as fast as MACS2/3, but uses much 
+more memory, chiefly due to the fact that reads are read into memory in 
+large chunks. On a single thread, memory usage will be roughly the 
+sum of the filesize of your bam files (i.e. IP + input, if using an input) 
+divided by `nChunks-1`.
 
 The function uses \code{\link{bamChrChunkApply}} to obtain the coverages,
 and can accept any argument of that function. This means for instance that 
@@ -123,8 +131,4 @@ To export as a narrowPeak file, see \code{\link{exportNarrowPeaks}}.
 # we use the example bam file from the Rsamtools package:
 bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 peaks <- callPeaks(bam, paired=TRUE)
-# If you are calling peaks on multiple IPs against the same input, you can 
-# save time by pre-loading the input coverage input memory, e.g. :
-# input.cov <- bam2bw("input.bam", output_bw=NA, scaling=FALSE, paired=TRUE)
-# peaks <- callPeaks("IP.bam", ctrl=input.cov, paired=TRUE)
 }
