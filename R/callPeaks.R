@@ -129,6 +129,7 @@ callPeaks <- function(
   }
   
   # Computing normalization factors
+  nf <- NULL
   if(!is.null(ctrl)){
     stopifnot(is(bam, "RleList")==is(ctrl, "RleList"))
     if(is(ctrl, "RleList")){
@@ -144,9 +145,10 @@ callPeaks <- function(
     useStrand <- FALSE
     if(verbose) message("Identifying candidate regions...")
     o <- .cpGetCandidates(bam, isPaired=paired, ctrl=ctrl,  verbose=verbose,
-                          binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
+                          binSize=binSize, fragLength=fragLength, 
                           minFoldEnr=minFoldEnr, minPeakCount=minPeakCount,
-                          pseudoCount=pseudoCount, useStrand=useStrand, nf=nf, 
+                          breakPeaks=type=="narrow", pseudoCount=pseudoCount,
+                          useStrand=useStrand, nf=nf, bgWindow=bgWindow, 
                           flgs=flags, maxSize=maxSize, globalBg=globalNullH)
     o <- list(o)
   }else{
