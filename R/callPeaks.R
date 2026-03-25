@@ -1,12 +1,14 @@
 #' callPeaks
 #' 
-#' This is a native R peak caller loosely based on the general MACS2 strategy 
-#' (Zhang et al., Genome Biology 2008). The results 
+#' This is a native R peak caller loosely based on the general MACS2/3 strategy 
+#' (Zhang et al., Genome Biology 2008). The results are highly concordant with
+#' the latter, although the significance estimates are slightly more 
+#' conservative.
 #'
 #' @param bam A signal bam file (which should be accompanied by an index file).
 #'   Alternatively, a TABIX-indexed fragment file, or an RleList object.
-#' @param ctrl An optional (but highly recommended) path to a control bam file. 
-#'   Alternatively, an RleList object.
+#' @param ctrl An optional path to a control bam file. Alternatively, an 
+#'   RleList object.
 #' @param paired Logical, whether the reads are paired.
 #' @param binSize Binsize used to estimate peak shift.
 #' @param fragLength Fragment length. Ignored if `paired=TRUE`. If 
@@ -51,7 +53,9 @@
 #' As a consequence, significance is estimated based on the peak's maximum 
 #' coverage, which is very similar for narrow peaks, but very different for 
 #' broad peaks, which will not produce astronomical p-values as is the case 
-#' with MACS.
+#' with MACS. In the absence of a control, the peaks called with this function 
+#' are slightly more reproducible across biological replicates. With a control, 
+#' however, the 
 #' 
 #' Because FDR calculation is so tricky for peak calling, the function uses an 
 #' uncorrected p-value threshold. If desired, users can further filter based on
@@ -299,11 +303,13 @@ callPeaks <- function(
         ctrl <- coverage(trim(ctrl))
       }
     }
-    covtm <- .covTrimmedMean(ctrl)
-    nf <- covtm/.covTrimmedMean(co)
+    # covtm <- .covTrimmedMean(ctrl)
+    # nf <- covtm/.covTrimmedMean(co)
+    nf <- sum(as.numeric(sum(ctrl)))/sum(as.numeric(sum(co)))
     fc <- (nf * r$meanCount)/pmax(unlist(viewMeans(Views(ctrl, r))), pseudoCount)
     r <- r[which(fc>minFoldEnr)]
   }
+  
   if(breakPeaks){
     r2 <- r[width(r)>maxSize]
     minW <- 25L
