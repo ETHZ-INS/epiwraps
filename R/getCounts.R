@@ -22,6 +22,8 @@
 #'   argument of \code{link[GenomicRanges]{countOverlaps}}).
 #' @param minoverlap Minimum overlap (see the corresponding argument of 
 #'   \code{link[GenomicRanges]{countOverlaps}}).
+#' @param getMedianFragLength Logical; whether to compile the median fragment
+#'   length per region. This is slightly slower.
 #' @inheritParams bam2bw
 #' 
 #' @return A RangedSummarizedExperiment with a 'counts' assay.
@@ -40,7 +42,7 @@ peakCountsFromBAM <- function(
                       ignore.strand=TRUE, strandMode=1, includeDuplicates=TRUE, 
                       includeSecondary=FALSE, minMapq=1L, minFragLength=1L,
                       maxFragLength=5000L, splitByChr=3, randomAcc=FALSE,
-                      verbose=TRUE){
+                      getMedianFragLength=FALSE, verbose=TRUE){
   # check inputs
   stopifnot(is(regions, "GRanges"))
   stopifnot(all(vapply(bam_files,FUN.VALUE=logical(1L),FUN=file.exists)))
@@ -70,6 +72,10 @@ peakCountsFromBAM <- function(
   seqs <- seqs[.checkMissingSeqLevels(names(seqs), seqlevelsInUse(regions),
                                       argName="regions")]
   
+  total_depth <- vapply(bam_files, FUN.VALUE=integer(1), FUN=function(x){
+    sum(idxstatsBam(BamFile(x, asMates=paired))$mapped)
+  })
+  
   if(is.null(randomAcc))
     randomAcc <- length(regions)<1000 & maxFragLength<=10000
 
@@ -89,19 +95,37 @@ peakCountsFromBAM <- function(
       r <- .bam2bwGetReads(bamfile, paired=paired, param=param[[x]], type=type,
                           extend=extend, shift=shift, minFragL=minFragLength,
                           maxFragL=maxFragLength, strandMode=strandMode, si=seqs)
+      if(getMedianFragLength){
+        
+      }
       list(ov=countOverlaps(regions, r, type=ov.type, maxgap=maxgap,
                             ignore.strand=ignore.strand, minoverlap=minoverlap),
            reads=metadata(r)$reads)
     })
     depth <- sum(vapply(res, FUN.VALUE=integer(1), FUN=function(x) x$reads))
+    mfl <- NULL
+    if(getMedianFragLength){
+      mfl <- rowSums(vapply(res, FUN.VALUE=numeric(length(regions),
+                            FUN=function(x) x$medfl)))
+    }
     res <- rowSums(vapply(res, \(x) x[[1]], integer(length(regions))))
     gc(full=TRUE, verbose=FALSE)
-    list(ov=res, depth=depth)
+    list(ov=res, depth=depth, mfl=mfl)
   })
   
   depths <- vapply(cnts, FUN.VALUE=integer(1), FUN=function(x) x$depth)
   
+  if(getMedianFragLength)
+    mfl <- matrix(unlist(lapply(cnts, \(x) x$mfl)), ncol=length(bam_files))
+  
   cnts <- matrix(unlist(lapply(cnts, \(x) x[[1]])), ncol=length(bam_files))
+  
+  if(getMedianFragLength){
+    mfl <- rowSums(cnts*mfl)/rowSums(cnts)
+    regions$flbias <- log10(1+mfl)
+  }
+  
+  
   if(is.null(names(bam_files))){
     if(!any(duplicated(bn<-basename(bam_files)))){
       colnames(cnts) <- gsub("\\.bam$","",bn,ignore.case=TRUE)
@@ -113,9 +137,9 @@ peakCountsFromBAM <- function(
   }else{
     colnames(cnts) <- names(bam_files)
   }
-  
   row.names(cnts) <- as.character(granges(regions))
   se <- SummarizedExperiment(list(counts=cnts), rowRanges=regions)
+  se$total_depth <- total_depth
   se$depth <- depths
   se
 }

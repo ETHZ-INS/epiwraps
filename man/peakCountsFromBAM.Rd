@@ -23,6 +23,7 @@ peakCountsFromBAM(
   maxFragLength = 5000L,
   splitByChr = 3,
   randomAcc = FALSE,
+  getMedianFragLength = FALSE,
   verbose = TRUE
 )
 }
@@ -90,6 +91,9 @@ typically worse than reading the entire file. However, if you need to get
 counts in few regions, enabling this will be faster. Note however that 
 when using random access, the output object will not contain depth 
 information.}
+
+\item{getMedianFragLength}{Logical; whether to compile the median fragment
+length per region. This is slightly slower.}
 
 \item{verbose}{Logical; whether to print progress messages}
 }
