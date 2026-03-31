@@ -23,7 +23,9 @@
 #' @param minoverlap Minimum overlap (see the corresponding argument of 
 #'   \code{link[GenomicRanges]{countOverlaps}}).
 #' @param getMedianFragLength Logical; whether to compile the median fragment
-#'   length per region. This is slightly slower.
+#'   length per region. This is slightly slower. The log10-transformed, 
+#'   (weighted mean across samples of the) median fragment length per region is
+#'   stored in `rowData(results)$flbias`.
 #' @inheritParams bam2bw
 #' 
 #' @return A RangedSummarizedExperiment with a 'counts' assay.
@@ -125,7 +127,6 @@ peakCountsFromBAM <- function(
     regions$flbias <- log10(1+mfl)
   }
   
-  
   if(is.null(names(bam_files))){
     if(!any(duplicated(bn<-basename(bam_files)))){
       colnames(cnts) <- gsub("\\.bam$","",bn,ignore.case=TRUE)
@@ -208,6 +209,5 @@ peakPbCountsSE <- function(fragfile, peaks, bcmap, insertions=FALSE,
       se
     })
   }
-  
   se
 }

@@ -93,7 +93,9 @@ when using random access, the output object will not contain depth
 information.}
 
 \item{getMedianFragLength}{Logical; whether to compile the median fragment
-length per region. This is slightly slower.}
+length per region. This is slightly slower. The log10-transformed, 
+(weighted mean across samples of the) median fragment length per region is
+stored in `rowData(results)$flbias`.}
 
 \item{verbose}{Logical; whether to print progress messages}
 }
