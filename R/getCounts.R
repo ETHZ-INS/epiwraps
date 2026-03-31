@@ -60,7 +60,7 @@ peakCountsFromBAM <- function(
     paired <- testPairedEndBam(bamfile)
     if(verbose) message("Detected ", ifelse(paired,"paired","unpaired")," data")
   }
-  if(paired && !(type %in% c("center","ends")) && verbose)
+  if(!paired && !(type %in% c("center","ends")) && verbose)
     message("`extend` argument ignored.")
   if(type=="ends" && !paired){
     if(verbose)
