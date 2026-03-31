@@ -75,7 +75,7 @@ peakCountsFromBAM <- function(
                                       argName="regions")]
   
   total_depth <- vapply(bam_files, FUN.VALUE=integer(1), FUN=function(x){
-    sum(idxstatsBam(BamFile(x, asMates=paired))$mapped)
+    as.integer(sum(idxstatsBam(BamFile(x, asMates=paired))$mapped))
   })
   
   if(is.null(randomAcc))
