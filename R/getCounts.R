@@ -47,7 +47,7 @@ peakCountsFromBAM <- function(
                       getMedianFragLength=FALSE, verbose=TRUE){
   # check inputs
   stopifnot(is(regions, "GRanges"))
-  stopifnot(all(vapply(bam_files,FUN.VALUE=logical(1L),FUN=file.exists)))
+  stopifnot(all(vapply(bam_files, FUN.VALUE=logical(1L), FUN=file.exists)))
   stopifnot(all(grepl("\\.bam",bam_files,ignore.case=TRUE)))
   type <- match.arg(type)
   stopifnot(extend>=0L)
@@ -107,8 +107,8 @@ peakCountsFromBAM <- function(
     depth <- sum(vapply(res, FUN.VALUE=integer(1), FUN=function(x) x$reads))
     mfl <- NULL
     if(getMedianFragLength){
-      mfl <- rowSums(vapply(res, FUN.VALUE=numeric(length(regions),
-                            FUN=function(x) x$medfl)))
+      mfl <- rowSums(vapply(res, FUN.VALUE=numeric(length(regions)),
+                            FUN=function(x) x$medfl))
     }
     res <- rowSums(vapply(res, \(x) x[[1]], integer(length(regions))))
     gc(full=TRUE, verbose=FALSE)
