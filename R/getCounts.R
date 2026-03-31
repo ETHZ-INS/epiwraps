@@ -27,6 +27,7 @@
 #'   (weighted mean across samples of the) median fragment length per region is
 #'   stored in `rowData(results)$flbias`.
 #' @inheritParams bam2bw
+#' @importFrom S4Vectors from to metadata countSubjectHits
 #' 
 #' @return A RangedSummarizedExperiment with a 'counts' assay.
 #' @export
@@ -98,7 +99,10 @@ peakCountsFromBAM <- function(
                           extend=extend, shift=shift, minFragL=minFragLength,
                           maxFragL=maxFragLength, strandMode=strandMode, si=seqs)
       if(getMedianFragLength){
-        
+        o <- findOverlaps(r, regions, type=ov.type, maxgap=maxgap,
+                          minoverlap=minoverlap, ignore.strand=ignore.strand)
+        mfl <- as.integer(table(factor(to(o), levels=seq_along(regions))))
+        return(list(ov=countSubjectHits(o), reads=metadata(r)$reads, mfl=mfl))
       }
       list(ov=countOverlaps(regions, r, type=ov.type, maxgap=maxgap,
                             ignore.strand=ignore.strand, minoverlap=minoverlap),
@@ -108,7 +112,7 @@ peakCountsFromBAM <- function(
     mfl <- NULL
     if(getMedianFragLength){
       mfl <- rowSums(vapply(res, FUN.VALUE=numeric(length(regions)),
-                            FUN=function(x) x$medfl))
+                            FUN=function(x) x$mfl))
     }
     res <- rowSums(vapply(res, \(x) x[[1]], integer(length(regions))))
     gc(full=TRUE, verbose=FALSE)
