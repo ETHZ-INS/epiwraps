@@ -22,9 +22,15 @@
 #'   argument of \code{link[GenomicRanges]{countOverlaps}}).
 #' @param minoverlap Minimum overlap (see the corresponding argument of 
 #'   \code{link[GenomicRanges]{countOverlaps}}).
+#' @param getMedianFragLength Logical; whether to compile the median fragment
+#'   length per region. This is slightly slower. The log10-transformed, 
+#'   (weighted mean across samples of the) median fragment length per region is
+#'   stored in `rowData(results)$flbias`.
 #' @inheritParams bam2bw
+#' @importFrom S4Vectors from to metadata countSubjectHits splitAsList
 #' 
-#' @return A RangedSummarizedExperiment with a 'counts' assay.
+#' @return A \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}} 
+#'   with a 'counts' assay.
 #' @export
 #'
 #' @examples
@@ -40,10 +46,10 @@ peakCountsFromBAM <- function(
                       ignore.strand=TRUE, strandMode=1, includeDuplicates=TRUE, 
                       includeSecondary=FALSE, minMapq=1L, minFragLength=1L,
                       maxFragLength=5000L, splitByChr=3, randomAcc=FALSE,
-                      verbose=TRUE){
+                      getMedianFragLength=FALSE, verbose=TRUE){
   # check inputs
   stopifnot(is(regions, "GRanges"))
-  stopifnot(all(vapply(bam_files,FUN.VALUE=logical(1L),FUN=file.exists)))
+  stopifnot(all(vapply(bam_files, FUN.VALUE=logical(1L), FUN=file.exists)))
   stopifnot(all(grepl("\\.bam",bam_files,ignore.case=TRUE)))
   type <- match.arg(type)
   stopifnot(extend>=0L)
@@ -55,7 +61,7 @@ peakCountsFromBAM <- function(
     paired <- testPairedEndBam(bamfile)
     if(verbose) message("Detected ", ifelse(paired,"paired","unpaired")," data")
   }
-  if(paired && !(type %in% c("center","ends")) && verbose)
+  if(!paired && !(type %in% c("center","ends")) && verbose && extend!=0)
     message("`extend` argument ignored.")
   if(type=="ends" && !paired){
     if(verbose)
@@ -69,6 +75,10 @@ peakCountsFromBAM <- function(
   seqs <- Rsamtools::scanBamHeader(bam_files[[1]])[[1]]$targets
   seqs <- seqs[.checkMissingSeqLevels(names(seqs), seqlevelsInUse(regions),
                                       argName="regions")]
+  
+  total_depth <- vapply(bam_files, FUN.VALUE=integer(1), FUN=function(x){
+    as.integer(sum(idxstatsBam(BamFile(x, asMates=paired))$mapped))
+  })
   
   if(is.null(randomAcc))
     randomAcc <- length(regions)<1000 & maxFragLength<=10000
@@ -88,20 +98,43 @@ peakCountsFromBAM <- function(
     res <- lapply(names(param), FUN=function(x){
       r <- .bam2bwGetReads(bamfile, paired=paired, param=param[[x]], type=type,
                           extend=extend, shift=shift, minFragL=minFragLength,
-                          maxFragL=maxFragLength, strandMode=strandMode, si=seqs)
+                          maxFragL=maxFragLength, strandMode=strandMode,
+                          si=seqs)
+      if(getMedianFragLength){
+        o <- findOverlaps(r, regions, type=ov.type, maxgap=maxgap,
+                          minoverlap=minoverlap, ignore.strand=ignore.strand)
+        mfl <- rep(0, length(regions))
+        if(length(o) > 0){
+          y <- IRanges::median(splitAsList(width(r)[queryHits(o)],
+                                           subjectHits(o)))
+          mfl[unique(sort(subjectHits(o)))] <- as.numeric(y)
+        }
+        return(list(ov=countSubjectHits(o), reads=metadata(r)$reads, mfl=mfl))
+      }
       list(ov=countOverlaps(regions, r, type=ov.type, maxgap=maxgap,
                             ignore.strand=ignore.strand, minoverlap=minoverlap),
            reads=metadata(r)$reads)
     })
     depth <- sum(vapply(res, FUN.VALUE=integer(1), FUN=function(x) x$reads))
+    mfl <- NULL
+    if(getMedianFragLength) mfl <- Reduce("+", lapply(res, \(x) x$mfl))
     res <- rowSums(vapply(res, \(x) x[[1]], integer(length(regions))))
     gc(full=TRUE, verbose=FALSE)
-    list(ov=res, depth=depth)
+    list(ov=res, depth=depth, mfl=mfl)
   })
   
   depths <- vapply(cnts, FUN.VALUE=integer(1), FUN=function(x) x$depth)
   
+  if(getMedianFragLength)
+    mfl <- matrix(unlist(lapply(cnts, \(x) x$mfl)), ncol=length(bam_files))
+  
   cnts <- matrix(unlist(lapply(cnts, \(x) x[[1]])), ncol=length(bam_files))
+  
+  if(getMedianFragLength){
+    mfl <- rowSums(mfl)/rowSums(cnts)
+    regions$flbias <- log10(1+mfl)
+  }
+  
   if(is.null(names(bam_files))){
     if(!any(duplicated(bn<-basename(bam_files)))){
       colnames(cnts) <- gsub("\\.bam$","",bn,ignore.case=TRUE)
@@ -113,77 +146,9 @@ peakCountsFromBAM <- function(
   }else{
     colnames(cnts) <- names(bam_files)
   }
-  
   row.names(cnts) <- as.character(granges(regions))
   se <- SummarizedExperiment(list(counts=cnts), rowRanges=regions)
+  se$total_depth <- total_depth
   se$depth <- depths
-  se
-}
-
-
-#' peakPbCountsSE
-#' 
-#' Generate a pseudobulk peak counts SummarizedExperiment from a fragment file.
-#'
-#' @param fragfile The path to a Tabix-indexed fragment file.
-#' @param peaks A GRanges of the regions in which to count.
-#' @param bcmap A named vector, indicating the pseudobulk sample (values) in 
-#'   which to include each barcode (names).
-#' @param genome A optional genome object or path to a genom fasta file. If
-#'   included, GC bias will be added to the rowData of the output object.
-#' @param insertions If TRUE, (shifted) Tn5 insertions events are counted 
-#'   instead of fragments. This means that each fragment gets counted twice
-#'   (for both ends). Default FALSE.
-#' @param minFragLength Minimum fragment length for a fragment to be counted.
-#' @param maxFragLength Maximum fragment length for a fragment to be counted.
-#'
-#' @returns A \link[SummarizedExperiment]{RangedSummarizedExperiment} with a 
-#'   'counts' assay, and columns corresponding to each unique value of `bcmap`.
-#' @export
-peakPbCountsSE <- function(fragfile, peaks, bcmap, insertions=FALSE, 
-                           genome=NULL, minFragLength=1L, maxFragLength=5000L){
-  if(is.data.frame(bcmap) && !is.null(row.names(bcmap)) && 
-     "group" %in% colnames(bcmap))
-    bcmap <- setNames(bcmap$group, row.names(bcmap))
-  
-  stopifnot(length(bcmap)>1 && !is.null(names(bcmap)) &&
-              (is.character(bcmap) || is.factor(bcmap)))
-  
-  frags <- Rsamtools::TabixFile(fragfile)
-  resl <- tabixChrApply(frags, fn=function(x){
-    x <- x[which(x$name %in% names(bcmap))]
-    x$name <- factor(x$name, names(bcmap))
-    x <- x[!is.na(x$name)]
-    sapply(split(x, bcmap[as.integer(x$name)]), \(y){
-      y <- y[which(width(y)>=minFragLength & width(y)<=maxFragLength)]
-      if(insertions){
-        y <- epiwraps:::.align2cuts(resize(y, fix="center", width(y)-8L))
-      }
-      countOverlaps(peaks, y)
-    })
-  })
-  gc(full=TRUE, verbose=FALSE)
-  mat <- sapply(setNames(unique(bcmap),unique(bcmap)), \(x){
-    y <- lapply(resl, \(y){
-      if(!is.null(dim(y)) && x %in% colnames(y)) return(y[,x])
-      NULL
-    })
-    y <- y[!sapply(y,is.null)]
-    Reduce("+",y)
-  })
-  
-  se <- SummarizedExperiment(list(counts=mat), rowRanges=peaks)
-
-  if(!is.null(genome)){
-    if(is.character(genome) && length(genome)==1)
-      genome <- Rsamtools::FaFile(genome)
-    se <- tryCatch({
-      chromVAR::addGCBias(se, genome=genome)
-    }, error=function(e){
-      warning("Failed to add GC bias to object: ", e)
-      se
-    })
-  }
-  
   se
 }

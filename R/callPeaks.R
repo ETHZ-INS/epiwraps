@@ -1,12 +1,17 @@
-#' callPeaksExperimental
+#' callPeaks
 #' 
-#' This is a native R peak caller loosely based on the general MACS2 strategy 
-#' (Zhang et al., Genome Biology 2008).
+#' This is a native R peak caller loosely based on the general MACS2/3 strategy 
+#' (Zhang et al., Genome Biology 2008). It can work from BAM files, fragment 
+#' files, or from coverage tracks. The results are highly concordant with MACS, 
+#' although the significance estimates are slightly more conservative, the peak 
+#' resolution differs, and the function requires much more memory (see details).
+#' We believe its calls are slightly better than MACS3 in the absence of a 
+#' control, and slightly worse when using a control.
 #'
 #' @param bam A signal bam file (which should be accompanied by an index file).
 #'   Alternatively, a TABIX-indexed fragment file, or an RleList object.
-#' @param ctrl An optional (but highly recommended) path to a control bam file. 
-#'   Alternatively, an RleList object.
+#' @param ctrl An optional path to a control bam file. Alternatively, an 
+#'   RleList object.
 #' @param paired Logical, whether the reads are paired.
 #' @param binSize Binsize used to estimate peak shift.
 #' @param fragLength Fragment length. Ignored if `paired=TRUE`. If 
@@ -33,16 +38,19 @@
 #' @param flags An optional \link[Rsamtools]{scanBamFlag} object to filter the 
 #'   reads. By default, reads flagged as optical duplicates are excluded.
 #' @param maxSize The loose maximum size of a peak. This is the size above which
-#'   the method will attempt to break up peaks into smaller ones. By default, it
-#'   is 1000 for `type="narrow"`, and 5000 for `type="broad"`.
+#'   the method will attempt to break up peaks into smaller ones. The default 
+#'   is 5000 for `type="broad"`, and will depend on the estimated fragment size
+#'   for narrow peak calls.
 #' @param pseudoCount The pseudocount to use when computing logFC.
 #' @param useStrand Logical; whether to use strand information to better 
 #'   estimate the peak boundaries with single-end data.
+#' @param nChunks The number of processing chunks. Increasing this will reduce
+#'   memory usage.
 #' @param verbose Logical; whether to output progress messages
 #' @param ... Passed to \code{\link{bamChrChunkApply}}
 #'
-#' @return A `GRanges`. If `outFormat="narrowPeak"`, the metadata columns will
-#'   follow the narrowPeak format specification.
+#' @return A `GRanges`, by default following the narrowPeak format 
+#'   specification.
 #' 
 #' @details 
 #' Unless `globalNullH=TRUE`, this function uses MACS' local lambda (defined by
@@ -51,39 +59,49 @@
 #' As a consequence, significance is estimated based on the peak's maximum 
 #' coverage, which is very similar for narrow peaks, but very different for 
 #' broad peaks, which will not produce astronomical p-values as is the case 
-#' with MACS.
-#' The function takes about twice as long to run as MACS2, and uses more memory.
-#' It can however be multithreaded relatively efficiently using the `BPPARAM`
-#' argument (passed to \code{\link{bamChrChunkApply}}). 
-#' If dealing with very large files and memory usage is a problem, be sure not 
-#' to multi-thread, and consider increasing the number of processing chunks, 
-#' for instance with `nChunks=10`.
+#' with MACS. Peak sizes will also differ and the distribution tends to be 
+#' narrower (i.e. fewer small and very large peaks).
+#' 
+#' Because FDR calculation is so tricky for peak calling, the function uses an 
+#' uncorrected p-value threshold for its output. If desired, users can further 
+#' filter based on the FDR. We recommend including a `blacklist` for FDR 
+#' estimation.
+#' 
+#' On a single thread, the function is nearly as fast as MACS2/3, but uses much 
+#' more memory, chiefly due to the fact that reads are read into memory in 
+#' large chunks. On a single thread, memory usage will be roughly the 
+#' sum of the filesize of your bam files (i.e. IP + input, if using an input) 
+#' divided by `nChunks-1`.
 #' 
 #' The function uses \code{\link{bamChrChunkApply}} to obtain the coverages,
 #' and can accept any argument of that function. This means for instance that 
-#' the `mapqFilter` argument can be used to restrict the reads used.
+#' the `mapqFilter` argument can be used to restrict the reads used, or a 
+#' `BPPARAM` argument to enable multi-threading (beware of memory consumption!).
+#' 
+#' To export as a narrowPeak file, see \code{\link{exportNarrowPeaks}}.
 #' 
 #' @importFrom IRanges Views viewMaxs viewMeans slice viewRangeMaxs relist IntegerList
 #' @importFrom stats setNames pnorm ppois optim density
 #' @importFrom S4Vectors mean.Rle
+#' @importFrom Rsamtools idxstatsBam
 #' @export
 #' @examples
 #' # we use the example bam file from the Rsamtools package:
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
-#' peaks <- callPeaksExperimental(bam, paired=TRUE)
-#' # If you are calling peaks on multiple IPs against the same input, you can 
-#' # save time by pre-loading the input coverage input memory, e.g. :
-#' # input.cov <- bam2bw("input.bam", output_bw=NA, scaling=FALSE, paired=TRUE)
-#' # peaks <- callPeaksExperimental("IP.bam", ctrl=input.cov, paired=TRUE)
-callPeaksExperimental <- function(
-      bam, ctrl=NULL, paired, type=c("narrow","broad"), fragLength=NULL,
-      globalNullH=FALSE, gsize=NULL, blacklist=NULL, binSize=10L,
-      flags=scanBamFlag(isDuplicate=FALSE), minPeakCount=5L, minFoldEnr=1.3,
-      pthres=10^-3, maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=0.5,
-      useStrand=!paired, outFormat=c("custom", "narrowPeak"), verbose=TRUE,
+#' peaks <- callPeaks(bam, paired=TRUE)
+callPeaks <- function(
+      bam, ctrl=NULL, paired, type=c("narrow","broad"), fragLength=200L,
+      globalNullH=FALSE, gsize=NULL, blacklist=NULL, binSize=10L, nChunks=8L,
+      flags=scanBamFlag(isDuplicate=FALSE), minPeakCount=5L, minFoldEnr=1.4,
+      pthres=10^-5, maxSize=NULL, bgWindow=c(1,5,10)*1000, pseudoCount=0.5,
+      useStrand=!paired, outFormat=c("narrowPeak", "custom"), verbose=TRUE,
       ...){
   type <- match.arg(type)
-  if(is.null(maxSize)) maxSize <- ifelse(type=="narrow",600L,5000L)
+  if(is.null(maxSize)){
+    maxSize <- ifelse(type=="narrow",
+                      ifelse(is.null(fragLength), 400L, fragLength),
+                      5000L)
+  }
   outFormat <- match.arg(outFormat)
   binSize <- as.integer(binSize)
   minPeakCount <- as.integer(minPeakCount)
@@ -110,15 +128,27 @@ callPeaksExperimental <- function(
     blacklist <- rtracklayer::import(blacklist)
   }
   
+  # Computing normalization factors
+  nf <- NULL
+  if(!is.null(ctrl)){
+    stopifnot(is(bam, "RleList")==is(ctrl, "RleList"))
+    if(is(ctrl, "RleList")){
+      nf <- sum(as.numeric(sum(ctrl)))/sum(as.numeric(sum(bam)))
+    }else{
+      nf <- sum(idxstatsBam(ctrl)$mapped)/sum(idxstatsBam(bam)$mapped)
+    }
+  }
+  
   if(is(bam, "RleList")){
     if(useStrand && verbose)
       message("`useStrand` disabled as the input is a coverage object.")
     useStrand <- FALSE
     if(verbose) message("Identifying candidate regions...")
     o <- .cpGetCandidates(bam, isPaired=paired, ctrl=ctrl,  verbose=verbose,
-                          binSize=binSize, fragLength=fragLength, bgWindow=bgWindow, 
+                          binSize=binSize, fragLength=fragLength, 
                           minFoldEnr=minFoldEnr, minPeakCount=minPeakCount,
-                          pseudoCount=pseudoCount, useStrand=useStrand, 
+                          breakPeaks=type=="narrow", pseudoCount=pseudoCount,
+                          useStrand=useStrand, nf=nf, bgWindow=bgWindow, 
                           flgs=flags, maxSize=maxSize, globalBg=globalNullH)
     o <- list(o)
   }else{
@@ -132,7 +162,7 @@ callPeaksExperimental <- function(
                            minFoldEnr=minFoldEnr, useStrand=useStrand, 
                            minPeakCount=minPeakCount, pseudoCount=pseudoCount,
                            breakPeaks=type=="narrow", globalBg=globalNullH,
-                           fn=.cpGetCandidates)
+                           nChunks=nChunks, nf=nf, fn=.cpGetCandidates)
         paired <- TRUE
       }
     }else if(sigType=="bam"){
@@ -143,31 +173,16 @@ callPeaksExperimental <- function(
                             minPeakCount=minPeakCount, pseudoCount=pseudoCount,
                             useStrand=useStrand, flgs=flags, flgs2=flags,
                             breakPeaks=type=="narrow", globalBg=globalNullH,
-                            FUN=.cpGetCandidates, progress=verbose)
+                            FUN=.cpGetCandidates, nChunks=nChunks, nf=nf, 
+                            progress=verbose)
     }else{
       stop("Unrecognized file format.")
     }
   }
   if(!is.null(ctrl)){
-    # adjust the per-block normalization factors
-    nf <- unlist(lapply(o, FUN=function(x) x$nf), use.names=FALSE)
-    mnf <- median(nf)
-    if((max((nf-mnf))/mnf)>0.3)
-      warning("There are large variations in the per-block normalization ",
-              "factor estimates. This can happen when the signal is heavily ",
-              "biased towards some chromosomes, and can lead to some peaks ",
-              "being lost. To be on the safe side, you could reduce the number",
-              " of blocks")
-    for(i in seq_along(nf)){
-      o[[i]]$regions$bg <- o[[i]]$regions$bg*nf[[i]]/mnf
-      o[[i]]$negR$bg <- o[[i]]$negR$bg*mnf/nf[[i]]
-    }
-    covtm <- median(unlist(lapply(o, FUN=function(x) x$covtm),
-                           use.names=FALSE))
     negR <- unlist(GRangesList(lapply(o, FUN=function(x) x$negR)),
                    use.names=FALSE)
     if(!is.null(blacklist)) negR <- negR[!overlapsAny(negR, blacklist)]
-    
   }
   r <- unlist(GRangesList(lapply(o, FUN=\(x) x$regions)), use.names=FALSE)
   if(!is.null(blacklist)) r <- r[!overlapsAny(r, blacklist)]
@@ -188,13 +203,18 @@ callPeaksExperimental <- function(
 
     r <- r[which(r$log10FE > as.integer(round(log10(minFoldEnr),2)))]
 
-    if(verbose) message("Computing FDR using negative peaks...")
-    # call peaks in the control
-    pneg <- -log10(ppois(negR$maxCount, pmax(covtm, pseudoCount, negR$bg),
-                      lower.tail=FALSE))
-    metadata(r)$ctrl.log10p <- pneg
-    mcols(r) <- cbind(mcols(r), getEmpiricalFDR(r$log10p, pneg))
-    
+    if(length(negR)==0){
+      if(verbose) message("No negative peaks... empirical FDR set to 0.")
+      mcols(r) <- cbind(mcols(r), getEmpiricalFDR(r$log10p, pneg))
+    }else{
+      if(verbose) message("Computing FDR using negative peaks...")
+      # call peaks in the control
+      pneg <- -log10(ppois(negR$maxCount, pmax(pseudoCount, negR$bg),
+                           lower.tail=FALSE))
+      metadata(r)$ctrl.log10p <- pneg
+      mcols(r) <- cbind(mcols(r), getEmpiricalFDR(r$log10p, pneg))
+    }
+
   }else{
     
     if(verbose)
@@ -206,7 +226,7 @@ callPeaksExperimental <- function(
                               use.names=FALSE))/gsize
     }
 
-    if(type=="narrow"){
+    if(FALSE && type=="narrow"){
       if(all(c("maxPos","maxNeg") %in% colnames(mcols(r)))){
         p <- pmax(p, ppois(2*r$maxPos+pseudoCount, adjbg, lower.tail=FALSE),
                   ppois(2*r$maxNeg+pseudoCount, adjbg, lower.tail=FALSE))
@@ -223,7 +243,7 @@ callPeaksExperimental <- function(
   
   r$score <- as.integer(round(1000*(r$log10FE/quantile(r$log10FE, .99))))
   r$score[r$score>1000L] <- 1000L
-  if(outFormat=="NarrowPeak")  r <- .customPeaks2NarrowPeaks(r)
+  if(outFormat=="narrowPeak")  r <- .customPeaks2NarrowPeak(r)
   r
 }
 
@@ -246,11 +266,11 @@ callPeaksExperimental <- function(
 
 .cpGetCandidates <- function(x, ctrl=NULL, isPaired=FALSE, blacklist=NULL, 
                              binSize=5L, fragLength=300L, minPeakCount=5L, 
-                             minSize=10L, maxSize=2000L, minFoldEnr=1.3, 
-                             bgWindow=c(1,5,10)*1000, pseudoCount=1L, 
+                             minSize=10L, maxSize=2000L, minFoldEnr=1.4, 
+                             bgWindow=c(1,5,10)*1000, pseudoCount=1L, nf=nf,
                              useStrand=TRUE, breakPeaks=TRUE, globalBg=FALSE,
                              flgs2=scanBamFlag(), verbose=FALSE, ...){
-  covtm <- nf <- negR <- fsq <- NULL
+  covtm <- negR <- fsq <- NULL
   if(is(x, "RleList")){
     co <- x
   }else{
@@ -292,16 +312,19 @@ callPeaksExperimental <- function(
         ctrl <- coverage(trim(ctrl))
       }
     }
-    covtm <- .covTrimmedMean(ctrl)
-    nf <- covtm/.covTrimmedMean(co)
+    # now using global nf passed as arg
+    # covtm <- .covTrimmedMean(ctrl)
+    # nf <- covtm/.covTrimmedMean(co)
+    # nf <- sum(as.numeric(sum(ctrl)))/sum(as.numeric(sum(co)))
     fc <- (nf * r$meanCount)/pmax(unlist(viewMeans(Views(ctrl, r))), pseudoCount)
     r <- r[which(fc>minFoldEnr)]
   }
+  
   if(breakPeaks){
     r2 <- r[width(r)>maxSize]
     minW <- 25L
-    if(!is.null(fsq)) minW <- round(fsq[5]/3)
-    if(!is.null(fragLength)) minW <- round(fragLength/3)
+    if(!is.null(fsq)) minW <- round(fsq[3])
+    if(!is.null(fragLength)) minW <- round(fragLength/4)
     r2 <- suppressWarnings({
       .breakRegions2(r2, v=r2$cov, minW=minW, maxW=maxSize)
     })
@@ -356,6 +379,14 @@ callPeaksExperimental <- function(
   }
   if(verbose) message(length(r), " peaks after filtering")
   
+  if(length(r) > 0){
+    r <- sort(r, ignore.strand=TRUE)
+    v_final <- Views(co, r)
+    r$summit <- unlist(viewWhichMaxs(v_final), use.names=FALSE)
+  } else {
+    r$summit <- integer(0)
+  }
+
   totCov <- sum(as.numeric(sum(co)))
   rm(co,ctrl)
   gc(verbose=FALSE)
@@ -370,7 +401,7 @@ callPeaksExperimental <- function(
     x <- (r$wNeg-r$wPos)[which(r$maxPos>(2*minC) & r$maxNeg>(2*minC))]
     x <- x[x>0]
     if(length(x) < 5){ 
-      if(is.null(maxW)) maxW <- 500L
+      if(is.null(maxW)) maxW <- 300L
       if(is.null(minW)) minW <- 25L
     } else {
       if(is.null(maxW)) maxW <- as.integer(round(quantile(x, 0.95)))
@@ -419,11 +450,37 @@ callPeaksExperimental <- function(
   sort(c(xO, gr))
 }
 
+#' exportNarrowPeaks
+#'
+#' @param p A GRanges, as produced by `callPeaks`
+#' @param file The path to the file where to save
+#'
+#' @returns Invisible file path.
+#' @export
+#' @examples
+#' # call some peaks:
+#' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
+#' peaks <- callPeaks(bam, paired=TRUE)
+#' # save them:
+#' filepath <- tempfile(fileext="narrowPeak")
+#' exportNarrowPeaks(peaks, filepath)
+exportNarrowPeaks <- function(p, file){
+  stopifnot(is(p, "GRanges"))
+  stopifnot(is.character(file) && length(file)==1)
+  if(all(c("log10p", "log10FE", "score") %in% colnames(mcols(p))))
+    p <- .customPeaks2NarrowPeak(p)
+  p <- as.data.frame(p)
+  fields <- c("seqnames", "start", "end", "name", "score", "strand",
+              "foldEnrichment", "log10p", "log10FDR", "pointSource")
+  stopifnot(all(fields %in% colnames(p)))
+  p <- p[,fields]
+  write.table(p, file, row.names=FALSE, col.names=FALSE, sep="\t", quote=FALSE)
+}
  
 .customPeaks2NarrowPeak <- function(r){
   r$name <- Rle(rep(factor("."),length(r)))
   r$pointSource <- r$summit-start(r)
-  r$foldEnrichment <- 10^r$log10FE
+  r$foldEnrichment <- round(10^r$log10FE, 2)
   mcols(r) <- mcols(r)[,c("name","score","foldEnrichment","log10p","log10FDR",
                           "pointSource")]
   r
@@ -564,6 +621,10 @@ callPeaksExperimental <- function(
 #' @return A data.frame with the empirical FDR and a smoothed -log10(FDR)
 #' @importFrom stats ecdf loess predict p.adjust
 getEmpiricalFDR <- function(log10p, pneg, n=length(log10p)*10){
+  if(length(pneg)==0){
+    return(data.frame(empiricalFDR=rep(0, length(log10p)),
+                      log10FDR=rep(100, length(log10p))))
+  }
   log10p[is.infinite(log10p)] <- max(log10p[!is.infinite(log10p)])
   pneg[is.infinite(pneg)] <- max(pneg[!is.infinite(pneg)])
   holm <- -log10(p.adjust(10^-log10p, method="holm", n=n))

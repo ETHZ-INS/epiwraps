@@ -54,7 +54,8 @@ the regions, but the other can be +/- `maxDist` around the region.}
 \item{nDistQuantiles}{The number of distance quantiles to use. Disabled by
 default and requires `exclusiveDist=TRUE`. When a positive integer, the 
 span from 0 to `maxDist` is split into `nDistQuantiles` number of 
-quantiles for each pair of motifs.}
+quantiles for each pair of motifs. Note that `minDist` is ignored in this
+mode.}
 
 \item{ignore.strand}{Logical; whether to ignore the strand for co-occurence
 (default TRUE).}

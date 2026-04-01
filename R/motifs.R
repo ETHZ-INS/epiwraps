@@ -68,7 +68,8 @@ motifFootprint <- function(bamfile, motif, motif_occurences, genome=NULL,
 #' @param nDistQuantiles The number of distance quantiles to use. Disabled by
 #'   default and requires `exclusiveDist=TRUE`. When a positive integer, the 
 #'   span from 0 to `maxDist` is split into `nDistQuantiles` number of 
-#'   quantiles for each pair of motifs.
+#'   quantiles for each pair of motifs. Note that `minDist` is ignored in this
+#'   mode.
 #' @param ignore.strand Logical; whether to ignore the strand for co-occurence
 #'   (default TRUE).
 #' 
@@ -117,7 +118,8 @@ motifCoOccurence <- function(motifs, pairs, regions, genome, centerDist=TRUE,
   if(!all(sapply(pairs, \(x) x %in% names(motifs)))){
     stop("Some of the motifs specific in `pairs` appear not to be in `motifs`.")
   }
-  if(is.null(names(pairs))) pairs <- setNames(pairs, sapply(pairs, paste, collapse="+"))
+  if(is.null(names(pairs)))
+    pairs <- setNames(pairs, sapply(pairs, paste, collapse="+"))
   if(is.character(genome) && length(genome)==1)
     genome <- Rsamtools::FaFile(genome)
   
