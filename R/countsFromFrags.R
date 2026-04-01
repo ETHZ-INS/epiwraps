@@ -22,7 +22,8 @@
 #' @inheritParams peakCountsFromBAM
 #' 
 #' @return A \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}} 
-#'   with a 'counts' assay.
+#'   with a 'counts' assay. The mean fragment length per region is also stored
+#'   in the `rowData` of the object.
 #' @export
 #' @importFrom GenomicRanges GRanges findOverlaps width granges
 #' @importFrom IRanges IRanges ranges
@@ -56,8 +57,12 @@ peakCountsFromFrags <- function(fragfile, regions, barcodes = NULL,
                                 ignore.strand=TRUE, ...){
   
   stopifnot(is(regions, "GRanges"))
-  stopifnot(file.exists(fragfile))
-  
+  if(!is(fragfile, "TabixFile")){
+    if(length(fragfile)>1)
+      stop("Please pass a single filepath into `fragfile`.")
+    stopifnot(file.exists(fragfile))
+  }
+
   if(!is.null(barcodes)){
     if(!is.character(barcodes)) barcodes <- as.character(barcodes)
     if(!is.null(names(barcodes))){

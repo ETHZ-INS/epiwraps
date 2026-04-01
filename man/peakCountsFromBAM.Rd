@@ -100,7 +100,8 @@ stored in `rowData(results)$flbias`.}
 \item{verbose}{Logical; whether to print progress messages}
 }
 \value{
-A RangedSummarizedExperiment with a 'counts' assay.
+A \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}} 
+  with a 'counts' assay.
 }
 \description{
 Creates a SummarizedExperiment of fragment (or insertion) counts from bam 

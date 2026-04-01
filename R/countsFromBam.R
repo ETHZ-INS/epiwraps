@@ -29,7 +29,8 @@
 #' @inheritParams bam2bw
 #' @importFrom S4Vectors from to metadata countSubjectHits splitAsList
 #' 
-#' @return A RangedSummarizedExperiment with a 'counts' assay.
+#' @return A \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}} 
+#'   with a 'counts' assay.
 #' @export
 #'
 #' @examples
@@ -104,9 +105,9 @@ peakCountsFromBAM <- function(
                           minoverlap=minoverlap, ignore.strand=ignore.strand)
         mfl <- rep(0, length(regions))
         if(length(o) > 0){
-          y <- median(splitAsList(width(r)[queryHits(o)],
+          y <- IRanges::median(splitAsList(width(r)[queryHits(o)],
                                            subjectHits(o)))
-          mfl[unique(sort(subjectHits(o)))] <- y
+          mfl[unique(sort(subjectHits(o)))] <- as.numeric(y)
         }
         return(list(ov=countSubjectHits(o), reads=metadata(r)$reads, mfl=mfl))
       }

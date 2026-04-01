@@ -55,7 +55,8 @@ counting overlaps (default TRUE).}
 }
 \value{
 A \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}} 
-  with a 'counts' assay.
+  with a 'counts' assay. The mean fragment length per region is also stored
+  in the `rowData` of the object.
 }
 \description{
 Creates a SummarizedExperiment of cell-level or pseudo-bulk-level fragment 
