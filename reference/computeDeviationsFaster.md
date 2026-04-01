@@ -24,9 +24,8 @@ computeDeviationsFaster(
 
   A matrix of read counts per region(rows)/sample(columns), or a
   SummarizedExperiment with this as first assay, as produced by
-  `getCounts` or
-  [`peakPbCountsSE`](https://ethz-ins.github.io/epiwraps/reference/peakPbCountsSE.md).
-  Can also be already normalized if \`normalize=FALSE\`.
+  `getCounts` or `peakPbCountsSE`. Can also be already normalized if
+  \`normalize=FALSE\`.
 
 - motifMatches:
 

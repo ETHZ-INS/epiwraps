@@ -25,6 +25,7 @@ peakCountsFromBAM(
   maxFragLength = 5000L,
   splitByChr = 3,
   randomAcc = FALSE,
+  getMedianFragLength = FALSE,
   verbose = TRUE
 )
 ```
@@ -131,13 +132,22 @@ peakCountsFromBAM(
   using random access, the output object will not contain depth
   information.
 
+- getMedianFragLength:
+
+  Logical; whether to compile the median fragment length per region.
+  This is slightly slower. The log10-transformed, (weighted mean across
+  samples of the) median fragment length per region is stored in
+  \`rowData(results)\$flbias\`.
+
 - verbose:
 
   Logical; whether to print progress messages
 
 ## Value
 
-A RangedSummarizedExperiment with a 'counts' assay.
+A
+[`RangedSummarizedExperiment`](https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html)
+with a 'counts' assay.
 
 ## Examples
 
@@ -155,5 +165,5 @@ peakCountsFromBAM(bam, peaks, paired=FALSE)
 #> rownames(3): seq1:400-499 seq1:900-999 seq2:500-599
 #> rowData names(0):
 #> colnames(1): ex1
-#> colData names(1): depth
+#> colData names(2): total_depth depth
 ```

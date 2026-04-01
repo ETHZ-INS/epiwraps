@@ -77,7 +77,8 @@ motifCoOccurence(
   The number of distance quantiles to use. Disabled by default and
   requires \`exclusiveDist=TRUE\`. When a positive integer, the span
   from 0 to \`maxDist\` is split into \`nDistQuantiles\` number of
-  quantiles for each pair of motifs.
+  quantiles for each pair of motifs. Note that \`minDist\` is ignored in
+  this mode.
 
 - ignore.strand:
 

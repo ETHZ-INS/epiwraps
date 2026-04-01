@@ -9,7 +9,7 @@ distances of each other."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.106</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.108</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -121,7 +121,8 @@ the regions, but the other can be +/- `maxDist` around the region.</p></dd>
 <dd><p>The number of distance quantiles to use. Disabled by
 default and requires `exclusiveDist=TRUE`. When a positive integer, the
 span from 0 to `maxDist` is split into `nDistQuantiles` number of
-quantiles for each pair of motifs.</p></dd>
+quantiles for each pair of motifs. Note that `minDist` is ignored in this
+mode.</p></dd>
 
 
 <dt id="arg-ignore-strand">ignore.strand<a class="anchor" aria-label="anchor" href="#arg-ignore-strand"></a></dt>
@@ -156,7 +157,7 @@ across the entire genome is not advisable (unless for very few motifs).</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Pierre-Luc Germain, Emanuel Sonder.</p>
+  <p>Developed by Pierre-Luc Germain.</p>
 </div>
 
 <div class="pkgdown-footer-right">

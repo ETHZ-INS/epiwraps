@@ -5,18 +5,16 @@
 - **Pierre-Luc Germain**. Maintainer, author.
   [](https://orcid.org/0000-0003-3418-4218)
 
-- **Emanuel Sonder**. Author.
-
 ## Citation
 
-Germain P, Sonder E (2026). *epiwraps: epiwraps: Wrappers for plotting
-and dealing with epigenomics data*. R package version 0.99.106,
+Germain P (2026). *epiwraps: epiwraps: Wrappers for plotting and dealing
+with epigenomics data*. R package version 0.99.108,
 <https://ethz-ins.github.io/epiwraps/>.
 
     @Manual{,
       title = {epiwraps: epiwraps: Wrappers for plotting and dealing with epigenomics data},
-      author = {Pierre-Luc Germain and Emanuel Sonder},
+      author = {Pierre-Luc Germain},
       year = {2026},
-      note = {R package version 0.99.106},
+      note = {R package version 0.99.108},
       url = {https://ethz-ins.github.io/epiwraps/},
     }

@@ -80,8 +80,8 @@ effect](https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html).
   : bamChrChunkApply
 - [`breakStrings()`](https://ethz-ins.github.io/epiwraps/reference/breakStrings.md)
   : breakStrings
-- [`callPeaksExperimental()`](https://ethz-ins.github.io/epiwraps/reference/callPeaksExperimental.md)
-  : callPeaksExperimental
+- [`callPeaks()`](https://ethz-ins.github.io/epiwraps/reference/callPeaks.md)
+  : callPeaks
 - [`clusterSignalMatrices()`](https://ethz-ins.github.io/epiwraps/reference/clusterSignalMatrices.md)
   : clusterSignalMatrices: clusters the regions of a (set of) signal
   matrices.
@@ -94,6 +94,8 @@ effect](https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html).
   : Example DNAme data on some active gene bodies
 - [`exampleESE`](https://ethz-ins.github.io/epiwraps/reference/exampleESE.md)
   : Example EnrichmentSE object
+- [`exportNarrowPeaks()`](https://ethz-ins.github.io/epiwraps/reference/exportNarrowPeaks.md)
+  : exportNarrowPeaks
 - [`formatGenomicDist()`](https://ethz-ins.github.io/epiwraps/reference/formatGenomicDist.md)
   : formatGenomicDist
 - [`frag2bw()`](https://ethz-ins.github.io/epiwraps/reference/frag2bw.md)
@@ -126,8 +128,8 @@ effect](https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html).
   : motifFootprint
 - [`peakCountsFromBAM()`](https://ethz-ins.github.io/epiwraps/reference/peakCountsFromBAM.md)
   : peakCountsFromBAM
-- [`peakPbCountsSE()`](https://ethz-ins.github.io/epiwraps/reference/peakPbCountsSE.md)
-  : peakPbCountsSE
+- [`peakCountsFromFrags()`](https://ethz-ins.github.io/epiwraps/reference/peakCountsFromFrags.md)
+  : peakCountsFromFrags
 - [`plotCorFromCovStats()`](https://ethz-ins.github.io/epiwraps/reference/plotCorFromCovStats.md)
   : plotCorFromCovStats
 - [`plotCovStats()`](https://ethz-ins.github.io/epiwraps/reference/plotCovStats.md)

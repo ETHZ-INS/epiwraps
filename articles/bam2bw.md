@@ -24,6 +24,12 @@ go the following single-end reads:
 
 ``` r
 suppressPackageStartupMessages(library(epiwraps))
+```
+
+    ## Warning: replacing previous import 'IRanges::median' by 'stats::median' when
+    ## loading 'epiwraps'
+
+``` r
 # we create some arbitrary genomic ranges
 gr <- GRanges("chr1", IRanges(c(30,70,120), width=50), strand=c("+","+","-"),
               seqlengths=c(chr1=500))
@@ -40,8 +46,8 @@ rtracklayer::export(gr, bam, format="bam")
 Rsamtools::indexBam(bam)
 ```
 
-    ##       /tmp/Rtmp0Gblp3/file3b6878f724e4.bam 
-    ## "/tmp/Rtmp0Gblp3/file3b6878f724e4.bam.bai"
+    ##       /tmp/Rtmpqqcnw4/file3bd016d9c43c.bam 
+    ## "/tmp/Rtmpqqcnw4/file3bd016d9c43c.bam.bai"
 
 Using these example reads, we can illustrate different ways of computing
 coverages.
@@ -238,7 +244,7 @@ sessionInfo()
 
     ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -258,7 +264,7 @@ sessionInfo()
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] epiwraps_0.99.106           EnrichedHeatmap_1.40.1     
+    ##  [1] epiwraps_0.99.108           EnrichedHeatmap_1.40.1     
     ##  [3] ComplexHeatmap_2.26.1       SummarizedExperiment_1.40.0
     ##  [5] Biobase_2.70.0              GenomicRanges_1.62.1       
     ##  [7] Seqinfo_1.0.0               IRanges_2.44.0             
@@ -270,14 +276,14 @@ sessionInfo()
     ##   [1] RColorBrewer_1.1-3          rstudioapi_0.18.0          
     ##   [3] jsonlite_2.0.0              shape_1.4.6.1              
     ##   [5] magrittr_2.0.4              GenomicFeatures_1.62.0     
-    ##   [7] farver_2.1.2                rmarkdown_2.30             
-    ##   [9] GlobalOptions_0.1.3         fs_2.0.0                   
-    ##  [11] BiocIO_1.20.0               ragg_1.5.1                 
+    ##   [7] farver_2.1.2                rmarkdown_2.31             
+    ##   [9] GlobalOptions_0.1.3         fs_2.0.1                   
+    ##  [11] BiocIO_1.20.0               ragg_1.5.2                 
     ##  [13] vctrs_0.7.2                 memoise_2.0.1              
     ##  [15] Rsamtools_2.26.0            RCurl_1.98-1.18            
     ##  [17] base64enc_0.1-6             htmltools_0.5.9            
     ##  [19] S4Arrays_1.10.1             progress_1.2.3             
-    ##  [21] curl_7.0.0                  SparseArray_1.10.9         
+    ##  [21] curl_7.0.0                  SparseArray_1.10.10        
     ##  [23] Formula_1.2-5               sass_0.4.10                
     ##  [25] bslib_0.10.0                htmlwidgets_1.6.4          
     ##  [27] desc_1.4.3                  Gviz_1.54.0                
@@ -285,7 +291,7 @@ sessionInfo()
     ##  [31] GenomicAlignments_1.46.0    lifecycle_1.0.5            
     ##  [33] iterators_1.0.14            pkgconfig_2.0.3            
     ##  [35] Matrix_1.7-4                R6_2.6.1                   
-    ##  [37] fastmap_1.2.0               clue_0.3-67                
+    ##  [37] fastmap_1.2.0               clue_0.3-68                
     ##  [39] digest_0.6.39               TFMPvalue_1.0.0            
     ##  [41] colorspace_2.1-2            AnnotationDbi_1.72.0       
     ##  [43] textshaping_1.0.5           Hmisc_5.2-5                
@@ -296,7 +302,7 @@ sessionInfo()
     ##  [53] backports_1.5.0             htmlTable_2.4.3            
     ##  [55] S7_0.2.1                    BiocParallel_1.44.0        
     ##  [57] DBI_1.3.0                   biomaRt_2.66.2             
-    ##  [59] rappdirs_0.3.4              DelayedArray_0.36.0        
+    ##  [59] rappdirs_0.3.4              DelayedArray_0.36.1        
     ##  [61] rjson_0.2.23                gtools_3.9.5               
     ##  [63] caTools_1.18.3              tools_4.5.3                
     ##  [65] foreign_0.8-91              nnet_7.3-20                

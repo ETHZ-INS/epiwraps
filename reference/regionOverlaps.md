@@ -8,6 +8,7 @@ genomic ranges.
 ``` r
 regionOverlaps(
   listOfRegions,
+  mode = c("reduced", "pairwise"),
   ignore.strand = TRUE,
   cluster = length(listOfRegions) > 2,
   color = viridis::plasma(100),
@@ -21,6 +22,14 @@ regionOverlaps(
 - listOfRegions:
 
   A named list of two or more (non-empty) \`GRanges\`
+
+- mode:
+
+  Either 'reduced' or 'pairwise'. 'reduced' first uses \`reduce\` to get
+  a set of reference regions which are, based on overlap, contained or
+  not in the different sets. It is thus symmetrical. \`pairwise\` does
+  pairwise overlap between the sets of regions; it is asymmetrical and
+  slower to compute.
 
 - ignore.strand:
 

@@ -9,7 +9,7 @@ files that overlap given regions."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.106</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.108</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,6 +67,7 @@ files that overlap given regions.</p>
 <span>  maxFragLength <span class="op">=</span> <span class="fl">5000L</span>,</span>
 <span>  splitByChr <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  randomAcc <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  getMedianFragLength <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -175,13 +176,21 @@ when using random access, the output object will not contain depth
 information.</p></dd>
 
 
+<dt id="arg-getmedianfraglength">getMedianFragLength<a class="anchor" aria-label="anchor" href="#arg-getmedianfraglength"></a></dt>
+<dd><p>Logical; whether to compile the median fragment
+length per region. This is slightly slower. The log10-transformed,
+(weighted mean across samples of the) median fragment length per region is
+stored in `rowData(results)$flbias`.</p></dd>
+
+
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>Logical; whether to print progress messages</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A RangedSummarizedExperiment with a 'counts' assay.</p>
+    <p>A <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html" class="external-link">RangedSummarizedExperiment</a></code>
+  with a 'counts' assay.</p>
     </div>
 
     <div class="section level2">
@@ -199,7 +208,7 @@ information.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rownames(3): seq1:400-499 seq1:900-999 seq2:500-599</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> rowData names(0):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> colnames(1): ex1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(1): depth</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> colData names(2): total_depth depth</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -207,7 +216,7 @@ information.</p></dd>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Pierre-Luc Germain, Emanuel Sonder.</p>
+  <p>Developed by Pierre-Luc Germain.</p>
 </div>
 
 <div class="pkgdown-footer-right">

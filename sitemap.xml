@@ -15,12 +15,13 @@
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/bam2bw.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/bamChrChunkApply.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/breakStrings.html</loc></url>
-<url><loc>https://ethz-ins.github.io/epiwraps/reference/callPeaksExperimental.html</loc></url>
+<url><loc>https://ethz-ins.github.io/epiwraps/reference/callPeaks.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/clusterSignalMatrices.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/computeDeviationsFaster.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/estimateFragSize.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/exampleDNAme.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/exampleESE.html</loc></url>
+<url><loc>https://ethz-ins.github.io/epiwraps/reference/exportNarrowPeaks.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/formatGenomicDist.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/frag2bw.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/fragSizesDist.html</loc></url>
@@ -37,7 +38,7 @@
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/motifCoOccurence.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/motifFootprint.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/peakCountsFromBAM.html</loc></url>
-<url><loc>https://ethz-ins.github.io/epiwraps/reference/peakPbCountsSE.html</loc></url>
+<url><loc>https://ethz-ins.github.io/epiwraps/reference/peakCountsFromFrags.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/plotCorFromCovStats.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/plotCovStats.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/plotEnrichedHeatmaps.html</loc></url>

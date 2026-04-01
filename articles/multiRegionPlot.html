@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.106</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.108</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,8 +100,11 @@ recommend using bigwig files. For generating bigwig files that show the
 kind of signal you want to visualize, see the
 <a href="bam2bw.html">vignette to this effect</a>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ethz-ins.github.io/epiwraps/">epiwraps</a></span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co"># we fetch the path to the example bigwig file:</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressPackageStartupMessages</a></span><span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ethz-ins.github.io/epiwraps/">epiwraps</a></span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: replacing previous import 'IRanges::median' by 'stats::median' when</span></span>
+<span><span class="co">## loading 'epiwraps'</span></span></code></pre>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># we fetch the path to the example bigwig file:</span></span>
 <span><span class="va">bwf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_atac.bw"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span>
 <span><span class="co"># we load example regions (could be a GRanges or a path to a bed-like file):</span></span>
 <span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_peaks.bed"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span>
@@ -110,7 +113,7 @@ kind of signal you want to visualize, see the
 <span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>atac1<span class="op">=</span><span class="va">bwf</span>, atac2<span class="op">=</span><span class="va">bwf</span><span class="op">)</span>, <span class="va">regions</span>, extend<span class="op">=</span><span class="fl">1000L</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span></span>
 <span><span class="co">## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span></span></code></pre>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: EnrichmentSE </span></span>
 <span><span class="co">## 2 tracks across 150 regions</span></span>
@@ -128,7 +131,7 @@ region is stored as a row, and each sample or signal track as a column
 of the object. So we can see that we have signal for 150 rows/regions
 from two tracks.</p>
 <p>We could subset to the first 50 regions as follows:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">m</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">50</span>,<span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: EnrichmentSE </span></span>
 <span><span class="co">## 2 tracks across 50 regions</span></span>
@@ -140,7 +143,7 @@ from two tracks.</p>
 <span><span class="co">## colData names(0):</span></span>
 <span><span class="co">## metadata(0):</span></span></code></pre>
 <p>or obtain the coordinates of the queried regions :</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">rowRanges</span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## GRanges object with 150 ranges and 0 metadata columns:</span></span>
 <span><span class="co">##                         seqnames              ranges strand</span></span>
@@ -160,7 +163,7 @@ from two tracks.</p>
 <span><span class="co">##   seqinfo: 1 sequence from an unspecified genome; no seqlengths</span></span></code></pre>
 <p>One can further obtain more detailed information about the bins saved
 in the object:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/showTrackInfo.html">showTrackInfo</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## atac1 ( 150x200 ) :</span></span>
 <span><span class="co">##   -1kb/+1kb (100 windows each)</span></span>
@@ -176,7 +179,7 @@ we asked to extend 1000bp on either side, and the default bin size is
 </h3>
 <p>It is possible to extract the list of signal matrix for
 manipulations, e.g. for transformation:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># square-root transform</span></span>
 <span><span class="va">m2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="../reference/getSignalMatrices.html">getSignalMatrices</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span>, <span class="va">sqrt</span><span class="op">)</span></span></code></pre></div>
 <p>See <code><a href="../reference/addAssayToESE.html">?addAssayToESE</a></code> for adding a list of signal matrices
@@ -201,20 +204,20 @@ methods. For an overview of these methods, see the
 <p>Once the signal has been read and the object prepared, (and
 eventually normalized, see the section below), we can plot heatmaps
 based on them as follows:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/heatmap1-1.png" class="r-plt" alt="" width="384">
 We can use most arguments that are supported by <em><a href="https://bioconductor.org/packages/3.22/EnrichedHeatmap" class="external-link">EnrichedHeatmap</a></em>
 (and thus, by extension, by <em><a href="https://bioconductor.org/packages/3.22/ComplexHeatmap" class="external-link">ComplexHeatmap</a></em>),
 for example:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">m</span>, colors<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>,<span class="st">"darkred"</span><span class="op">)</span>, cluster_rows<span class="op">=</span><span class="cn">TRUE</span>,</span>
 <span>                     show_row_dend<span class="op">=</span><span class="cn">TRUE</span>, top_annotation<span class="op">=</span><span class="cn">FALSE</span>, </span>
 <span>                     row_title<span class="op">=</span><span class="st">"My list of cool regions"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/heatmap2-1.png" class="r-plt" alt="" width="384"></p>
 <p>It is often useful to subset to regions with a high enrichment, which
 we can do with the <code>score</code> function:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">m</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/order.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/score.html" class="external-link">score</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,<span class="fl">50</span><span class="op">)</span>,<span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/heatmap2b-1.png" class="r-plt" alt="" width="384"></p>
 <div class="section level3">
@@ -225,7 +228,7 @@ driven by rare extreme values. This can be controlled via the
 <code>trim</code> argument (which indicates up to which quantile of data
 points to keep to establish the colorscale). Compare for instance the
 following two heatmaps:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">m</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, trim<span class="op">=</span><span class="fl">1</span>, scale_title<span class="op">=</span><span class="st">"trim=1"</span>, column_title<span class="op">=</span><span class="st">"trim=1 (no trim)"</span>,</span>
 <span>                     top_annotation<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">m</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, trim<span class="op">=</span><span class="fl">0.99</span>, scale_title<span class="op">=</span><span class="st">"trim=0.99"</span>,</span>
@@ -249,7 +252,7 @@ trimming (e.g. the default is <code>c(0.02,0.98)</code>).</p>
 tracks, which is especially useful when comparing very different
 signals. To illustrate this, let’s load an example with different
 tracks:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span></span>
 <span><span class="va">exampleESE</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: EnrichmentSE </span></span>
@@ -262,18 +265,18 @@ tracks:</p>
 <span><span class="co">## colData names(0):</span></span>
 <span><span class="co">## metadata(0):</span></span></code></pre>
 <p>We can put each of the three tracks on its own color scale:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">exampleESE</span>, multiScale<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/heatmap1ms-1.png" class="r-plt" alt="" width="432"></p>
 <p>One could also specify colors separately by providing them as a
 list:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">exampleESE</span>,</span>
 <span>                     colors<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>,<span class="st">"darkblue"</span><span class="op">)</span>, <span class="st">"darkgreen"</span>, <span class="st">"darkred"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/heatmap1ms2-1.png" class="r-plt" alt="" width="432"></p>
 <p>This information can also be stored in the object, rather than
 specified everytime:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">exampleESE</span><span class="op">$</span><span class="va">hmcolors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu">viridisLite</span><span class="fu">::</span><span class="fu"><a href="https://sjmgarnier.github.io/viridisLite/reference/viridis.html" class="external-link">inferno</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>,  <span class="st">"darkgreen"</span>, <span class="st">"darkred"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="432"></p>
@@ -287,27 +290,27 @@ of the provided regions. This means that the width of the input regions
 is ignored. In some circumstances, however, it can be useful to scale
 regions to the same width, which can be done using the
 <code>type="scaled"</code> argument. Consider the following example:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ese</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/cbind.html" class="external-link">cbind</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>center<span class="op">=</span><span class="va">bwf</span><span class="op">)</span>, <span class="va">regions</span>, extend<span class="op">=</span><span class="fl">1000L</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>scaled<span class="op">=</span><span class="va">bwf</span><span class="op">)</span>, <span class="va">regions</span>, extend<span class="op">=</span><span class="fl">1000L</span>, type<span class="op">=</span><span class="st">"scaled"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span></span>
 <span><span class="co">## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span></span></code></pre>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">ese</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="700"></p>
 <p>For some purposes, such as when plotting signal over transcripts, it
 can be useful for the target region to consist of multiple regions
 (e.g. exons) stitched together. This can be done by supplying a
 <code>GRangesList</code> as regions:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># we make a dummy GRangesList:</span></span>
 <span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">import</span><span class="op">(</span><span class="va">regions</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">dummy.grl</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRangesList-class.html" class="external-link">GRangesList</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/splitAsList.html" class="external-link">split</a></span><span class="op">(</span><span class="va">a</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span><span class="op">]</span>,each<span class="op">=</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>scaled<span class="op">=</span><span class="va">bwf</span><span class="op">)</span>, <span class="va">dummy.grl</span>, extend<span class="op">=</span><span class="fl">1000L</span>, type<span class="op">=</span><span class="st">"scaled"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span></span></code></pre>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">sm</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="700"></p>
 </div>
@@ -338,7 +341,7 @@ been to disable rasterization using <code>use_raster=FALSE</code>.</p>
 <p>The traditional ranking by decreasing overall enrichment can easily
 hide patterns in the data, which are instead revealed by clustering. One
 approach is to use hierarchical clustering of the rows:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">exampleESE</span>, cluster_rows<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="700"></p>
 <p>In this example, this already reveals important patterns in the data,
@@ -349,12 +352,12 @@ can easily be led astray by patterns in individual signals, and seldom
 provides good results in practice. An alternative is to use enrichment
 score weighted by distance to the center, eventually row-normalized, to
 cluster the regions. We provide a function to this end:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># we cluster the regions using 2 clusters, and store the cluster labels in the </span></span>
 <span><span class="co"># rowData of the object: </span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span><span class="op">$</span><span class="va">cluster</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/clusterSignalMatrices.html">clusterSignalMatrices</a></span><span class="op">(</span><span class="va">exampleESE</span>, k<span class="op">=</span><span class="fl">2</span>, scaleRows<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   ~95% of the variance explained by clusters</span></span></code></pre>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># we additionally label the clusters with colors:</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">exampleESE</span>, row_split<span class="op">=</span><span class="st">"cluster"</span>,</span>
 <span>                     mean_color<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span><span class="op">=</span><span class="st">"red"</span>, <span class="st">"2"</span><span class="op">=</span><span class="st">"blue"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -368,7 +371,7 @@ a single score which weights the signal according to the distance to the
 center of the target (see
 <code><a href="https://rdrr.io/pkg/EnrichedHeatmap/man/enriched_score.html" class="external-link">?EnrichedHeatmap::enriched_score</a></code>). This can be done for the
 default assay with the <code>score</code> method:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/score.html" class="external-link">score</a></span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##                           H3K27ac   H3K4me3     p300</span></span>
 <span><span class="co">## chr1:36986026-36986320   39609.53   341.850 27443.12</span></span>
@@ -386,7 +389,7 @@ To do this, we first melt the signal matrices and then use <em><a href="https://
 <code>meltSignals</code> function will return a data.frame showing the
 mean, standard deviation, standard error and median at each position
 relative to the center, for each sample/matrix:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/meltSignals.html">meltSignals</a></span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   position  sample     mean       SD       SE median</span></span>
@@ -398,7 +401,7 @@ relative to the center, for each sample/matrix:</p>
 <span><span class="co">## 6    -1750 H3K27ac 85.52000 173.5301 14.16867   14.5</span></span></code></pre>
 <p>This can then be used for plotting, simply with
 <code>ggplot</code>:</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">d</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">position</span>, <span class="va">mean</span>, colour<span class="op">=</span><span class="va">sample</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept<span class="op">=</span><span class="fl">0</span>, linetype<span class="op">=</span><span class="st">"dashed"</span><span class="op">)</span> <span class="op">+</span></span>
@@ -407,7 +410,7 @@ relative to the center, for each sample/matrix:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x<span class="op">=</span><span class="st">"relative position"</span>, y<span class="op">=</span><span class="st">"mean RPKM"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/aggPlot-1.png" class="r-plt" alt="" width="384"></p>
 <p>We could also include cluster information:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/meltSignals.html">meltSignals</a></span><span class="op">(</span><span class="va">exampleESE</span>, splitBy <span class="op">=</span> <span class="st">"cluster"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">d</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">position</span>, <span class="va">mean</span>, colour<span class="op">=</span><span class="va">sample</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept<span class="op">=</span><span class="fl">0</span>, linetype<span class="op">=</span><span class="st">"dashed"</span><span class="op">)</span> <span class="op">+</span></span>
@@ -430,7 +433,7 @@ For this reason, it is advisable to smooth DNA methylation signals for
 the purpose of visualization.</p>
 <p>As an example, let’s look at the gene bodies of some active genes
 from chr8 of the A549 cell lines:</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"exampleDNAme"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">exampleDNAme</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## UnstitchedGPos object with 6 positions and 1 metadata column:</span></span>
@@ -449,18 +452,18 @@ specifically a GPos object, since all ranges have a width of 1
 nucleotide) with, in the score column, the percentage of DNA
 methylation. Let’s see what happens if we plot a heatmap of this signal,
 with and without smoothing.</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">o1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>noSmooth<span class="op">=</span><span class="va">exampleDNAme</span><span class="op">)</span>, <span class="va">geneBodies</span>, type<span class="op">=</span><span class="st">"scaled"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Computing signal from GRanges 'noSmooth'...</span></span></code></pre>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">o2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>smoothed<span class="op">=</span><span class="va">exampleDNAme</span><span class="op">)</span>, <span class="va">geneBodies</span>, type<span class="op">=</span><span class="st">"scaled"</span>, </span>
 <span>                    smooth<span class="op">=</span><span class="cn">TRUE</span>, limit<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">100</span><span class="op">)</span><span class="op">)</span> <span class="co"># recommended for DNAme</span></span></code></pre></div>
 <pre><code><span><span class="co">## Computing signal from GRanges 'smoothed'...</span></span></code></pre>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># we add a third one to visualize the CpGs:</span></span>
 <span><span class="va">o3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"noSmooth only CpGs"</span><span class="op">=</span><span class="va">exampleDNAme</span><span class="op">)</span>, <span class="va">geneBodies</span>, type<span class="op">=</span><span class="st">"scaled"</span>, background<span class="op">=</span><span class="cn">NA</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Computing signal from GRanges 'noSmooth only CpGs'...</span></span></code></pre>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">o</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">o1</span>,<span class="va">o2</span>,<span class="va">o3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">o</span>, scale_title<span class="op">=</span><span class="st">"%\nmethylation"</span>, axis_name<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TSS"</span>,<span class="st">"TES"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="multiRegionPlot_files/figure-html/unnamed-chunk-16-1.png" class="r-plt" alt="" width="700"></p>
@@ -494,11 +497,11 @@ information/customization.</p>
 <div class="section level2">
 <h2 class="unnumbered" id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 24.04.3 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.4 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -518,7 +521,7 @@ information/customization.</p>
 <span><span class="co">## [8] methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] ggplot2_4.0.2               epiwraps_0.99.106          </span></span>
+<span><span class="co">##  [1] ggplot2_4.0.2               epiwraps_0.99.108          </span></span>
 <span><span class="co">##  [3] EnrichedHeatmap_1.40.1      ComplexHeatmap_2.26.1      </span></span>
 <span><span class="co">##  [5] SummarizedExperiment_1.40.0 Biobase_2.70.0             </span></span>
 <span><span class="co">##  [7] GenomicRanges_1.62.1        Seqinfo_1.0.0              </span></span>
@@ -532,14 +535,14 @@ information/customization.</p>
 <span><span class="co">##   [3] jsonlite_2.0.0              shape_1.4.6.1              </span></span>
 <span><span class="co">##   [5] magrittr_2.0.4              magick_2.9.1               </span></span>
 <span><span class="co">##   [7] GenomicFeatures_1.62.0      farver_2.1.2               </span></span>
-<span><span class="co">##   [9] rmarkdown_2.30              GlobalOptions_0.1.3        </span></span>
-<span><span class="co">##  [11] fs_2.0.0                    BiocIO_1.20.0              </span></span>
-<span><span class="co">##  [13] ragg_1.5.1                  vctrs_0.7.2                </span></span>
+<span><span class="co">##   [9] rmarkdown_2.31              GlobalOptions_0.1.3        </span></span>
+<span><span class="co">##  [11] fs_2.0.1                    BiocIO_1.20.0              </span></span>
+<span><span class="co">##  [13] ragg_1.5.2                  vctrs_0.7.2                </span></span>
 <span><span class="co">##  [15] memoise_2.0.1               Rsamtools_2.26.0           </span></span>
 <span><span class="co">##  [17] RCurl_1.98-1.18             base64enc_0.1-6            </span></span>
 <span><span class="co">##  [19] htmltools_0.5.9             S4Arrays_1.10.1            </span></span>
 <span><span class="co">##  [21] progress_1.2.3              curl_7.0.0                 </span></span>
-<span><span class="co">##  [23] SparseArray_1.10.9          Formula_1.2-5              </span></span>
+<span><span class="co">##  [23] SparseArray_1.10.10         Formula_1.2-5              </span></span>
 <span><span class="co">##  [25] sass_0.4.10                 bslib_0.10.0               </span></span>
 <span><span class="co">##  [27] htmlwidgets_1.6.4           desc_1.4.3                 </span></span>
 <span><span class="co">##  [29] Gviz_1.54.0                 httr2_1.2.2                </span></span>
@@ -547,7 +550,7 @@ information/customization.</p>
 <span><span class="co">##  [33] lifecycle_1.0.5             iterators_1.0.14           </span></span>
 <span><span class="co">##  [35] pkgconfig_2.0.3             Matrix_1.7-4               </span></span>
 <span><span class="co">##  [37] R6_2.6.1                    fastmap_1.2.0              </span></span>
-<span><span class="co">##  [39] clue_0.3-67                 digest_0.6.39              </span></span>
+<span><span class="co">##  [39] clue_0.3-68                 digest_0.6.39              </span></span>
 <span><span class="co">##  [41] TFMPvalue_1.0.0             colorspace_2.1-2           </span></span>
 <span><span class="co">##  [43] AnnotationDbi_1.72.0        textshaping_1.0.5          </span></span>
 <span><span class="co">##  [45] Hmisc_5.2-5                 RSQLite_2.4.6              </span></span>
@@ -559,7 +562,7 @@ information/customization.</p>
 <span><span class="co">##  [57] htmlTable_2.4.3             S7_0.2.1                   </span></span>
 <span><span class="co">##  [59] BiocParallel_1.44.0         DBI_1.3.0                  </span></span>
 <span><span class="co">##  [61] biomaRt_2.66.2              rappdirs_0.3.4             </span></span>
-<span><span class="co">##  [63] DelayedArray_0.36.0         rjson_0.2.23               </span></span>
+<span><span class="co">##  [63] DelayedArray_0.36.1         rjson_0.2.23               </span></span>
 <span><span class="co">##  [65] gtools_3.9.5                caTools_1.18.3             </span></span>
 <span><span class="co">##  [67] tools_4.5.3                 foreign_0.8-91             </span></span>
 <span><span class="co">##  [69] nnet_7.3-20                 glue_1.8.0                 </span></span>
@@ -606,7 +609,7 @@ information/customization.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Pierre-Luc Germain, Emanuel Sonder.</p>
+  <p>Developed by Pierre-Luc Germain.</p>
 </div>
 
 <div class="pkgdown-footer-right">

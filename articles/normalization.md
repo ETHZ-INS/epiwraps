@@ -206,7 +206,7 @@ sessionInfo()
 
     ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -226,7 +226,7 @@ sessionInfo()
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] epiwraps_0.99.106           EnrichedHeatmap_1.40.1     
+    ##  [1] epiwraps_0.99.108           EnrichedHeatmap_1.40.1     
     ##  [3] ComplexHeatmap_2.26.1       SummarizedExperiment_1.40.0
     ##  [5] Biobase_2.70.0              GenomicRanges_1.62.1       
     ##  [7] Seqinfo_1.0.0               IRanges_2.44.0             
@@ -239,14 +239,14 @@ sessionInfo()
     ##   [3] jsonlite_2.0.0              shape_1.4.6.1              
     ##   [5] magrittr_2.0.4              magick_2.9.1               
     ##   [7] GenomicFeatures_1.62.0      farver_2.1.2               
-    ##   [9] rmarkdown_2.30              GlobalOptions_0.1.3        
-    ##  [11] fs_2.0.0                    BiocIO_1.20.0              
-    ##  [13] ragg_1.5.1                  vctrs_0.7.2                
+    ##   [9] rmarkdown_2.31              GlobalOptions_0.1.3        
+    ##  [11] fs_2.0.1                    BiocIO_1.20.0              
+    ##  [13] ragg_1.5.2                  vctrs_0.7.2                
     ##  [15] memoise_2.0.1               Rsamtools_2.26.0           
     ##  [17] RCurl_1.98-1.18             base64enc_0.1-6            
     ##  [19] htmltools_0.5.9             S4Arrays_1.10.1            
     ##  [21] progress_1.2.3              curl_7.0.0                 
-    ##  [23] SparseArray_1.10.9          Formula_1.2-5              
+    ##  [23] SparseArray_1.10.10         Formula_1.2-5              
     ##  [25] sass_0.4.10                 bslib_0.10.0               
     ##  [27] htmlwidgets_1.6.4           desc_1.4.3                 
     ##  [29] Gviz_1.54.0                 httr2_1.2.2                
@@ -254,7 +254,7 @@ sessionInfo()
     ##  [33] lifecycle_1.0.5             iterators_1.0.14           
     ##  [35] pkgconfig_2.0.3             Matrix_1.7-4               
     ##  [37] R6_2.6.1                    fastmap_1.2.0              
-    ##  [39] clue_0.3-67                 digest_0.6.39              
+    ##  [39] clue_0.3-68                 digest_0.6.39              
     ##  [41] TFMPvalue_1.0.0             colorspace_2.1-2           
     ##  [43] AnnotationDbi_1.72.0        textshaping_1.0.5          
     ##  [45] Hmisc_5.2-5                 RSQLite_2.4.6              
@@ -265,7 +265,7 @@ sessionInfo()
     ##  [55] htmlTable_2.4.3             S7_0.2.1                   
     ##  [57] BiocParallel_1.44.0         DBI_1.3.0                  
     ##  [59] biomaRt_2.66.2              rappdirs_0.3.4             
-    ##  [61] DelayedArray_0.36.0         rjson_0.2.23               
+    ##  [61] DelayedArray_0.36.1         rjson_0.2.23               
     ##  [63] gtools_3.9.5                caTools_1.18.3             
     ##  [65] tools_4.5.3                 foreign_0.8-91             
     ##  [67] nnet_7.3-20                 glue_1.8.0                 
