@@ -102,6 +102,12 @@ against local or global backgrounds:
 p <- callPeaks(bam)
 ```
 
+## Region merging
+
+The merging of genomic regions with `reduce` tends to produce large regions
+which are undesirable for some downstream analyses. As an alternative, the 
+`reduceWithResplit` function splits large merges using local overlap minima.
+
 ## Region overlapping
 
 The `GenomicRanges` package offers fast and powerful functions for overlapping
