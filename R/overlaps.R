@@ -91,7 +91,10 @@ regionsToUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
 #'   not in the different sets. It is thus symmetrical. `pairwise` does pairwise
 #'   overlap between the sets of regions; it is asymmetrical and slower to 
 #'   compute.
-#' @param ignore.strand Logical; whether to ignore strand for overlaps
+#' @param colorBy Whether to color by 'overlapCoef' (default), or by 'jaccard'
+#'   index.
+#' @param ignore.strand Logical; whether to ignore strand for overlaps (default
+#'   TRUE).
 #' @param color Heatmap colorscale
 #' @param cluster Logical; whether to cluster rows/columns
 #' @param number_color Values color
@@ -111,37 +114,41 @@ regionsToUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
 #' regionOverlaps(grl)
 regionOverlaps <- function(listOfRegions, mode=c("reduced","pairwise"),
                            ignore.strand=TRUE, cluster=length(listOfRegions)>2,
-                           color=viridis::plasma(100),
-                           number_color="black", ...){
+                           colorBy=c("overlapCoef","jaccard"), ...,
+                           color=viridis::plasma(100), number_color="black"){
   stopifnot(length(listOfRegions)>1 && all(lengths(listOfRegions)>0) &&
               all(sapply(listOfRegions,class2="GRanges",is)))
   mode <- match.arg(mode)
-  if(mode=="reference"){
+  colorBy <- match.arg(colorBy)
+  if(mode=="reduced"){
     r <- reduce(GRangesList(listOfRegions), ignore.strand=ignore.strand)
     m <- sapply(listOfRegions, \(x) overlapsAny(r, m,
                                                 ignore.strand=ignore.strand))
     o <- t(m) %*% m
+  }else{
+    o <- suppressWarnings(sapply(listOfRegions, FUN=function(x){
+      sapply(listOfRegions, FUN=function(y){
+        if(identical(x,y)) return(length(x))
+        sum(overlapsAny(x,y,ignore.strand=ignore.strand))
+      })
+    }))
   }
-  o <- suppressWarnings(sapply(listOfRegions, FUN=function(x){
-    sapply(listOfRegions, FUN=function(y){
-      if(identical(x,y)) return(length(x))
-      sum(overlapsAny(x,y,ignore.strand=ignore.strand))
-    })
-  }))
-  co <- sapply(seq_along(listOfRegions), FUN=function(x){
-    sapply(seq_along(listOfRegions), FUN=function(y){
-      if(identical(x,y)) return(NA_real_)
-      round(o[x,y]/min(lengths(listOfRegions[c(x,y)])),2)
-    })
-  })
+  sizes <- lengths(listOfRegions)
+  if(colorBy=="overlapCoef"){
+    co <- o/outer(sizes, sizes, "min")
+  }else{
+    co <- o/(outer(sizes, sizes, "+")-o)
+  }
+  diag(o) <- NA_real_
   h <- NULL
   if(isTRUE(cluster)) h <- hclust(dist(co))
   if(is(cluster,"hclust") || is(cluster,"dendrogram")) h <- cluster
   if(length(unique(as.numeric(co)))<3) co[is.na(co)] <- 1
   dimnames(co) <- dimnames(o)
+  cn <- ifelse(colorBy=="jaccard", "Jaccard", "overlap\ncoefficient")
   ComplexHeatmap::pheatmap(co, display_numbers=o, number_color=number_color,
                            cluster_rows=h, cluster_cols=h,
-                           name="overlap\ncoefficient", color=color, ...)
+                           name=cn, color=color, ...)
 }
 
 
@@ -221,4 +228,44 @@ regionCAT <- function(regions1, regions2, start=5L,
   requireNamespace("ggplot2")
   ggplot2::ggplot(d, ggplot2::aes(rank, prop)) + ggplot2::geom_line(size=1.5) +
     ggplot2::labs(x="Rank", y="Proportion of overlap")
+}
+
+#' colOverlaps
+#' 
+#' Computes pairwise overlap metric between columns
+#'
+#' @param x A logical matrix.
+#' @param y An optional nother logical matrix or vector. If NULL (default), 
+#'   overlaps are computed between columns of `x`.
+#' @param metric Either 'overlap', 'jaccard', or 'overlapCoef'.
+#'
+#' @returns A matrix of pairwise metric values.
+#' @export
+#'
+#' @examples
+#' m <- matrix(sample(c(TRUE,FALSE),12,replace=TRUE), nrow=4)
+#' colOverlaps(m, metric="jaccard")
+colOverlaps <- function(x, y=NULL, metric=c("overlap","jaccard","overlapCoef")){
+  metric <- match.arg(metric)
+  x <- as(x, "lMatrix")
+  ys <- xs <- colSums(x)
+  if(is.null(y)){
+    y <- x
+  }else{
+    if(is.vector(y)) y <- as.matrix(y)
+    y <- as(y, "lMatrix")
+    ys <- colSums(y)
+  }
+  intersections <- t(x) %*% as.matrix(y)
+  if(metric=="overlap"){
+    out <- intersections
+  }else if(metric=="overlapCoef"){
+    minSize <- outer(xs, ys, "min")
+    out <- intersections/minSize
+  }else{
+    unions <- outer(xs, ys, "+") - intersections
+    out <- intersections/unions
+  }
+  if(is(out, "dgeMatrix")) out <- as.matrix(out)
+  out
 }

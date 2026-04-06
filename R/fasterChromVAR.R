@@ -2,7 +2,7 @@
 #' 
 #' A faster version of \code{\link[chromVAR]{computeDeviations}} (see details).
 #' This is kept for legacy/backward compatibility, and users should rather use 
-#' the `betterChromVAR` package.
+#' the much faster and more precise `betterChromVAR` package.
 #'
 #' @param counts A matrix of read counts per region(rows)/sample(columns), or a
 #'   SummarizedExperiment with this as first assay, as produced by 

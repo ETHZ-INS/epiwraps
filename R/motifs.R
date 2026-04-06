@@ -1,42 +1,3 @@
-#' motifFootprint
-#' 
-#' This is a wrapper around `ATACseqQC::factorFootprints`, making it compatible
-#' with a broader variety of inputs and use cases.
-#'
-#' @param bamfile The path to a bam file
-#' @param motif The motif (as probability matrix)
-#' @param motif_occurences A GRanges of the motif occurences
-#' @param genome Optional genome used for seqlengths (otherwise estimated from
-#'   the occurences)
-#' @param around How much around the motif to plot
-#'
-#' @return A plot
-#' @export
-#' @importFrom GenomeInfoDb seqlevels seqlevels<- seqlengths seqlengths<-
-motifFootprint <- function(bamfile, motif, motif_occurences, genome=NULL,
-                           around=100){
-  stopifnot(is.matrix(motif))
-  stopifnot(is(motif_occurences, "GRanges"))
-  if(!requireNamespace("ATACseqQC", quietly=TRUE))
-    stop("This requires the ATACseqQC package.")
-  seqlevelsStyle(motif_occurences) <- seqlevelsStyle(BamFile(bamfile))
-  if(all(is.na(seqlengths(motif_occurences)))){
-    if(!is.null(genome)){
-      seqlengths(motif_occurences) <-
-        seqlengths(genome)[seqlevels(motif_occurences)]
-    }else{
-      seqlengths(motif_occurences) <- sapply(
-                                split(end(motif_occurences)+as.integer(around),
-                                seqnames(motif_occurences)), max)
-    }
-  }
-  if(is.null(motif_occurences$score)) motif_occurences$score <- 1
-  ATACseqQC:::factorFootprints(bamfile, pfm=motif, bindingSites=motif_occurences, 
-                              upstream=around, downstream=around,
-                              seqlev=seqlevels(motif_occurences))
-}
-
-
 #' motifCoOccurence
 #' 
 #' Returns regions that have matches for given pairs of motifs within certain 
@@ -198,4 +159,194 @@ motifCoOccurence <- function(motifs, pairs, regions, genome, centerDist=TRUE,
   })
   attr(a, "breaks") <- lapply(res, \(x) x$q)
   a
+}
+
+
+#' getInteractionsDeviations
+#'
+#' Get `betterChromVAR` deviations for overlaps between motifs and a bait motif.
+#' 
+#' @param se An object inheriting `SummarizedExperiment`, containing a `counts`
+#'   assay.
+#' @param annotation A (sparse) matrix or object inheriting 
+#'   `SummarizedExperiment` containing motif annotations for each row of `se`.
+#' @param bait The name of the bait motif (corresponding to a column of 
+#'   `annotation`), for which to search for interacting motifs.
+#' @param minCount The minimum overlap size for a motif pair to be considered.
+#' @param ... Passed to `betterChromVAR`
+#'
+#' @returns A `SummarizedExperiment` of deviations for the intersection of 
+#'   all motifs with the bait motif.
+#' @importFrom betterChromVAR betterChromVAR
+#' @export
+getInteractionsDeviations <- function(se, annotation, bait, minCount=20, ...){
+  stopifnot(inherits(se, "SummarizedExperiment"))
+  stopifnot(nrow(se)==nrow(annotation))
+  stopifnot(length(bait)==1 && bait %in% colnames(annotation))
+  if(inherits(annotation, "SummarizedExperiment")){
+    annotation <- assay(annotation)
+  }
+  moi2 <- annotation & annotation[,bait]
+  moi2 <- moi2[,colSums(moi2)>=minCount]
+  ov <- colSums(moi2)
+  dev <- betterChromVAR(se, moi2, ...)
+  tot <- colSums(annotation[,colnames(moi2)])
+  totBait <- as.integer(tot[bait])
+  expected <- totBait*tot/nrow(annotation)
+  rowData(dev)$overlap.percentOfBait <- round(100*(ov/totBait),2)
+  jac <- colOverlaps(annotation[,colnames(moi2)], annotation[,bait],
+                     metric="jaccard")
+  rowData(dev)$overlap.jaccard <- as.numeric(jac)
+  rowData(dev)$overlap.log2Enr <- log2(ov/expected)
+  rowData(dev)$isBait <- row.names(dev)==bait
+  dev
+}
+
+#' discoverMotifInteractions
+#' 
+#' Discover motifs interacting with a bait motif.
+#'
+#' @param dev A deviations SummarizedExperiment produced by 
+#'   \code{\link{getInteractionsDeviations}}
+#' @param group The column of `colData(dev)` containing the experimental groups
+#'   of interest. To column will be coerced to a factor, and all comparisons 
+#'   will be made relative to the first level of the factor.
+#' @param covar Optional columns of `colData(dev)` containing covariates to 
+#'   correct for.
+#' @param global Logical; whether to test the contrasts globally, rather than
+#'   individually. Has no effect when there is a single contrast 
+#'   (i.e. two-group comparison).
+#' @param weights Logical; whether to use weights (recommended). Can also be
+#'   a function that will convert the number of overlapping sites into weights 
+#'   (default `sqrt`).
+#' @param useAssay Which assay to use. We recommend setting 'adjZ' (default),
+#'   which uses z-scores but corrects the scale of the bait's z-scores to its
+#'   expectation for the intersection size.
+#' @author Pierre-Luc Germain
+#'
+#' @returns A data.frame.
+#' @importFrom limma lmFit makeContrasts eBayes topTable contrasts.fit
+#' @importFrom stats model.matrix
+#' @export
+discoverMotifInteractions <- function(dev, group, covar=c(), global=FALSE,
+                                      weights=TRUE,
+                                      useAssay=c("adjZ","deviations","z")){
+  stopifnot(inherits(dev, "SummarizedExperiment"))
+  stopifnot(sum(rowData(dev)$isBait)==1)
+  useAssay <- match.arg(useAssay)
+  bait <- row.names(dev)[which(rowData(dev)$isBait)]
+  wBait <- which(row.names(dev)==bait)
+  N <- rowData(dev)$N
+  if(useAssay=="adjZ"){
+    useAssay <- "z"
+    # shrink the bait's z to expectation for the interaction size
+    nf <- sqrt(N/N[wBait])
+    e1 <- outer(nf[-wBait], assay(dev,useAssay)[bait,])
+  }else{
+    e1 <- matrix(assay(dev,useAssay)[bait,], nrow=nrow(dev)-1, ncol=ncol(dev))
+  }
+  e2 <- assay(dev,useAssay)[-wBait,]
+  cd <- as.data.frame(rbind(colData(dev),colData(dev)))
+  cd$isInt <- rep(c(FALSE,TRUE), each=ncol(dev))
+  cd$combined <- factor(paste(cd[[group]], cd$isInt, sep="_"))
+  cd[[group]] <- factor(cd[[group]])
+  formula <- paste(c("~0+combined", covar), collapse="+")
+  mm <- model.matrix(as.formula(formula), data=cd)
+  colnames(mm) <- gsub("combined","",colnames(mm))
+  e <- cbind(e1,e2)
+  w <- NULL
+  if(!isFALSE(weights)){
+    if(isTRUE(weights)) weights <- sqrt
+    if(!is.function(weights))
+      stop("`weights` should be TRUE, FALSE, or a function.")
+    motif_weight <- weights(rowData(dev)$N)
+    w <- matrix(motif_weight[-wBait], nrow=nrow(e), ncol=ncol(e))
+    w[, seq_len(ncol(dev))] <- motif_weight[wBait]
+  }
+  fit <- lmFit(e, mm, weights=w)
+  refG <- levels(cd[[group]])[1]
+  grs <- levels(cd[[group]])[-1]
+  names(grs) <- paste0(grs,"-",refG)
+  contrast_strings <- sapply(grs, function(g) {
+    paste0("(", g, "_TRUE - ", g, "_FALSE) - (", 
+           refG, "_TRUE - ", refG, "_FALSE)")
+  })
+  cont_matrix <- makeContrasts(contrasts=contrast_strings, levels=mm)
+  fit <- eBayes(contrasts.fit(fit, cont_matrix))
+  if(!isTRUE(global)){
+    res <- dplyr::bind_rows(lapply(setNames(names(grs),names(grs)), \(co){
+      res <- as.data.frame(topTable(fit, coef=co, number=Inf))
+      colnames(res)[1] <- "difference"
+      cbind(motif=row.names(res), res)
+    }), .id="contrast")
+  }else{
+    res <- as.data.frame(topTable(fit, coef=names(grs), number=Inf))
+    res <- cbind(motif=row.names(res), res)
+  }
+  res$B <- res$AveExpr <- NULL
+  cols <- c("N",grep("^overlap", colnames(rowData(dev)), value=TRUE))
+  d <- as.data.frame(rowData(dev)[,cols])
+  colnames(d)[1] <- "overlap.N"
+  cbind(res[,c("contrast","motif")], d[res$motif,],
+        res[,setdiff(colnames(res), c("contrast", "motif"))])
+}
+
+#' exploreMotifInteraction
+#' 
+#' We compare deviations in sites that harbor a single of the two motifs, or
+#' the pair of motifs at given distances from each other.
+#'
+#' @param counts An object inheriting from `RangedSummarizedExperiment`, with
+#'   a `bias` column in its `rowData`.
+#' @param motifs A named pair of motifs, in a format recognized by 
+#'   \code{\link[motifmatchr]{matchMotif}}.
+#' @param genome A BSgenome or FaFile object.
+#' @param nDistQuantiles The number of distance quantiles between the motif 
+#'   matches (up to `maxDist`)
+#' @param maxDist The maximum distance between matches.
+#' @param ... Any further argument passed to 
+#'   \code{\link[betterChromVAR]{betterChromVAR}}.
+#' @author Pierre-Luc Germain
+#'
+#' @returns A SummarizedExperiment object of deviations for different types of
+#'   interactions between the motifs.
+#' 
+#' @details
+#' Motif pairs are split according to the distance between their centers up to
+#' `maxDist` (default 300) into `nDistQuantiles` (default 4) similarly-populated
+#' quantiles. Deviations are reported for these different bins, as well as sites
+#' harboring only a single motif.
+#' @export
+#' @importFrom betterChromVAR computeDeviationsAnalytic normalizeDevsForSize
+#' @importFrom motifmatchr matchMotifs
+#' @examples
+exploreMotifInteraction <- function(counts, motifs, genome, bg=NULL,
+                                    nDistQuantiles=5L, maxDist=500L, ...){
+  stopifnot(length(motifs)==2)
+  stopifnot(inherits(counts, "RangedSummarizedExperiment"))
+  moi <- motifmatchr::matchMotifs(motifs, counts, genome=genome)
+  moi2 <- motifCoOccurence(motifs, list(names(motifs)), rowRanges(counts),
+                           genome = genome, nDistQuantiles=nDistQuantiles,
+                           maxDist=maxDist)
+  breaks <- round(attr(moi2, "breaks")[[1]][-1])
+  bins <- c(paste0("d<=", breaks[1]), paste0(breaks[-length(breaks)],
+                                             "<d<=", breaks[-1]))
+  moi2flat <- Reduce(cbind, moi2)
+  colnames(moi2flat) <- paste(colnames(moi2[[1]]),
+                              rep(names(moi2), each=ncol(moi2[[1]])), sep=".")
+  moi2 <- lapply(moi2, assay)
+  moiSinglet <- (assay(moi)-(Reduce("+", lapply(moi2,rowSums))>0))>0
+  colnames(moiSinglet) <- paste0(colnames(moiSinglet),"+,",
+                                 rev(colnames(moiSinglet)),"-")
+  moi <- cbind(assay(moi), moiSinglet, moi2flat)
+  for(b in seq_along(bins)){
+    colnames(moi) <- gsub(paste0("\\.bin",b), paste0("\n", bins[b]),
+                          colnames(moi))
+  }
+  if(is.null(bg)){
+    dev <- betterChromVAR(counts, moi, ...)
+  }else{
+    dev <- computeDeviationsAnalytic(counts, bg, moi, ...)
+  }
+  normalizeDevsForSize(dev)
 }

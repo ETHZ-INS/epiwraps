@@ -27,6 +27,7 @@ Imports:
     Gviz,
     ensembldb,
     AnnotationFilter,
+    limma,
     matrixStats,
     motifmatchr,
     circlize,

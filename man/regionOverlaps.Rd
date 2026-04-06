@@ -9,9 +9,10 @@ regionOverlaps(
   mode = c("reduced", "pairwise"),
   ignore.strand = TRUE,
   cluster = length(listOfRegions) > 2,
+  colorBy = c("overlapCoef", "jaccard"),
+  ...,
   color = viridis::plasma(100),
-  number_color = "black",
-  ...
+  number_color = "black"
 )
 }
 \arguments{
@@ -23,15 +24,19 @@ not in the different sets. It is thus symmetrical. `pairwise` does pairwise
 overlap between the sets of regions; it is asymmetrical and slower to 
 compute.}
 
-\item{ignore.strand}{Logical; whether to ignore strand for overlaps}
+\item{ignore.strand}{Logical; whether to ignore strand for overlaps (default
+TRUE).}
 
 \item{cluster}{Logical; whether to cluster rows/columns}
+
+\item{colorBy}{Whether to color by 'overlapCoef' (default), or by 'jaccard'
+index.}
+
+\item{...}{Passed to \code{\link[ComplexHeatmap]{pheatmap}}}
 
 \item{color}{Heatmap colorscale}
 
 \item{number_color}{Values color}
-
-\item{...}{Passed to \code{\link[ComplexHeatmap]{pheatmap}}}
 }
 \value{
 A `Heatmap` showing the overlap coefficient as colors, and the 
