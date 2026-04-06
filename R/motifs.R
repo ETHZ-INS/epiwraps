@@ -334,8 +334,7 @@ exploreMotifInteraction <- function(counts, motifs, genome, bg=NULL,
   moi2flat <- Reduce(cbind, moi2)
   colnames(moi2flat) <- paste(colnames(moi2[[1]]),
                               rep(names(moi2), each=ncol(moi2[[1]])), sep=".")
-  moi2 <- lapply(moi2, assay)
-  moiSinglet <- (assay(moi)-(Reduce("+", lapply(moi2,rowSums))>0))>0
+  moiSinglet <- (assay(moi)-(Reduce("+", lapply(moi2,Matrix::rowSums))>0))>0
   colnames(moiSinglet) <- paste0(colnames(moiSinglet),"+,",
                                  rev(colnames(moiSinglet)),"-")
   moi <- cbind(assay(moi), moiSinglet, moi2flat)
