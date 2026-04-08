@@ -25,5 +25,6 @@ A `SummarizedExperiment` of deviations for the intersection of
   all motifs with the bait motif.
 }
 \description{
-Get `betterChromVAR` deviations for overlaps between motifs and a bait motif.
+Get \code{\link[betterChromVAR]{betterChromVAR}} deviations for overlaps 
+between motifs and a bait motif.
 }

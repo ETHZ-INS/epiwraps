@@ -40,7 +40,8 @@ expectation for the intersection size.}
 A data.frame.
 }
 \description{
-Discover motifs interacting with a bait motif.
+Discover motifs interacting with a bait motif, based on the betterChromVAR
+package.
 }
 \author{
 Pierre-Luc Germain

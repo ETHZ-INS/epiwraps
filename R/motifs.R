@@ -164,7 +164,8 @@ motifCoOccurence <- function(motifs, pairs, regions, genome, centerDist=TRUE,
 
 #' getInteractionsDeviations
 #'
-#' Get `betterChromVAR` deviations for overlaps between motifs and a bait motif.
+#' Get \code{\link[betterChromVAR]{betterChromVAR}} deviations for overlaps 
+#' between motifs and a bait motif.
 #' 
 #' @param se An object inheriting `SummarizedExperiment`, containing a `counts`
 #'   assay.
@@ -204,7 +205,8 @@ getInteractionsDeviations <- function(se, annotation, bait, minCount=20, ...){
 
 #' discoverMotifInteractions
 #' 
-#' Discover motifs interacting with a bait motif.
+#' Discover motifs interacting with a bait motif, based on the betterChromVAR
+#' package.
 #'
 #' @param dev A deviations SummarizedExperiment produced by 
 #'   \code{\link{getInteractionsDeviations}}
