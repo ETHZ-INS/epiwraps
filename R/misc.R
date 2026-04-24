@@ -4,6 +4,23 @@
       alpha, maxColorValue = 255)
 }
 
+.safeGRresize <- function(gr, ...){
+  sinfo <- seqinfo(gr)
+  seqlengths(gr) <- NA
+  resize(gr, ...)
+  seqinfo(gr) <- sinfo
+  trim(gr)
+}
+
+.safeGRshift <- function(gr, ...){
+  sinfo <- seqinfo(gr)
+  seqlengths(gr) <- NA
+  shift(gr, ...)
+  seqinfo(gr) <- sinfo
+  trim(gr)
+}
+
+
 .parseFiletypeFromName <- function(x, stopOnUnrecognized=TRUE, mustExist=TRUE,
                                    grOk=FALSE, trackOk=FALSE, covOk=FALSE,
                                    requireUnique=FALSE){
@@ -439,6 +456,8 @@ views2Matrix <- function(v, padVal=NA_integer_){
 #'
 #' @return A character vector.
 #' @export
+#' @examples
+#' formatGenomicDistc(1235000)
 formatGenomicDist <- function(e, allowFraction=TRUE, sameUnits=TRUE, head0=TRUE,
                               units=c("mb"=1000000,"kb"=1000,"bp"=1)){
   stopifnot(is.numeric(e))

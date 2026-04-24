@@ -127,6 +127,14 @@ mergeSignalMatrices <- function(ml, aggregation=c("mean","sum","median"),
 #' @export
 #' @importFrom matrixStats rowMaxs rowVars
 #' @importFrom stats kmeans
+#' @examples
+#' data(exampleESE)
+#' rowData(exampleESE)$cluster <- clusterSignalMatrices(exampleESE, 3)
+#' # we could plot the data clustered:
+#' plotEnrichedHeatmaps(exampleESE, row_split="cluster")
+#' # we could also try with different values of k:
+#' cl <- clusterSignalMatrices(exampleESE, 2:5)
+#' cl$varExplained
 clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
                                   use=c("enrich","full","max","center"),
                                   by=rep(1L,length(ml)),

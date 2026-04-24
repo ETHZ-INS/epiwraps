@@ -18,7 +18,7 @@ vignette: |
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include=FALSE}
+```{r prelim, include=FALSE}
 library(BiocStyle)
 ```
 
@@ -37,7 +37,7 @@ from R or compatible with a variety of tools, including genome browsers.
 To introduce the different variations on coverage, let's assume you've go the 
 following single-end reads:
 
-```{r, fig.height=1, fig.width=4}
+```{r plotGR, fig.height=1, fig.width=4}
 suppressPackageStartupMessages(library(epiwraps))
 # we create some arbitrary genomic ranges
 gr <- GRanges("chr1", IRanges(c(30,70,120), width=50), strand=c("+","+","-"),
@@ -47,7 +47,7 @@ plotSignalTracks(list(reads=gr), region="chr1:1:180", extend=0, genomeAxis=FALSE
 
 For testing purposes, we'll save this as a bam file and index it:
 
-```{r}
+```{r prepBam}
 bam <- tempfile(fileext = ".bam") # temp file name
 rtracklayer::export(gr, bam, format="bam")
 Rsamtools::indexBam(bam)
@@ -59,7 +59,7 @@ First, we can save coverage at different resolutions, from full resolution
 (each nucleotide is a single bin) to larger bin sizes, the latter giving smaller
 filesizes:
 
-```{r, fig.width=4.5, fig.height=2.5}
+```{r plotBw1, fig.width=4.5, fig.height=2.5}
 # Full coverage with bin width of 1 nucleotide (i.e. full resolution)
 cov_full_bw1 <- tempfile(fileext = ".bw") # temp file name
 bam2bw(bam, cov_full_bw1, binWidth=1L, scaling=FALSE)
@@ -74,7 +74,7 @@ Both tracks compile the number of reads that overlap each position, but in the
 bottom track the signal is by chunks of 25 nucleotides. By default, the maximum 
 signal inside a bin is used, however it is possible to change this:
 
-```{r, fig.width=4.5, fig.height=3.5}
+```{r plotBw2, fig.width=4.5, fig.height=3.5}
 # Using mean per bin:
 cov_full_bw25mean <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_full_bw25mean, binWidth=25L, binSummarization = "mean", scaling=FALSE)
@@ -92,7 +92,7 @@ common to extend reads to this size when computing coverage, so as to obtain
 the number of fragments (rather than reads) coverage each position. This can be
 done as follows:
 
-```{r, fig.width=4.5, fig.height=2.5}
+```{r plotBwExtended, fig.width=4.5, fig.height=2.5}
 # Here the reads are 50bp, and we want to extend them to 100bp, hence _by_ 50:
 cov_full_ext <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_full_ext, binWidth=1L, extend=50L, scaling=FALSE)
@@ -109,7 +109,7 @@ the captured fragments.
 Instead of computing coverage, we could compute the number of reads starting, 
 ending, or being centered at each position:
 
-```{r, fig.width=4.5, fig.height=3.5}
+```{r plotBwEnds, fig.width=4.5, fig.height=3.5}
 # Here the reads are 50bp, and we want to extend them to 100bp, hence _by_ 50:
 cov_start <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_start, binWidth=1L, extend=50L, scaling=FALSE, type="start")

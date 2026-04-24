@@ -9,7 +9,7 @@ discoverMotifInteractions(
   group,
   covar = c(),
   global = FALSE,
-  weights = TRUE,
+  weights = c("fixed", "trend", "none"),
   useAssay = c("adjZ", "deviations", "z")
 )
 }
@@ -28,9 +28,10 @@ correct for.}
 individually. Has no effect when there is a single contrast 
 (i.e. two-group comparison).}
 
-\item{weights}{Logical; whether to use weights (recommended). Can also be
-a function that will convert the number of overlapping sites into weights 
-(default `sqrt`).}
+\item{weights}{The weights to use, either 'fixed' (uses the sqrt number of 
+sites), 'trend' (default; uses the trend over the number of sites), or 
+'none' (no weights; not recommended). We recommend 'trend' if the number
+of motifs is sufficiently large (e.g. >100).}
 
 \item{useAssay}{Which assay to use. We recommend setting 'adjZ' (default),
 which uses z-scores but corrects the scale of the bait's z-scores to its

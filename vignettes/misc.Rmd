@@ -16,7 +16,7 @@ vignette: |
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include=FALSE}
+```{r prelim, include=FALSE}
 library(BiocStyle)
 ```
 
@@ -32,7 +32,7 @@ on the fly.
 The functions can also compute fragment length information for each region, 
 which can for instance be used with the `betterChromVAR` package. For example:
 
-```{r getCounts,  message=FALSE}
+```{r peakCountsFromBAM,  message=FALSE}
 suppressPackageStartupMessages(library(epiwraps))
 bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 # create regions of interest
@@ -98,7 +98,7 @@ function.
 A peak calling function can be used, either against an input control or 
 against local or global backgrounds:
 
-```{r, eval=FALSE}
+```{r callPeaks, eval=FALSE}
 p <- callPeaks(bam)
 ```
 

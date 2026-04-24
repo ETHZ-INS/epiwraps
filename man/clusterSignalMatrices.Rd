@@ -53,3 +53,12 @@ If `k` is of length 1, a vector of cluster labels, corresponding to
 \description{
 clusterSignalMatrices: clusters the regions of a (set of) signal matrices.
 }
+\examples{
+data(exampleESE)
+rowData(exampleESE)$cluster <- clusterSignalMatrices(exampleESE, 3)
+# we could plot the data clustered:
+plotEnrichedHeatmaps(exampleESE, row_split="cluster")
+# we could also try with different values of k:
+cl <- clusterSignalMatrices(exampleESE, 2:5)
+cl$varExplained
+}

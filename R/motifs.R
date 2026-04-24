@@ -218,9 +218,10 @@ getInteractionsDeviations <- function(se, annotation, bait, minCount=20, ...){
 #' @param global Logical; whether to test the contrasts globally, rather than
 #'   individually. Has no effect when there is a single contrast 
 #'   (i.e. two-group comparison).
-#' @param weights Logical; whether to use weights (recommended). Can also be
-#'   a function that will convert the number of overlapping sites into weights 
-#'   (default `sqrt`).
+#' @param weights The weights to use, either 'fixed' (uses the sqrt number of 
+#'   sites), 'trend' (default; uses the trend over the number of sites), or 
+#'   'none' (no weights; not recommended). We recommend 'trend' if the number
+#'   of motifs is sufficiently large (e.g. >100).
 #' @param useAssay Which assay to use. We recommend setting 'adjZ' (default),
 #'   which uses z-scores but corrects the scale of the bait's z-scores to its
 #'   expectation for the intersection size.
@@ -231,11 +232,12 @@ getInteractionsDeviations <- function(se, annotation, bait, minCount=20, ...){
 #' @importFrom stats model.matrix
 #' @export
 discoverMotifInteractions <- function(dev, group, covar=c(), global=FALSE,
-                                      weights=TRUE,
+                                      weights=c("fixed","trend","none"),
                                       useAssay=c("adjZ","deviations","z")){
   stopifnot(inherits(dev, "SummarizedExperiment"))
   stopifnot(sum(rowData(dev)$isBait)==1)
   useAssay <- match.arg(useAssay)
+  weights <- match.arg(weights)
   bait <- row.names(dev)[which(rowData(dev)$isBait)]
   wBait <- which(row.names(dev)==bait)
   N <- rowData(dev)$N
@@ -257,15 +259,14 @@ discoverMotifInteractions <- function(dev, group, covar=c(), global=FALSE,
   colnames(mm) <- gsub("combined","",colnames(mm))
   e <- cbind(e1,e2)
   w <- NULL
-  if(!isFALSE(weights)){
-    if(isTRUE(weights)) weights <- sqrt
-    if(!is.function(weights))
-      stop("`weights` should be TRUE, FALSE, or a function.")
-    motif_weight <- weights(rowData(dev)$N)
+  if(weights=="fixed"){
+    motif_weight <- sqrt(rowData(dev)$N)
     w <- matrix(motif_weight[-wBait], nrow=nrow(e), ncol=ncol(e))
     w[, seq_len(ncol(dev))] <- motif_weight[wBait]
+    fit <- lmFit(e, mm, weights=w)
+  }else{
+    fit <- lmFit(e, mm)
   }
-  fit <- lmFit(e, mm, weights=w)
   refG <- levels(cd[[group]])[1]
   grs <- levels(cd[[group]])[-1]
   names(grs) <- paste0(grs,"-",refG)
@@ -274,7 +275,13 @@ discoverMotifInteractions <- function(dev, group, covar=c(), global=FALSE,
            refG, "_TRUE - ", refG, "_FALSE)")
   })
   cont_matrix <- makeContrasts(contrasts=contrast_strings, levels=mm)
-  fit <- eBayes(contrasts.fit(fit, cont_matrix))
+  if(weights=="trend"){
+    motif_weight <- sqrt(rowData(dev)$N[-wBait])
+    fit <- eBayes(contrasts.fit(fit, cont_matrix), trend=motif_weight)
+  }else{
+    fit <- eBayes(contrasts.fit(fit, cont_matrix))
+  }
+  
   if(!isTRUE(global)){
     res <- dplyr::bind_rows(lapply(setNames(names(grs),names(grs)), \(co){
       res <- as.data.frame(topTable(fit, coef=co, number=Inf))

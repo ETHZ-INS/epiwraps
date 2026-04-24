@@ -43,3 +43,15 @@ The sorted `regions` object with additional annotation columns.
 Annotates a GRanges on the basis of an annotation object (e.g. 
 \code{\link[ensembldb]{EnsDb}}).
 }
+\examples{
+# we first create some regions we want to annotate:
+regions <- as(c("chrY:2655742-2655890", "chrY:28730110-28730950"), "GRanges")
+# we'll use a lightweight ensembldb annotation for the annotation:
+chrY <- system.file("chrY", package="ensembldb")
+edb <- EnsDb(makeEnsemblSQLiteFromTables(path=chrY ,dbname=tempfile()))
+# we run teh annotation:
+regions <- annotateRegions(regions, edb)
+# this adds metadata columns to the regions:
+regions
+table(regions$class)
+}
