@@ -1,3 +1,8 @@
+on:
+  push:
+    branches: [main, devel]
+  pull_request:
+    branches: [main, devel]
 name: R-CMD-check
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
