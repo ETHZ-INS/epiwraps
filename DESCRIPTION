@@ -37,6 +37,7 @@ Imports:
     dplyr,
     stats,
     pbapply,
+    Matrix,
     methods
 Suggests: 
     knitr,
