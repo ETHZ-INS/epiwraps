@@ -17,7 +17,7 @@
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/breakStrings.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/callPeaks.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/clusterSignalMatrices.html</loc></url>
-<url><loc>https://ethz-ins.github.io/epiwraps/reference/computeDeviationsFaster.html</loc></url>
+<url><loc>https://ethz-ins.github.io/epiwraps/reference/colOverlaps.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/estimateFragSize.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/exampleDNAme.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/exampleESE.html</loc></url>
@@ -35,8 +35,6 @@
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/meltSignals.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/mergeSignalMatrices.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/ml2ESE.html</loc></url>
-<url><loc>https://ethz-ins.github.io/epiwraps/reference/motifCoOccurence.html</loc></url>
-<url><loc>https://ethz-ins.github.io/epiwraps/reference/motifFootprint.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/peakCountsFromBAM.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/peakCountsFromFrags.html</loc></url>
 <url><loc>https://ethz-ins.github.io/epiwraps/reference/plotCorFromCovStats.html</loc></url>

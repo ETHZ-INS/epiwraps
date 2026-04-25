@@ -13,10 +13,10 @@ from them.
 Since reading data from many regions is typically longer than plotting
 it, we split plotting and acquiring the data. The latter is done through
 function specific to this package, while the former wraps around the
-*[EnrichedHeatmap](https://bioconductor.org/packages/3.22/EnrichedHeatmap)*
+*[EnrichedHeatmap](https://bioconductor.org/packages/3.23/EnrichedHeatmap)*
 package. The interface here has been simplified, but for full
 functionality and customization it is recommended to have a look at the
-*[EnrichedHeatmap](https://bioconductor.org/packages/3.22/EnrichedHeatmap)*
+*[EnrichedHeatmap](https://bioconductor.org/packages/3.23/EnrichedHeatmap)*
 documentation.
 
 ## Reading signal in/around a set of regions
@@ -42,14 +42,14 @@ bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
 regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
 # we obtain the matrix of the signal around the regions. For the purpose of this
 # example, we'll read twice from the same:
-m <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L)
+ese <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L)
 ```
 
     ## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw
     ## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw
 
 ``` r
-m
+ese
 ```
 
     ## class: EnrichmentSE 
@@ -63,7 +63,7 @@ m
     ## metadata(0):
 
 The result is an object of class `EnrichmentSE`, which inherits from a
-*[SummarizedExperiment](https://bioconductor.org/packages/3.22/SummarizedExperiment/vignettes/RangedSummarizedExperiment)*,
+*[SummarizedExperiment](https://bioconductor.org/packages/3.23/SummarizedExperiment/vignettes/RangedSummarizedExperiment)*,
 and therefore affords all the manipulations that the latter offers. Each
 region is stored as a row, and each sample or signal track as a column
 of the object. So we can see that we have signal for 150 rows/regions
@@ -72,7 +72,7 @@ from two tracks.
 We could subset to the first 50 regions as follows:
 
 ``` r
-m[1:50,]
+ese[1:50,]
 ```
 
     ## class: EnrichmentSE 
@@ -88,7 +88,7 @@ m[1:50,]
 or obtain the coordinates of the queried regions :
 
 ``` r
-rowRanges(m)
+rowRanges(ese)
 ```
 
     ## GRanges object with 150 ranges and 0 metadata columns:
@@ -112,7 +112,7 @@ One can further obtain more detailed information about the bins saved in
 the object:
 
 ``` r
-showTrackInfo(m)
+showTrackInfo(ese)
 ```
 
     ## atac1 ( 150x200 ) :
@@ -133,7 +133,7 @@ e.g. for transformation:
 
 ``` r
 # square-root transform
-m2 <- lapply(getSignalMatrices(m), sqrt)
+m2 <- lapply(getSignalMatrices(ese), sqrt)
 ```
 
 See
@@ -161,18 +161,18 @@ normalized, see the section below), we can plot heatmaps based on them
 as follows:
 
 ``` r
-plotEnrichedHeatmaps(m)
+plotEnrichedHeatmaps(ese)
 ```
 
 ![](multiRegionPlot_files/figure-html/heatmap1-1.png) We can use most
 arguments that are supported by
-*[EnrichedHeatmap](https://bioconductor.org/packages/3.22/EnrichedHeatmap)*
+*[EnrichedHeatmap](https://bioconductor.org/packages/3.23/EnrichedHeatmap)*
 (and thus, by extension, by
-*[ComplexHeatmap](https://bioconductor.org/packages/3.22/ComplexHeatmap)*),
+*[ComplexHeatmap](https://bioconductor.org/packages/3.23/ComplexHeatmap)*),
 for example:
 
 ``` r
-plotEnrichedHeatmaps(m, colors=c("white","darkred"), cluster_rows=TRUE,
+plotEnrichedHeatmaps(ese, colors=c("white","darkred"), cluster_rows=TRUE,
                      show_row_dend=TRUE, top_annotation=FALSE, 
                      row_title="My list of cool regions")
 ```
@@ -183,7 +183,7 @@ It is often useful to subset to regions with a high enrichment, which we
 can do with the `score` function:
 
 ``` r
-plotEnrichedHeatmaps(m[head(order(-rowMeans(score(m))),50),])
+plotEnrichedHeatmaps(ese[head(order(-rowMeans(score(ese))),50),])
 ```
 
 ![](multiRegionPlot_files/figure-html/heatmap2b-1.png)
@@ -197,11 +197,11 @@ establish the colorscale). Compare for instance the following two
 heatmaps:
 
 ``` r
-plotEnrichedHeatmaps(m[,1], trim=1, scale_title="trim=1", column_title="trim=1 (no trim)",
+plotEnrichedHeatmaps(ese[,1], trim=1, scale_title="trim=1", column_title="trim=1 (no trim)",
                      top_annotation=FALSE) +
-  plotEnrichedHeatmaps(m[,1], trim=0.99, scale_title="trim=0.99",
+  plotEnrichedHeatmaps(ese[,1], trim=0.99, scale_title="trim=0.99",
                        column_title="trim=0.99", top_annotation=FALSE) +
-  plotEnrichedHeatmaps(m[,1], trim=0.9, column_title="trim=0.9",
+  plotEnrichedHeatmaps(ese[,1], trim=0.9, column_title="trim=0.9",
                        scale_title="trim=0.9", top_annotation=FALSE)
 ```
 
@@ -262,7 +262,7 @@ exampleESE$hmcolors <- list(viridisLite::inferno(100),  "darkgreen", "darkred")
 plotEnrichedHeatmaps(exampleESE)
 ```
 
-![](multiRegionPlot_files/figure-html/unnamed-chunk-8-1.png)
+![](multiRegionPlot_files/figure-html/hmcolors-1.png)
 
 ### Scaled regions
 
@@ -287,7 +287,7 @@ ese <- cbind(
 plotEnrichedHeatmaps(ese)
 ```
 
-![](multiRegionPlot_files/figure-html/unnamed-chunk-9-1.png)
+![](multiRegionPlot_files/figure-html/scaling-1.png)
 
 For some purposes, such as when plotting signal over transcripts, it can
 be useful for the target region to consist of multiple regions
@@ -307,7 +307,7 @@ sm <- signal2Matrix(c(scaled=bwf), dummy.grl, extend=1000L, type="scaled")
 plotEnrichedHeatmaps(sm)
 ```
 
-![](multiRegionPlot_files/figure-html/unnamed-chunk-10-1.png)
+![](multiRegionPlot_files/figure-html/GRangesList-1.png)
 
 ### Heatmap rasterization
 
@@ -340,7 +340,7 @@ approach is to use hierarchical clustering of the rows:
 plotEnrichedHeatmaps(exampleESE, cluster_rows=TRUE)
 ```
 
-![](multiRegionPlot_files/figure-html/unnamed-chunk-11-1.png)
+![](multiRegionPlot_files/figure-html/clusterRows1-1.png)
 
 In this example, this already reveals important patterns in the data,
 namely the fact that p300 binding is associated with H3K27ac and tends
@@ -366,7 +366,7 @@ plotEnrichedHeatmaps(exampleESE, row_split="cluster",
                      mean_color=c("1"="red", "2"="blue"))
 ```
 
-![](multiRegionPlot_files/figure-html/unnamed-chunk-12-1.png)
+![](multiRegionPlot_files/figure-html/clusterRows2-1.png)
 
 Note that here we are splitting into 3 clusters, you can also provide a
 range of values (e.g. `k=2:8`) and the function will also return cluster
@@ -502,7 +502,7 @@ o <- cbind(o1,o2,o3)
 plotEnrichedHeatmaps(o, scale_title="%\nmethylation", axis_name=c("TSS","TES"))
 ```
 
-![](multiRegionPlot_files/figure-html/unnamed-chunk-16-1.png)
+![](multiRegionPlot_files/figure-html/plotDNAme-1.png)
 
 Here we use `type="scaled"` to scale the gene bodies to the same size,
 since these can have very different sizes. The first heatmap is the
@@ -529,7 +529,7 @@ i.e. that the regions downstream of the genes and upstream of the
 promoters are, most of the time, as methylated as the gene bodies.
 
 Smoothing is performed by
-*[EnrichedHeatmap](https://bioconductor.org/packages/3.22/EnrichedHeatmap)*;
+*[EnrichedHeatmap](https://bioconductor.org/packages/3.23/EnrichedHeatmap)*;
 see
 [`?EnrichedHeatmap::normalizeToMatrix`](https://rdrr.io/pkg/EnrichedHeatmap/man/normalizeToMatrix.html)
 for more information/customization.
@@ -543,7 +543,7 @@ for more information/customization.
 sessionInfo()
 ```
 
-    ## R version 4.5.3 (2026-03-11)
+    ## R version 4.6.0 (2026-04-24)
     ## Platform: x86_64-pc-linux-gnu
     ## Running under: Ubuntu 24.04.4 LTS
     ## 
@@ -565,83 +565,57 @@ sessionInfo()
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] ggplot2_4.0.2               epiwraps_0.99.108          
-    ##  [3] EnrichedHeatmap_1.40.1      ComplexHeatmap_2.26.1      
-    ##  [5] SummarizedExperiment_1.40.0 Biobase_2.70.0             
-    ##  [7] GenomicRanges_1.62.1        Seqinfo_1.0.0              
-    ##  [9] IRanges_2.44.0              S4Vectors_0.48.0           
-    ## [11] BiocGenerics_0.56.0         generics_0.1.4             
-    ## [13] MatrixGenerics_1.22.0       matrixStats_1.5.0          
-    ## [15] BiocStyle_2.38.0           
+    ##  [1] ggplot2_4.0.3               epiwraps_0.99.113          
+    ##  [3] EnrichedHeatmap_1.41.1      ComplexHeatmap_2.27.1      
+    ##  [5] SummarizedExperiment_1.41.1 Biobase_2.71.0             
+    ##  [7] GenomicRanges_1.63.2        Seqinfo_1.1.0              
+    ##  [9] IRanges_2.45.0              S4Vectors_0.49.2           
+    ## [11] BiocGenerics_0.57.1         generics_0.1.4             
+    ## [13] MatrixGenerics_1.23.0       matrixStats_1.5.0          
+    ## [15] BiocStyle_2.39.0           
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] RColorBrewer_1.1-3          rstudioapi_0.18.0          
-    ##   [3] jsonlite_2.0.0              shape_1.4.6.1              
-    ##   [5] magrittr_2.0.4              magick_2.9.1               
-    ##   [7] GenomicFeatures_1.62.0      farver_2.1.2               
-    ##   [9] rmarkdown_2.31              GlobalOptions_0.1.3        
-    ##  [11] fs_2.0.1                    BiocIO_1.20.0              
-    ##  [13] ragg_1.5.2                  vctrs_0.7.2                
-    ##  [15] memoise_2.0.1               Rsamtools_2.26.0           
-    ##  [17] RCurl_1.98-1.18             base64enc_0.1-6            
-    ##  [19] htmltools_0.5.9             S4Arrays_1.10.1            
-    ##  [21] progress_1.2.3              curl_7.0.0                 
-    ##  [23] SparseArray_1.10.10         Formula_1.2-5              
-    ##  [25] sass_0.4.10                 bslib_0.10.0               
-    ##  [27] htmlwidgets_1.6.4           desc_1.4.3                 
-    ##  [29] Gviz_1.54.0                 httr2_1.2.2                
-    ##  [31] cachem_1.1.0                GenomicAlignments_1.46.0   
-    ##  [33] lifecycle_1.0.5             iterators_1.0.14           
-    ##  [35] pkgconfig_2.0.3             Matrix_1.7-4               
-    ##  [37] R6_2.6.1                    fastmap_1.2.0              
-    ##  [39] clue_0.3-68                 digest_0.6.39              
-    ##  [41] TFMPvalue_1.0.0             colorspace_2.1-2           
-    ##  [43] AnnotationDbi_1.72.0        textshaping_1.0.5          
-    ##  [45] Hmisc_5.2-5                 RSQLite_2.4.6              
-    ##  [47] labeling_0.4.3              seqLogo_1.76.0             
-    ##  [49] filelock_1.0.3              httr_1.4.8                 
-    ##  [51] abind_1.4-8                 compiler_4.5.3             
-    ##  [53] withr_3.0.2                 bit64_4.6.0-1              
-    ##  [55] doParallel_1.0.17           backports_1.5.0            
-    ##  [57] htmlTable_2.4.3             S7_0.2.1                   
-    ##  [59] BiocParallel_1.44.0         DBI_1.3.0                  
-    ##  [61] biomaRt_2.66.2              rappdirs_0.3.4             
-    ##  [63] DelayedArray_0.36.1         rjson_0.2.23               
-    ##  [65] gtools_3.9.5                caTools_1.18.3             
-    ##  [67] tools_4.5.3                 foreign_0.8-91             
-    ##  [69] nnet_7.3-20                 glue_1.8.0                 
-    ##  [71] restfulr_0.0.16             checkmate_2.3.4            
-    ##  [73] cluster_2.1.8.2             TFBSTools_1.48.0           
-    ##  [75] gtable_0.3.6                BSgenome_1.78.0            
-    ##  [77] ensembldb_2.34.0            data.table_1.18.2.1        
-    ##  [79] hms_1.1.4                   XVector_0.50.0             
-    ##  [81] motifmatchr_1.32.0          foreach_1.5.2              
-    ##  [83] pillar_1.11.1               stringr_1.6.0              
-    ##  [85] circlize_0.4.17             dplyr_1.2.0                
-    ##  [87] BiocFileCache_3.0.0         lattice_0.22-9             
-    ##  [89] deldir_2.0-4                rtracklayer_1.70.1         
-    ##  [91] bit_4.6.0                   biovizBase_1.58.0          
-    ##  [93] DirichletMultinomial_1.52.0 tidyselect_1.2.1           
-    ##  [95] locfit_1.5-9.12             pbapply_1.7-4              
-    ##  [97] Biostrings_2.78.0           knitr_1.51                 
-    ##  [99] gridExtra_2.3               bookdown_0.46              
-    ## [101] ProtGenerics_1.42.0         xfun_0.57                  
-    ## [103] stringi_1.8.7               UCSC.utils_1.6.1           
-    ## [105] lazyeval_0.2.2              yaml_2.3.12                
-    ## [107] evaluate_1.0.5              codetools_0.2-20           
-    ## [109] cigarillo_1.0.0             interp_1.1-6               
-    ## [111] GenomicFiles_1.46.0         tibble_3.3.1               
-    ## [113] BiocManager_1.30.27         cli_3.6.5                  
-    ## [115] rpart_4.1.24                systemfonts_1.3.2          
-    ## [117] jquerylib_0.1.4             dichromat_2.0-0.1          
-    ## [119] Rcpp_1.1.1                  GenomeInfoDb_1.46.2        
-    ## [121] dbplyr_2.5.2                png_0.1-9                  
-    ## [123] XML_3.99-0.23               parallel_4.5.3             
-    ## [125] pkgdown_2.2.0               blob_1.3.0                 
-    ## [127] prettyunits_1.2.0           jpeg_0.1-11                
-    ## [129] latticeExtra_0.6-31         AnnotationFilter_1.34.0    
-    ## [131] bitops_1.0-9                pwalign_1.6.0              
-    ## [133] viridisLite_0.4.3           VariantAnnotation_1.56.0   
-    ## [135] scales_1.4.0                crayon_1.5.3               
-    ## [137] GetoptLong_1.1.0            rlang_1.1.7                
-    ## [139] cowplot_1.2.0               KEGGREST_1.50.0
+    ##   [1] RColorBrewer_1.1-3       rstudioapi_0.18.0        jsonlite_2.0.0          
+    ##   [4] shape_1.4.6.1            magrittr_2.0.5           magick_2.9.1            
+    ##   [7] GenomicFeatures_1.63.2   farver_2.1.2             rmarkdown_2.31          
+    ##  [10] GlobalOptions_0.1.4      fs_2.1.0                 BiocIO_1.21.0           
+    ##  [13] ragg_1.5.2               vctrs_0.7.3              memoise_2.0.1           
+    ##  [16] Rsamtools_2.27.2         RCurl_1.98-1.18          base64enc_0.1-6         
+    ##  [19] htmltools_0.5.9          S4Arrays_1.11.1          progress_1.2.3          
+    ##  [22] curl_7.1.0               SparseArray_1.11.13      Formula_1.2-5           
+    ##  [25] sass_0.4.10              bslib_0.10.0             htmlwidgets_1.6.4       
+    ##  [28] desc_1.4.3               Gviz_1.55.0              httr2_1.2.2             
+    ##  [31] cachem_1.1.0             GenomicAlignments_1.47.0 lifecycle_1.0.5         
+    ##  [34] iterators_1.0.14         pkgconfig_2.0.3          Matrix_1.7-5            
+    ##  [37] R6_2.6.1                 fastmap_1.2.0            clue_0.3-68             
+    ##  [40] digest_0.6.39            colorspace_2.1-2         AnnotationDbi_1.73.1    
+    ##  [43] textshaping_1.0.5        Hmisc_5.2-5              RSQLite_2.4.6           
+    ##  [46] labeling_0.4.3           filelock_1.0.3           httr_1.4.8              
+    ##  [49] abind_1.4-8              compiler_4.6.0           withr_3.0.2             
+    ##  [52] bit64_4.8.0              doParallel_1.0.17        backports_1.5.1         
+    ##  [55] htmlTable_2.5.0          S7_0.2.2                 BiocParallel_1.45.0     
+    ##  [58] DBI_1.3.0                biomaRt_2.67.7           rappdirs_0.3.4          
+    ##  [61] DelayedArray_0.37.1      rjson_0.2.23             tools_4.6.0             
+    ##  [64] foreign_0.8-91           nnet_7.3-20              glue_1.8.1              
+    ##  [67] restfulr_0.0.16          checkmate_2.3.4          cluster_2.1.8.2         
+    ##  [70] gtable_0.3.6             BSgenome_1.79.1          ensembldb_2.35.0        
+    ##  [73] data.table_1.18.2.1      hms_1.1.4                XVector_0.51.0          
+    ##  [76] foreach_1.5.2            pillar_1.11.1            stringr_1.6.0           
+    ##  [79] circlize_0.4.18          dplyr_1.2.1              BiocFileCache_3.1.0     
+    ##  [82] lattice_0.22-9           deldir_2.0-4             rtracklayer_1.71.3      
+    ##  [85] bit_4.6.0                biovizBase_1.59.0        tidyselect_1.2.1        
+    ##  [88] locfit_1.5-9.12          pbapply_1.7-4            Biostrings_2.79.5       
+    ##  [91] knitr_1.51               gridExtra_2.3            bookdown_0.46           
+    ##  [94] ProtGenerics_1.43.0      xfun_0.57                stringi_1.8.7           
+    ##  [97] UCSC.utils_1.7.1         lazyeval_0.2.3           yaml_2.3.12             
+    ## [100] evaluate_1.0.5           codetools_0.2-20         cigarillo_1.1.0         
+    ## [103] interp_1.1-6             GenomicFiles_1.47.0      tibble_3.3.1            
+    ## [106] BiocManager_1.30.27      cli_3.6.6                rpart_4.1.27            
+    ## [109] systemfonts_1.3.2        jquerylib_0.1.4          dichromat_2.0-0.1       
+    ## [112] Rcpp_1.1.1-1             GenomeInfoDb_1.47.2      dbplyr_2.5.2            
+    ## [115] png_0.1-9                XML_3.99-0.23            parallel_4.6.0          
+    ## [118] pkgdown_2.2.0            blob_1.3.0               prettyunits_1.2.0       
+    ## [121] jpeg_0.1-11              latticeExtra_0.6-31      AnnotationFilter_1.35.0 
+    ## [124] bitops_1.0-9             viridisLite_0.4.3        VariantAnnotation_1.57.1
+    ## [127] scales_1.4.0             crayon_1.5.3             GetoptLong_1.1.1        
+    ## [130] rlang_1.2.0              cowplot_1.2.0            KEGGREST_1.51.1

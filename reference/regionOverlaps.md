@@ -11,9 +11,11 @@ regionOverlaps(
   mode = c("reduced", "pairwise"),
   ignore.strand = TRUE,
   cluster = length(listOfRegions) > 2,
+  colorBy = c("overlapCoef", "jaccard"),
+  ...,
+  returnValues = FALSE,
   color = viridis::plasma(100),
-  number_color = "black",
-  ...
+  number_color = "black"
 )
 ```
 
@@ -33,11 +35,25 @@ regionOverlaps(
 
 - ignore.strand:
 
-  Logical; whether to ignore strand for overlaps
+  Logical; whether to ignore strand for overlaps (default TRUE).
 
 - cluster:
 
   Logical; whether to cluster rows/columns
+
+- colorBy:
+
+  Whether to color by 'overlapCoef' (default), or by 'jaccard' index.
+
+- ...:
+
+  Passed to
+  [`pheatmap`](https://rdrr.io/pkg/ComplexHeatmap/man/pheatmap.html)
+
+- returnValues:
+
+  Logical; whether to return the matrix of requested values instead of
+  plotting.
 
 - color:
 
@@ -47,15 +63,11 @@ regionOverlaps(
 
   Values color
 
-- ...:
-
-  Passed to
-  [`pheatmap`](https://rdrr.io/pkg/ComplexHeatmap/man/pheatmap.html)
-
 ## Value
 
 A \`Heatmap\` showing the overlap coefficient as colors, and the overlap
-size as values.
+size as values. Alternatively, if \`returnValues=TRUE\`, a matrix of the
+requested values.
 
 ## Examples
 

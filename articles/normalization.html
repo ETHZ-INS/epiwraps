@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.108</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.113</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,6 +45,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="http://github.com/ETHZ-INS/epiwraps/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -64,7 +65,8 @@ Germain</h4>
             <address class="author_afil">
       Lab of Statistical Bioinformatics, University of Zürich;D-HEST
 Institute for Neuroscience, ETH Zürich,
-Switzerland<br><div class="d-none name"><code>normalization.Rmd</code></div>
+Switzerland<br><small class="dont-index">Source: <a href="http://github.com/ETHZ-INS/epiwraps/blob/main/vignettes/normalization.Rmd" class="external-link"><code>vignettes/normalization.Rmd</code></a></small>
+      <div class="d-none name"><code>normalization.Rmd</code></div>
     </address>
 </div>
 
@@ -170,21 +172,23 @@ the original scale.</li>
 <span><span class="co">##     1     1</span></span></code></pre>
 <p>In this case, since the files are identical, the factors are both
 1.</p>
-<p>Some normalization methods addtionally require peaks as input,
+<p>Some normalization methods additionally require peaks as input,
 e.g.:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">peaks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/example_peaks.bed"</span>, package<span class="op">=</span><span class="st">"epiwraps"</span><span class="op">)</span></span>
 <span><span class="va">nf</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getNormFactors.html">getNormFactors</a></span><span class="op">(</span><span class="va">bwfiles</span>, peaks <span class="op">=</span> <span class="va">peaks</span>, method<span class="op">=</span><span class="st">"MAnorm"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Comparing coverage in peaks...</span></span></code></pre>
+<pre><code><span><span class="co">## calcNormFactors has been renamed to normLibSizes</span></span>
+<span><span class="co">## calcNormFactors has been renamed to normLibSizes</span></span></code></pre>
 <p>(Note that MAnorm would normally require to have a list of peaks for
 each sample/experiment).</p>
 <p>Once computed, the normalization factors can be applied to an
 <code>EnrichmentSE</code> object:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/signal2Matrix.html">signal2Matrix</a></span><span class="op">(</span><span class="va">bwfiles</span>, <span class="va">peaks</span>, extend<span class="op">=</span><span class="fl">1000L</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span></span>
 <span><span class="co">## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw</span></span></code></pre>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/renormalizeSignalMatrices.html">renormalizeSignalMatrices</a></span><span class="op">(</span><span class="va">sm</span>, scaleFactors<span class="op">=</span><span class="va">nf</span><span class="op">)</span></span>
 <span><span class="va">sm</span></span></code></pre></div>
 <pre><code><span><span class="co">## class: EnrichmentSE </span></span>
@@ -231,17 +235,17 @@ the same across tracks/samples.</li>
 </ul>
 <p>To illustrate these, we will first introduce some difference between
 our two tracks using arbitrary factors:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/renormalizeSignalMatrices.html">renormalizeSignalMatrices</a></span><span class="op">(</span><span class="va">sm</span>, scaleFactors<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">4</span><span class="op">)</span>, toAssay<span class="op">=</span><span class="st">"test"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">sm</span>, assay <span class="op">=</span> <span class="st">"test"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="normalization_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="700"></p>
+<p><img src="normalization_files/figure-html/fakeDiff-1.png" class="r-plt" alt="" width="700"></p>
 <p>Then we can normalize:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/renormalizeSignalMatrices.html">renormalizeSignalMatrices</a></span><span class="op">(</span><span class="va">sm</span>, method<span class="op">=</span><span class="st">"top"</span>, fromAssay<span class="op">=</span><span class="st">"test"</span><span class="op">)</span></span>
 <span><span class="co"># again this adds an assay to the object, which will be automatically used when plotting:</span></span>
 <span><span class="fu"><a href="../reference/plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">sm</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Using assay topNormalized</span></span></code></pre>
-<p><img src="normalization_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="700"></p>
+<p><img src="normalization_files/figure-html/renormalizeSignalMatrices2-1.png" class="r-plt" alt="" width="700"></p>
 <p>And we’ve recovered comparable signal across the two
 tracks/samples.</p>
 <p><br><br></p>
@@ -249,9 +253,9 @@ tracks/samples.</p>
 <div class="section level2">
 <h2 class="unnumbered" id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R version 4.5.3 (2026-03-11)</span></span>
+<pre><code><span><span class="co">## R version 4.6.0 (2026-04-24)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
 <span><span class="co">## Running under: Ubuntu 24.04.4 LTS</span></span>
 <span><span class="co">## </span></span>
@@ -273,86 +277,60 @@ tracks/samples.</p>
 <span><span class="co">## [8] methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] epiwraps_0.99.108           EnrichedHeatmap_1.40.1     </span></span>
-<span><span class="co">##  [3] ComplexHeatmap_2.26.1       SummarizedExperiment_1.40.0</span></span>
-<span><span class="co">##  [5] Biobase_2.70.0              GenomicRanges_1.62.1       </span></span>
-<span><span class="co">##  [7] Seqinfo_1.0.0               IRanges_2.44.0             </span></span>
-<span><span class="co">##  [9] S4Vectors_0.48.0            BiocGenerics_0.56.0        </span></span>
-<span><span class="co">## [11] generics_0.1.4              MatrixGenerics_1.22.0      </span></span>
-<span><span class="co">## [13] matrixStats_1.5.0           BiocStyle_2.38.0           </span></span>
+<span><span class="co">##  [1] epiwraps_0.99.113           EnrichedHeatmap_1.41.1     </span></span>
+<span><span class="co">##  [3] ComplexHeatmap_2.27.1       SummarizedExperiment_1.41.1</span></span>
+<span><span class="co">##  [5] Biobase_2.71.0              GenomicRanges_1.63.2       </span></span>
+<span><span class="co">##  [7] Seqinfo_1.1.0               IRanges_2.45.0             </span></span>
+<span><span class="co">##  [9] S4Vectors_0.49.2            BiocGenerics_0.57.1        </span></span>
+<span><span class="co">## [11] generics_0.1.4              MatrixGenerics_1.23.0      </span></span>
+<span><span class="co">## [13] matrixStats_1.5.0           BiocStyle_2.39.0           </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##   [1] RColorBrewer_1.1-3          rstudioapi_0.18.0          </span></span>
-<span><span class="co">##   [3] jsonlite_2.0.0              shape_1.4.6.1              </span></span>
-<span><span class="co">##   [5] magrittr_2.0.4              magick_2.9.1               </span></span>
-<span><span class="co">##   [7] GenomicFeatures_1.62.0      farver_2.1.2               </span></span>
-<span><span class="co">##   [9] rmarkdown_2.31              GlobalOptions_0.1.3        </span></span>
-<span><span class="co">##  [11] fs_2.0.1                    BiocIO_1.20.0              </span></span>
-<span><span class="co">##  [13] ragg_1.5.2                  vctrs_0.7.2                </span></span>
-<span><span class="co">##  [15] memoise_2.0.1               Rsamtools_2.26.0           </span></span>
-<span><span class="co">##  [17] RCurl_1.98-1.18             base64enc_0.1-6            </span></span>
-<span><span class="co">##  [19] htmltools_0.5.9             S4Arrays_1.10.1            </span></span>
-<span><span class="co">##  [21] progress_1.2.3              curl_7.0.0                 </span></span>
-<span><span class="co">##  [23] SparseArray_1.10.10         Formula_1.2-5              </span></span>
-<span><span class="co">##  [25] sass_0.4.10                 bslib_0.10.0               </span></span>
-<span><span class="co">##  [27] htmlwidgets_1.6.4           desc_1.4.3                 </span></span>
-<span><span class="co">##  [29] Gviz_1.54.0                 httr2_1.2.2                </span></span>
-<span><span class="co">##  [31] cachem_1.1.0                GenomicAlignments_1.46.0   </span></span>
-<span><span class="co">##  [33] lifecycle_1.0.5             iterators_1.0.14           </span></span>
-<span><span class="co">##  [35] pkgconfig_2.0.3             Matrix_1.7-4               </span></span>
-<span><span class="co">##  [37] R6_2.6.1                    fastmap_1.2.0              </span></span>
-<span><span class="co">##  [39] clue_0.3-68                 digest_0.6.39              </span></span>
-<span><span class="co">##  [41] TFMPvalue_1.0.0             colorspace_2.1-2           </span></span>
-<span><span class="co">##  [43] AnnotationDbi_1.72.0        textshaping_1.0.5          </span></span>
-<span><span class="co">##  [45] Hmisc_5.2-5                 RSQLite_2.4.6              </span></span>
-<span><span class="co">##  [47] seqLogo_1.76.0              filelock_1.0.3             </span></span>
-<span><span class="co">##  [49] httr_1.4.8                  abind_1.4-8                </span></span>
-<span><span class="co">##  [51] compiler_4.5.3              bit64_4.6.0-1              </span></span>
-<span><span class="co">##  [53] doParallel_1.0.17           backports_1.5.0            </span></span>
-<span><span class="co">##  [55] htmlTable_2.4.3             S7_0.2.1                   </span></span>
-<span><span class="co">##  [57] BiocParallel_1.44.0         DBI_1.3.0                  </span></span>
-<span><span class="co">##  [59] biomaRt_2.66.2              rappdirs_0.3.4             </span></span>
-<span><span class="co">##  [61] DelayedArray_0.36.1         rjson_0.2.23               </span></span>
-<span><span class="co">##  [63] gtools_3.9.5                caTools_1.18.3             </span></span>
-<span><span class="co">##  [65] tools_4.5.3                 foreign_0.8-91             </span></span>
-<span><span class="co">##  [67] nnet_7.3-20                 glue_1.8.0                 </span></span>
-<span><span class="co">##  [69] restfulr_0.0.16             checkmate_2.3.4            </span></span>
-<span><span class="co">##  [71] cluster_2.1.8.2             TFBSTools_1.48.0           </span></span>
-<span><span class="co">##  [73] gtable_0.3.6                BSgenome_1.78.0            </span></span>
-<span><span class="co">##  [75] ensembldb_2.34.0            data.table_1.18.2.1        </span></span>
-<span><span class="co">##  [77] hms_1.1.4                   XVector_0.50.0             </span></span>
-<span><span class="co">##  [79] motifmatchr_1.32.0          foreach_1.5.2              </span></span>
-<span><span class="co">##  [81] pillar_1.11.1               stringr_1.6.0              </span></span>
-<span><span class="co">##  [83] limma_3.66.0                circlize_0.4.17            </span></span>
-<span><span class="co">##  [85] dplyr_1.2.0                 BiocFileCache_3.0.0        </span></span>
-<span><span class="co">##  [87] lattice_0.22-9              deldir_2.0-4               </span></span>
-<span><span class="co">##  [89] rtracklayer_1.70.1          bit_4.6.0                  </span></span>
-<span><span class="co">##  [91] biovizBase_1.58.0           DirichletMultinomial_1.52.0</span></span>
-<span><span class="co">##  [93] tidyselect_1.2.1            locfit_1.5-9.12            </span></span>
-<span><span class="co">##  [95] pbapply_1.7-4               Biostrings_2.78.0          </span></span>
-<span><span class="co">##  [97] knitr_1.51                  gridExtra_2.3              </span></span>
-<span><span class="co">##  [99] bookdown_0.46               ProtGenerics_1.42.0        </span></span>
-<span><span class="co">## [101] edgeR_4.8.2                 xfun_0.57                  </span></span>
-<span><span class="co">## [103] statmod_1.5.1               stringi_1.8.7              </span></span>
-<span><span class="co">## [105] UCSC.utils_1.6.1            lazyeval_0.2.2             </span></span>
-<span><span class="co">## [107] yaml_2.3.12                 evaluate_1.0.5             </span></span>
-<span><span class="co">## [109] codetools_0.2-20            cigarillo_1.0.0            </span></span>
-<span><span class="co">## [111] interp_1.1-6                GenomicFiles_1.46.0        </span></span>
-<span><span class="co">## [113] tibble_3.3.1                BiocManager_1.30.27        </span></span>
-<span><span class="co">## [115] cli_3.6.5                   rpart_4.1.24               </span></span>
-<span><span class="co">## [117] systemfonts_1.3.2           jquerylib_0.1.4            </span></span>
-<span><span class="co">## [119] dichromat_2.0-0.1           Rcpp_1.1.1                 </span></span>
-<span><span class="co">## [121] GenomeInfoDb_1.46.2         dbplyr_2.5.2               </span></span>
-<span><span class="co">## [123] png_0.1-9                   XML_3.99-0.23              </span></span>
-<span><span class="co">## [125] parallel_4.5.3              pkgdown_2.2.0              </span></span>
-<span><span class="co">## [127] ggplot2_4.0.2               blob_1.3.0                 </span></span>
-<span><span class="co">## [129] prettyunits_1.2.0           jpeg_0.1-11                </span></span>
-<span><span class="co">## [131] latticeExtra_0.6-31         AnnotationFilter_1.34.0    </span></span>
-<span><span class="co">## [133] bitops_1.0-9                pwalign_1.6.0              </span></span>
-<span><span class="co">## [135] viridisLite_0.4.3           VariantAnnotation_1.56.0   </span></span>
-<span><span class="co">## [137] scales_1.4.0                crayon_1.5.3               </span></span>
-<span><span class="co">## [139] GetoptLong_1.1.0            rlang_1.1.7                </span></span>
-<span><span class="co">## [141] cowplot_1.2.0               KEGGREST_1.50.0</span></span></code></pre>
+<span><span class="co">##   [1] RColorBrewer_1.1-3       rstudioapi_0.18.0        jsonlite_2.0.0          </span></span>
+<span><span class="co">##   [4] shape_1.4.6.1            magrittr_2.0.5           magick_2.9.1            </span></span>
+<span><span class="co">##   [7] GenomicFeatures_1.63.2   farver_2.1.2             rmarkdown_2.31          </span></span>
+<span><span class="co">##  [10] GlobalOptions_0.1.4      fs_2.1.0                 BiocIO_1.21.0           </span></span>
+<span><span class="co">##  [13] ragg_1.5.2               vctrs_0.7.3              memoise_2.0.1           </span></span>
+<span><span class="co">##  [16] Rsamtools_2.27.2         RCurl_1.98-1.18          base64enc_0.1-6         </span></span>
+<span><span class="co">##  [19] htmltools_0.5.9          S4Arrays_1.11.1          progress_1.2.3          </span></span>
+<span><span class="co">##  [22] curl_7.1.0               SparseArray_1.11.13      Formula_1.2-5           </span></span>
+<span><span class="co">##  [25] sass_0.4.10              bslib_0.10.0             htmlwidgets_1.6.4       </span></span>
+<span><span class="co">##  [28] desc_1.4.3               Gviz_1.55.0              httr2_1.2.2             </span></span>
+<span><span class="co">##  [31] cachem_1.1.0             GenomicAlignments_1.47.0 lifecycle_1.0.5         </span></span>
+<span><span class="co">##  [34] iterators_1.0.14         pkgconfig_2.0.3          Matrix_1.7-5            </span></span>
+<span><span class="co">##  [37] R6_2.6.1                 fastmap_1.2.0            clue_0.3-68             </span></span>
+<span><span class="co">##  [40] digest_0.6.39            colorspace_2.1-2         AnnotationDbi_1.73.1    </span></span>
+<span><span class="co">##  [43] textshaping_1.0.5        Hmisc_5.2-5              RSQLite_2.4.6           </span></span>
+<span><span class="co">##  [46] filelock_1.0.3           httr_1.4.8               abind_1.4-8             </span></span>
+<span><span class="co">##  [49] compiler_4.6.0           bit64_4.8.0              doParallel_1.0.17       </span></span>
+<span><span class="co">##  [52] backports_1.5.1          htmlTable_2.5.0          S7_0.2.2                </span></span>
+<span><span class="co">##  [55] BiocParallel_1.45.0      DBI_1.3.0                biomaRt_2.67.7          </span></span>
+<span><span class="co">##  [58] rappdirs_0.3.4           DelayedArray_0.37.1      rjson_0.2.23            </span></span>
+<span><span class="co">##  [61] tools_4.6.0              foreign_0.8-91           nnet_7.3-20             </span></span>
+<span><span class="co">##  [64] glue_1.8.1               restfulr_0.0.16          checkmate_2.3.4         </span></span>
+<span><span class="co">##  [67] cluster_2.1.8.2          gtable_0.3.6             BSgenome_1.79.1         </span></span>
+<span><span class="co">##  [70] ensembldb_2.35.0         data.table_1.18.2.1      hms_1.1.4               </span></span>
+<span><span class="co">##  [73] XVector_0.51.0           foreach_1.5.2            pillar_1.11.1           </span></span>
+<span><span class="co">##  [76] stringr_1.6.0            limma_3.67.3             circlize_0.4.18         </span></span>
+<span><span class="co">##  [79] dplyr_1.2.1              BiocFileCache_3.1.0      lattice_0.22-9          </span></span>
+<span><span class="co">##  [82] deldir_2.0-4             rtracklayer_1.71.3       bit_4.6.0               </span></span>
+<span><span class="co">##  [85] biovizBase_1.59.0        tidyselect_1.2.1         locfit_1.5-9.12         </span></span>
+<span><span class="co">##  [88] pbapply_1.7-4            Biostrings_2.79.5        knitr_1.51              </span></span>
+<span><span class="co">##  [91] gridExtra_2.3            bookdown_0.46            ProtGenerics_1.43.0     </span></span>
+<span><span class="co">##  [94] edgeR_4.9.9              xfun_0.57                statmod_1.5.1           </span></span>
+<span><span class="co">##  [97] stringi_1.8.7            UCSC.utils_1.7.1         lazyeval_0.2.3          </span></span>
+<span><span class="co">## [100] yaml_2.3.12              evaluate_1.0.5           codetools_0.2-20        </span></span>
+<span><span class="co">## [103] cigarillo_1.1.0          interp_1.1-6             GenomicFiles_1.47.0     </span></span>
+<span><span class="co">## [106] tibble_3.3.1             BiocManager_1.30.27      cli_3.6.6               </span></span>
+<span><span class="co">## [109] rpart_4.1.27             systemfonts_1.3.2        jquerylib_0.1.4         </span></span>
+<span><span class="co">## [112] dichromat_2.0-0.1        Rcpp_1.1.1-1             GenomeInfoDb_1.47.2     </span></span>
+<span><span class="co">## [115] dbplyr_2.5.2             png_0.1-9                XML_3.99-0.23           </span></span>
+<span><span class="co">## [118] parallel_4.6.0           pkgdown_2.2.0            ggplot2_4.0.3           </span></span>
+<span><span class="co">## [121] blob_1.3.0               prettyunits_1.2.0        jpeg_0.1-11             </span></span>
+<span><span class="co">## [124] latticeExtra_0.6-31      AnnotationFilter_1.35.0  bitops_1.0-9            </span></span>
+<span><span class="co">## [127] viridisLite_0.4.3        VariantAnnotation_1.57.1 scales_1.4.0            </span></span>
+<span><span class="co">## [130] crayon_1.5.3             GetoptLong_1.1.1         rlang_1.2.0             </span></span>
+<span><span class="co">## [133] cowplot_1.2.0            KEGGREST_1.51.1</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

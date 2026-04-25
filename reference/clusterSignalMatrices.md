@@ -76,3 +76,22 @@ If \`k\` is of length 1, a vector of cluster labels, corresponding to
 the rows of \`ml\`. If \`length(k)\>1\`, a list of two data.frames
 containing: 1) the cluster labels at the different resolutions, and 2)
 the variance explained by clusters at each resolution.
+
+## Examples
+
+``` r
+data(exampleESE)
+rowData(exampleESE)$cluster <- clusterSignalMatrices(exampleESE, 3)
+#>   ~87% of the variance explained by clusters
+# we could plot the data clustered:
+plotEnrichedHeatmaps(exampleESE, row_split="cluster")
+
+# we could also try with different values of k:
+cl <- clusterSignalMatrices(exampleESE, 2:5)
+cl$varExplained
+#>   k varExplained
+#> 2 2           79
+#> 3 3           87
+#> 4 4           89
+#> 5 5           90
+```

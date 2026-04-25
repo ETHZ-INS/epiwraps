@@ -9,7 +9,7 @@ EnsDb)."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.108</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.113</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,6 +28,7 @@ EnsDb)."></head><body>
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+<li class="nav-item"><a class="external-link nav-link" href="http://github.com/ETHZ-INS/epiwraps/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -37,7 +38,7 @@ EnsDb)."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>annotateRegions</h1>
-
+      <small class="dont-index">Source: <a href="http://github.com/ETHZ-INS/epiwraps/blob/main/R/annotateRegions.R" class="external-link"><code>R/annotateRegions.R</code></a></small>
       <div class="d-none name"><code>annotateRegions.Rd</code></div>
     </div>
 
@@ -103,6 +104,30 @@ overlaps with `extra`.</p></dd>
     <p>The sorted `regions` object with additional annotation columns.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># we first create some regions we want to annotate:</span></span></span>
+<span class="r-in"><span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu">as</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chrY:2655742-2655890"</span>, <span class="st">"chrY:28730110-28730950"</span><span class="op">)</span>, <span class="st">"GRanges"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># we'll use a lightweight ensembldb annotation for the annotation:</span></span></span>
+<span class="r-in"><span><span class="va">chrY</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"chrY"</span>, package<span class="op">=</span><span class="st">"ensembldb"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">edb</span> <span class="op">&lt;-</span> <span class="fu">EnsDb</span><span class="op">(</span><span class="fu">makeEnsemblSQLiteFromTables</span><span class="op">(</span>path<span class="op">=</span><span class="va">chrY</span> ,dbname<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in EnsDb(makeEnsemblSQLiteFromTables(path = chrY, dbname = tempfile())):</span> could not find function "EnsDb"</span>
+<span class="r-in"><span><span class="co"># we run teh annotation:</span></span></span>
+<span class="r-in"><span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu">annotateRegions</span><span class="op">(</span><span class="va">regions</span>, <span class="va">edb</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'edb' not found</span>
+<span class="r-in"><span><span class="co"># this adds metadata columns to the regions:</span></span></span>
+<span class="r-in"><span><span class="va">regions</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 2 ranges and 0 metadata columns:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       seqnames            ranges strand</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1]     chrY   2655742-2655890      *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [2]     chrY 28730110-28730950      *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 1 sequence from an unspecified genome; no seqlengths</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">regions</span><span class="op">$</span><span class="va">class</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt; table of extent 0 &gt;</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

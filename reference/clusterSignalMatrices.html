@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.108</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.113</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,6 +26,7 @@
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+<li class="nav-item"><a class="external-link nav-link" href="http://github.com/ETHZ-INS/epiwraps/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -35,7 +36,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>clusterSignalMatrices: clusters the regions of a (set of) signal matrices.</h1>
-
+      <small class="dont-index">Source: <a href="http://github.com/ETHZ-INS/epiwraps/blob/main/R/signalMatrices.R" class="external-link"><code>R/signalMatrices.R</code></a></small>
       <div class="d-none name"><code>clusterSignalMatrices.Rd</code></div>
     </div>
 
@@ -117,6 +118,24 @@ scaled together.</p></dd>
   explained by clusters at each resolution.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">rowData</span><span class="op">(</span><span class="va">exampleESE</span><span class="op">)</span><span class="op">$</span><span class="va">cluster</span> <span class="op">&lt;-</span> <span class="fu">clusterSignalMatrices</span><span class="op">(</span><span class="va">exampleESE</span>, <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   ~87% of the variance explained by clusters</span>
+<span class="r-in"><span><span class="co"># we could plot the data clustered:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="plotEnrichedHeatmaps.html">plotEnrichedHeatmaps</a></span><span class="op">(</span><span class="va">exampleESE</span>, row_split<span class="op">=</span><span class="st">"cluster"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="clusterSignalMatrices-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="co"># we could also try with different values of k:</span></span></span>
+<span class="r-in"><span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu">clusterSignalMatrices</span><span class="op">(</span><span class="va">exampleESE</span>, <span class="fl">2</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cl</span><span class="op">$</span><span class="va">varExplained</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   k varExplained</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 2           79</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 3           87</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 4           89</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 5           90</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

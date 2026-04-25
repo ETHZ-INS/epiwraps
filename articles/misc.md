@@ -4,6 +4,42 @@ Abstract
 
 This vignette introduces some more isolated epiwraps functions.
 
+## Getting read counts in regions of interest
+
+The `peakCountsFromBAM` and `peakCountsFromFrags` functions enable the
+construction of SummarizedExperiment objects containing overlap counts
+of regions across samples. `peakCountsFromFrags` is especially geared
+towards single-cell data, splitting the frag file by cell barcodes,
+generating sparse representations and optionally doing pseudo-bulk
+aggregation on the fly.
+
+The functions can also compute fragment length information for each
+region, which can for instance be used with the `betterChromVAR`
+package. For example:
+
+``` r
+suppressPackageStartupMessages(library(epiwraps))
+```
+
+    ## Warning: replacing previous import 'IRanges::median' by 'stats::median' when
+    ## loading 'epiwraps'
+
+``` r
+bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
+# create regions of interest
+peaks <- GRanges(c("seq1","seq1","seq2"), IRanges(c(400,900,500), width=100))
+peakCountsFromBAM(bam, peaks, paired=FALSE, getMedianFragLength=TRUE)
+```
+
+    ## class: RangedSummarizedExperiment 
+    ## dim: 3 1 
+    ## metadata(0):
+    ## assays(1): counts
+    ## rownames(3): seq1:400-499 seq1:900-999 seq2:500-599
+    ## rowData names(1): flbias
+    ## colnames(1): ex1
+    ## colData names(2): total_depth depth
+
 ## Quality control
 
 ### Coverage statistics
@@ -18,13 +54,6 @@ Because our example data spans only part of a chromosome, we’ll exclude
 completely empty regions using the `exclude` parameter, which would
 normally be used to exclude regions likely to be technical artefacts
 (e.g. blacklisted regions).
-
-``` r
-suppressPackageStartupMessages(library(epiwraps))
-```
-
-    ## Warning: replacing previous import 'IRanges::median' by 'stats::median' when
-    ## loading 'epiwraps'
 
 ``` r
 # get the path to an example bigwig file:
@@ -69,22 +98,27 @@ The TSS enrichment can also be calculated and plotted using the
 
 ## Peak calling
 
-A very experimental peak calling function can be used, either against an
-input control or against local or global backgrounds:
+A peak calling function can be used, either against an input control or
+against local or global backgrounds:
 
 ``` r
-p <- callPeaks(bam, fragLength=50)
+p <- callPeaks(bam)
 ```
 
-Note that this function is still under heavy development, and its usage
-at the moment is discouraged!
+## Region merging
+
+The merging of genomic regions with `reduce` tends to produce large
+regions which are undesirable for some downstream analyses. As an
+alternative, the `reduceWithResplit` function splits large merges using
+local overlap minima.
 
 ## Region overlapping
 
 The `GenomicRanges` package offers fast and powerful functions for
 overlapping genomic regions. `epiwraps` includes wrappers around those
 for common tasks, such as calculating and visualizing overlaps across
-multiple sets of regions (see `?regionUpset`,
+multiple sets of regions (see
+[`?regionsToUpset`](https://ethz-ins.github.io/epiwraps/reference/regionsToUpset.md),
 [`?regionOverlaps`](https://ethz-ins.github.io/epiwraps/reference/regionOverlaps.md),
 and
 [`?regionCAT`](https://ethz-ins.github.io/epiwraps/reference/regionCAT.md)).
@@ -98,7 +132,7 @@ and
 sessionInfo()
 ```
 
-    ## R version 4.5.3 (2026-03-11)
+    ## R version 4.6.0 (2026-04-24)
     ## Platform: x86_64-pc-linux-gnu
     ## Running under: Ubuntu 24.04.4 LTS
     ## 
@@ -120,82 +154,56 @@ sessionInfo()
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] epiwraps_0.99.108           EnrichedHeatmap_1.40.1     
-    ##  [3] ComplexHeatmap_2.26.1       SummarizedExperiment_1.40.0
-    ##  [5] Biobase_2.70.0              GenomicRanges_1.62.1       
-    ##  [7] Seqinfo_1.0.0               IRanges_2.44.0             
-    ##  [9] S4Vectors_0.48.0            BiocGenerics_0.56.0        
-    ## [11] generics_0.1.4              MatrixGenerics_1.22.0      
-    ## [13] matrixStats_1.5.0           BiocStyle_2.38.0           
+    ##  [1] epiwraps_0.99.113           EnrichedHeatmap_1.41.1     
+    ##  [3] ComplexHeatmap_2.27.1       SummarizedExperiment_1.41.1
+    ##  [5] Biobase_2.71.0              GenomicRanges_1.63.2       
+    ##  [7] Seqinfo_1.1.0               IRanges_2.45.0             
+    ##  [9] S4Vectors_0.49.2            BiocGenerics_0.57.1        
+    ## [11] generics_0.1.4              MatrixGenerics_1.23.0      
+    ## [13] matrixStats_1.5.0           BiocStyle_2.39.0           
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] RColorBrewer_1.1-3          rstudioapi_0.18.0          
-    ##   [3] jsonlite_2.0.0              shape_1.4.6.1              
-    ##   [5] magrittr_2.0.4              GenomicFeatures_1.62.0     
-    ##   [7] farver_2.1.2                rmarkdown_2.31             
-    ##   [9] GlobalOptions_0.1.3         fs_2.0.1                   
-    ##  [11] BiocIO_1.20.0               ragg_1.5.2                 
-    ##  [13] vctrs_0.7.2                 memoise_2.0.1              
-    ##  [15] Rsamtools_2.26.0            RCurl_1.98-1.18            
-    ##  [17] base64enc_0.1-6             htmltools_0.5.9            
-    ##  [19] S4Arrays_1.10.1             progress_1.2.3             
-    ##  [21] curl_7.0.0                  SparseArray_1.10.10        
-    ##  [23] Formula_1.2-5               sass_0.4.10                
-    ##  [25] bslib_0.10.0                htmlwidgets_1.6.4          
-    ##  [27] desc_1.4.3                  Gviz_1.54.0                
-    ##  [29] httr2_1.2.2                 cachem_1.1.0               
-    ##  [31] GenomicAlignments_1.46.0    lifecycle_1.0.5            
-    ##  [33] iterators_1.0.14            pkgconfig_2.0.3            
-    ##  [35] Matrix_1.7-4                R6_2.6.1                   
-    ##  [37] fastmap_1.2.0               clue_0.3-68                
-    ##  [39] digest_0.6.39               TFMPvalue_1.0.0            
-    ##  [41] colorspace_2.1-2            AnnotationDbi_1.72.0       
-    ##  [43] textshaping_1.0.5           Hmisc_5.2-5                
-    ##  [45] RSQLite_2.4.6               labeling_0.4.3             
-    ##  [47] seqLogo_1.76.0              filelock_1.0.3             
-    ##  [49] httr_1.4.8                  abind_1.4-8                
-    ##  [51] compiler_4.5.3              withr_3.0.2                
-    ##  [53] bit64_4.6.0-1               doParallel_1.0.17          
-    ##  [55] backports_1.5.0             htmlTable_2.4.3            
-    ##  [57] S7_0.2.1                    BiocParallel_1.44.0        
-    ##  [59] DBI_1.3.0                   biomaRt_2.66.2             
-    ##  [61] rappdirs_0.3.4              DelayedArray_0.36.1        
-    ##  [63] rjson_0.2.23                gtools_3.9.5               
-    ##  [65] caTools_1.18.3              tools_4.5.3                
-    ##  [67] foreign_0.8-91              nnet_7.3-20                
-    ##  [69] glue_1.8.0                  restfulr_0.0.16            
-    ##  [71] checkmate_2.3.4             cluster_2.1.8.2            
-    ##  [73] TFBSTools_1.48.0            gtable_0.3.6               
-    ##  [75] BSgenome_1.78.0             ensembldb_2.34.0           
-    ##  [77] data.table_1.18.2.1         hms_1.1.4                  
-    ##  [79] XVector_0.50.0              motifmatchr_1.32.0         
-    ##  [81] foreach_1.5.2               pillar_1.11.1              
-    ##  [83] stringr_1.6.0               circlize_0.4.17            
-    ##  [85] dplyr_1.2.0                 BiocFileCache_3.0.0        
-    ##  [87] lattice_0.22-9              deldir_2.0-4               
-    ##  [89] rtracklayer_1.70.1          bit_4.6.0                  
-    ##  [91] biovizBase_1.58.0           DirichletMultinomial_1.52.0
-    ##  [93] tidyselect_1.2.1            locfit_1.5-9.12            
-    ##  [95] pbapply_1.7-4               Biostrings_2.78.0          
-    ##  [97] knitr_1.51                  gridExtra_2.3              
-    ##  [99] bookdown_0.46               ProtGenerics_1.42.0        
-    ## [101] xfun_0.57                   stringi_1.8.7              
-    ## [103] UCSC.utils_1.6.1            lazyeval_0.2.2             
-    ## [105] yaml_2.3.12                 evaluate_1.0.5             
-    ## [107] codetools_0.2-20            cigarillo_1.0.0            
-    ## [109] interp_1.1-6                GenomicFiles_1.46.0        
-    ## [111] tibble_3.3.1                BiocManager_1.30.27        
-    ## [113] cli_3.6.5                   rpart_4.1.24               
-    ## [115] systemfonts_1.3.2           jquerylib_0.1.4            
-    ## [117] dichromat_2.0-0.1           Rcpp_1.1.1                 
-    ## [119] GenomeInfoDb_1.46.2         dbplyr_2.5.2               
-    ## [121] png_0.1-9                   XML_3.99-0.23              
-    ## [123] parallel_4.5.3              pkgdown_2.2.0              
-    ## [125] ggplot2_4.0.2               blob_1.3.0                 
-    ## [127] prettyunits_1.2.0           jpeg_0.1-11                
-    ## [129] latticeExtra_0.6-31         AnnotationFilter_1.34.0    
-    ## [131] bitops_1.0-9                pwalign_1.6.0              
-    ## [133] viridisLite_0.4.3           VariantAnnotation_1.56.0   
-    ## [135] scales_1.4.0                crayon_1.5.3               
-    ## [137] GetoptLong_1.1.0            rlang_1.1.7                
-    ## [139] cowplot_1.2.0               KEGGREST_1.50.0
+    ##   [1] RColorBrewer_1.1-3       rstudioapi_0.18.0        jsonlite_2.0.0          
+    ##   [4] shape_1.4.6.1            magrittr_2.0.5           GenomicFeatures_1.63.2  
+    ##   [7] farver_2.1.2             rmarkdown_2.31           GlobalOptions_0.1.4     
+    ##  [10] fs_2.1.0                 BiocIO_1.21.0            ragg_1.5.2              
+    ##  [13] vctrs_0.7.3              memoise_2.0.1            Rsamtools_2.27.2        
+    ##  [16] RCurl_1.98-1.18          base64enc_0.1-6          htmltools_0.5.9         
+    ##  [19] S4Arrays_1.11.1          progress_1.2.3           curl_7.1.0              
+    ##  [22] SparseArray_1.11.13      Formula_1.2-5            sass_0.4.10             
+    ##  [25] bslib_0.10.0             htmlwidgets_1.6.4        desc_1.4.3              
+    ##  [28] Gviz_1.55.0              httr2_1.2.2              cachem_1.1.0            
+    ##  [31] GenomicAlignments_1.47.0 lifecycle_1.0.5          iterators_1.0.14        
+    ##  [34] pkgconfig_2.0.3          Matrix_1.7-5             R6_2.6.1                
+    ##  [37] fastmap_1.2.0            clue_0.3-68              digest_0.6.39           
+    ##  [40] colorspace_2.1-2         AnnotationDbi_1.73.1     textshaping_1.0.5       
+    ##  [43] Hmisc_5.2-5              RSQLite_2.4.6            labeling_0.4.3          
+    ##  [46] filelock_1.0.3           httr_1.4.8               abind_1.4-8             
+    ##  [49] compiler_4.6.0           withr_3.0.2              bit64_4.8.0             
+    ##  [52] doParallel_1.0.17        backports_1.5.1          htmlTable_2.5.0         
+    ##  [55] S7_0.2.2                 BiocParallel_1.45.0      DBI_1.3.0               
+    ##  [58] biomaRt_2.67.7           rappdirs_0.3.4           DelayedArray_0.37.1     
+    ##  [61] rjson_0.2.23             tools_4.6.0              foreign_0.8-91          
+    ##  [64] nnet_7.3-20              glue_1.8.1               restfulr_0.0.16         
+    ##  [67] checkmate_2.3.4          cluster_2.1.8.2          gtable_0.3.6            
+    ##  [70] BSgenome_1.79.1          ensembldb_2.35.0         data.table_1.18.2.1     
+    ##  [73] hms_1.1.4                XVector_0.51.0           foreach_1.5.2           
+    ##  [76] pillar_1.11.1            stringr_1.6.0            circlize_0.4.18         
+    ##  [79] dplyr_1.2.1              BiocFileCache_3.1.0      lattice_0.22-9          
+    ##  [82] deldir_2.0-4             rtracklayer_1.71.3       bit_4.6.0               
+    ##  [85] biovizBase_1.59.0        tidyselect_1.2.1         locfit_1.5-9.12         
+    ##  [88] pbapply_1.7-4            Biostrings_2.79.5        knitr_1.51              
+    ##  [91] gridExtra_2.3            bookdown_0.46            ProtGenerics_1.43.0     
+    ##  [94] xfun_0.57                stringi_1.8.7            UCSC.utils_1.7.1        
+    ##  [97] lazyeval_0.2.3           yaml_2.3.12              evaluate_1.0.5          
+    ## [100] codetools_0.2-20         cigarillo_1.1.0          interp_1.1-6            
+    ## [103] GenomicFiles_1.47.0      tibble_3.3.1             BiocManager_1.30.27     
+    ## [106] cli_3.6.6                rpart_4.1.27             systemfonts_1.3.2       
+    ## [109] jquerylib_0.1.4          dichromat_2.0-0.1        Rcpp_1.1.1-1            
+    ## [112] GenomeInfoDb_1.47.2      dbplyr_2.5.2             png_0.1-9               
+    ## [115] XML_3.99-0.23            parallel_4.6.0           pkgdown_2.2.0           
+    ## [118] ggplot2_4.0.3            blob_1.3.0               prettyunits_1.2.0       
+    ## [121] jpeg_0.1-11              latticeExtra_0.6-31      AnnotationFilter_1.35.0 
+    ## [124] bitops_1.0-9             viridisLite_0.4.3        VariantAnnotation_1.57.1
+    ## [127] scales_1.4.0             crayon_1.5.3             GetoptLong_1.1.1        
+    ## [130] rlang_1.2.0              cowplot_1.2.0            KEGGREST_1.51.1

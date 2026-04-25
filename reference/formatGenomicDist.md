@@ -40,3 +40,10 @@ formatGenomicDist(
 ## Value
 
 A character vector.
+
+## Examples
+
+``` r
+formatGenomicDistc(1235000)
+#> Error in formatGenomicDistc(1235000): could not find function "formatGenomicDistc"
+```

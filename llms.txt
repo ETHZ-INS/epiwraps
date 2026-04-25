@@ -85,8 +85,8 @@ effect](https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html).
 - [`clusterSignalMatrices()`](https://ethz-ins.github.io/epiwraps/reference/clusterSignalMatrices.md)
   : clusterSignalMatrices: clusters the regions of a (set of) signal
   matrices.
-- [`computeDeviationsFaster()`](https://ethz-ins.github.io/epiwraps/reference/computeDeviationsFaster.md)
-  : computeDeviationsFaster
+- [`colOverlaps()`](https://ethz-ins.github.io/epiwraps/reference/colOverlaps.md)
+  : colOverlaps
 - [`estimateFragSize()`](https://ethz-ins.github.io/epiwraps/reference/estimateFragSize.md)
   : estimateFragSize
 - [`exampleDNAme`](https://ethz-ins.github.io/epiwraps/reference/exampleDNAme.md)
@@ -122,10 +122,6 @@ effect](https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html).
   : mergeSignalMatrices: aggregates two or more signal matrices.
 - [`ml2ESE()`](https://ethz-ins.github.io/epiwraps/reference/ml2ESE.md)
   : Creates an EnrichmentSE from a list of normalizedMatrix objects
-- [`motifCoOccurence()`](https://ethz-ins.github.io/epiwraps/reference/motifCoOccurence.md)
-  : motifCoOccurence
-- [`motifFootprint()`](https://ethz-ins.github.io/epiwraps/reference/motifFootprint.md)
-  : motifFootprint
 - [`peakCountsFromBAM()`](https://ethz-ins.github.io/epiwraps/reference/peakCountsFromBAM.md)
   : peakCountsFromBAM
 - [`peakCountsFromFrags()`](https://ethz-ins.github.io/epiwraps/reference/peakCountsFromFrags.md)

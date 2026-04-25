@@ -61,3 +61,28 @@ annotateRegions(
 ## Value
 
 The sorted \`regions\` object with additional annotation columns.
+
+## Examples
+
+``` r
+# we first create some regions we want to annotate:
+regions <- as(c("chrY:2655742-2655890", "chrY:28730110-28730950"), "GRanges")
+# we'll use a lightweight ensembldb annotation for the annotation:
+chrY <- system.file("chrY", package="ensembldb")
+edb <- EnsDb(makeEnsemblSQLiteFromTables(path=chrY ,dbname=tempfile()))
+#> Error in EnsDb(makeEnsemblSQLiteFromTables(path = chrY, dbname = tempfile())): could not find function "EnsDb"
+# we run teh annotation:
+regions <- annotateRegions(regions, edb)
+#> Error: object 'edb' not found
+# this adds metadata columns to the regions:
+regions
+#> GRanges object with 2 ranges and 0 metadata columns:
+#>       seqnames            ranges strand
+#>          <Rle>         <IRanges>  <Rle>
+#>   [1]     chrY   2655742-2655890      *
+#>   [2]     chrY 28730110-28730950      *
+#>   -------
+#>   seqinfo: 1 sequence from an unspecified genome; no seqlengths
+table(regions$class)
+#> < table of extent 0 >
+```

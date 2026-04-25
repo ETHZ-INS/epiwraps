@@ -192,5 +192,5 @@ peaks <- callPeaks(bam, paired=TRUE)
 #> Identified 2 candidate regions
 #> Computing significance...
 #> (In the absence of a control, FDR is unlikely to be calibrated)
-#> Reporting 2 regions, 2 with FDR<0.05
+#> Reporting 0 regions, 0 with FDR<0.05
 ```
