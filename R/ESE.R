@@ -256,7 +256,7 @@ getSignalMatrices <- function(x, assay=1L){
 #' # then we will create a new assay which is simply sqrt-transformed, and add 
 #' # it back in the object
 #' newAssay <- lapply(getSignalMatrices(exampleESE), sqrt)
-#' exampleESE <- addAssayToESE(exampleESE, newAssay, named="sqrt")
+#' exampleESE <- addAssayToESE(exampleESE, newAssay, name="sqrt")
 addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
   stopifnot(is(x,"EnrichmentSE"))
   if(is(a, "list")) a <- .ml2assay(a)
