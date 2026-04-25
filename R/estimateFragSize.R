@@ -56,7 +56,7 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
                "calls to the function.")
         ctrl <- Reduce("+", bamChrChunkApply(ctrl, keepSeqLvls=useSeqLevels, 
                                              paired=FALSE, FUN=function(x){
-                   x <- suppressWarnings(resize(x, pmax(width(x),priorLength)))
+                   x <- .safeGRresize(x, pmax(width(x),priorLength))
                    coverage(trim(x))
                  }))
       } 
@@ -83,7 +83,7 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
     if(!is(ctrl, "RleList")){
       ctrl <- Reduce("+", bamChrChunkApply(ctrl, keepSeqLvls=useSeqLevels, 
                                            paired=FALSE, FUN=function(x){
-        x <- suppressWarnings(resize(x, pmax(width(x),priorLength)))
+        x <- .safeGRresize(x, pmax(width(x),priorLength))
         coverage(trim(x))
       }))
     }
@@ -203,7 +203,7 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
                                   binSize=5L){
   covs <- bamChrChunkApply(bam, keepSeqLvls=keepSeqLvls, FUN=function(x){
     msize <- median(width(x))
-    x <- trim(suppressWarnings(resize(x, width=pmax(width(x),fragLength))))
+    x <- .safeGRresize(x, width=pmax(width(x),fragLength))
     cov <- coverage(x)
     x <- trim(resize(x,binSize))
     pos <- coverage(x[strand(x)=="+"])

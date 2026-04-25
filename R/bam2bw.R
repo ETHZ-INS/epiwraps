@@ -429,8 +429,7 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
   }
   bam <- .doTrim(bam, trim=trim)
   if(!paired && type %in% c("full","center") && extend!=0L){
-      bam <- suppressWarnings(trim(resize(bam, width(bam)+as.integer(extend),
-                                          use.names=FALSE)))
+      bam <- .safeGRresize(bam,width(bam)+as.integer(extend),use.names=FALSE)
   }
   if(!is.null(forceStyle)) seqlevelsStyle(bam) <- forceStyle
   if(!is.null(only) && is(only,"GRanges")){
@@ -444,13 +443,12 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
   bam <- .doShift(bam, shift)
   if(type=="ends"){
     bam <- .align2cuts(bam)
-    if(extend!=0L) bam <- suppressWarnings(trim(resize(bam, as.integer(extend),
-                                                       use.names=FALSE)))
+    if(extend!=0L) bam <- .safeGRresize(bam, as.integer(extend),
+                                                       use.names=FALSE)
   }else if(type=="center" && paired){
-    bam <- suppressWarnings(trim(resize(bam, max(1L,extend), fix="center",
-                                        use.names=FALSE)))
+    bam <- .safeGRresize(bam, max(1L,extend), fix="center", use.names=FALSE)
   }else if(type!="full"){
-    bam <- resize(bam, width=1L, fix=type, use.names=FALSE)
+    bam <- .safeGRresize(bam, width=1L, fix=type, use.names=FALSE)
   }
   if(!is.null(si)){
     # for trimming, to avoid out-of-range warnings

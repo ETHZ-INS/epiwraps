@@ -19,7 +19,7 @@ vignette: |
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include=FALSE}
+```{r prelim, include=FALSE}
 library(BiocStyle)
 ```
 
@@ -41,7 +41,7 @@ files is considerably slower and we strongly recommend using bigwig files. For
 generating bigwig files that show the kind of signal you want to visualize, see
 the <a href="bam2bw.html">vignette to this effect</a>.
 
-```{r}
+```{r signal2Matrix}
 suppressPackageStartupMessages(library(epiwraps))
 # we fetch the path to the example bigwig file:
 bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
@@ -49,32 +49,32 @@ bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
 regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
 # we obtain the matrix of the signal around the regions. For the purpose of this
 # example, we'll read twice from the same:
-m <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L)
-m
+ese <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L)
+ese
 ```
 
 The result is an object of class `EnrichmentSE`, which inherits from a 
 `r BiocStyle::Biocpkg("SummarizedExperiment","RangedSummarizedExperiment")`, and
 therefore affords all the manipulations that the latter offers. Each region is
 stored as a row, and each sample or signal track as a column of the object. So 
-we can see that we have signal for `r nrow(m)` rows/regions from two tracks.
+we can see that we have signal for `r nrow(ese)` rows/regions from two tracks.
 
 We could subset to the first 50 regions as follows:
 
-```{r}
-m[1:50,]
+```{r subsetESE}
+ese[1:50,]
 ```
 
 or obtain the coordinates of the queried regions :
 
-```{r}
-rowRanges(m)
+```{r ESEranges}
+rowRanges(ese)
 ```
 
 One can further obtain more detailed information about the bins saved in the object:
 
-```{r}
-showTrackInfo(m)
+```{r showTrackInfo}
+showTrackInfo(ese)
 ```
 
 This means that each signal track is a matrix of 200 columns, because we
@@ -86,9 +86,9 @@ asked to extend 1000bp on either side, and the default bin size is 10bp, making
 It is possible to extract the list of signal matrix for manipulations, e.g. for 
 transformation:
 
-```{r}
+```{r getSignalMatrices}
 # square-root transform
-m2 <- lapply(getSignalMatrices(m), sqrt)
+m2 <- lapply(getSignalMatrices(ese), sqrt)
 ```
 
 See `?addAssayToESE` for adding a list of signal matrices (such as `m2` here) to
@@ -164,7 +164,7 @@ It is also possible to have different colorscales for different tracks, which is
 especially useful when comparing very different signals. To illustrate this, 
 let's load an example with different tracks:
 
-```{r}
+```{r exampleESE}
 data(exampleESE)
 exampleESE
 ```
@@ -185,7 +185,7 @@ plotEnrichedHeatmaps(exampleESE,
 This information can also be stored in the object, rather than specified 
 everytime:
 
-```{r, fig.height=4, fig.width=4.5}
+```{r hmcolors, fig.height=4, fig.width=4.5}
 exampleESE$hmcolors <- list(viridisLite::inferno(100),  "darkgreen", "darkred")
 plotEnrichedHeatmaps(exampleESE)
 ```
@@ -198,7 +198,7 @@ the width of the input regions is ignored. In some circumstances, however, it
 can be useful to scale regions to the same width, which can be done using the 
 `type="scaled"` argument. Consider the following example:
 
-```{r}
+```{r scaling}
 ese <- cbind(
   signal2Matrix(c(center=bwf), regions, extend=1000L),
   signal2Matrix(c(scaled=bwf), regions, extend=1000L, type="scaled")
@@ -210,7 +210,7 @@ For some purposes, such as when plotting signal over transcripts, it can be
 useful for the target region to consist of multiple regions (e.g. exons) 
 stitched together. This can be done by supplying a `GRangesList` as regions:
 
-```{r}
+```{r GRangesList}
 # we make a dummy GRangesList:
 a <- sort(rtracklayer::import(regions))
 dummy.grl <- GRangesList(split(a, rep(LETTERS[1:15],each=10)))
@@ -245,7 +245,7 @@ The traditional ranking by decreasing overall enrichment can easily hide
 patterns in the data, which are instead revealed by clustering. One approach is
 to use hierarchical clustering of the rows:
 
-```{r}
+```{r clusterRows1}
 plotEnrichedHeatmaps(exampleESE, cluster_rows=TRUE)
 ```
 
@@ -260,7 +260,7 @@ distance to the center, eventually row-normalized, to cluster the regions. We
 provide a function to this end:
 
 
-```{r}
+```{r clusterRows2}
 # we cluster the regions using 2 clusters, and store the cluster labels in the 
 # rowData of the object: 
 rowData(exampleESE)$cluster <- clusterSignalMatrices(exampleESE, k=2, scaleRows=TRUE)
@@ -279,7 +279,7 @@ weights the signal according to the distance to the center of the target (see
 `?EnrichedHeatmap::enriched_score`). This can be done for the default assay with
 the `score` method:
 
-```{r}
+```{r score}
 head(score(exampleESE))
 ```
 
@@ -291,7 +291,7 @@ we first melt the signal matrices and then use `r CRANpkg("ggplot2")`. The
 deviation, standard error and median at each position relative to the center,
 for each sample/matrix:
 
-```{r}
+```{r meltSignals}
 d <- meltSignals(exampleESE)
 head(d)
 ```
@@ -334,7 +334,7 @@ the purpose of visualization.
 As an example, let's look at the gene bodies of some active genes from chr8 of
 the A549 cell lines:
 
-```{r}
+```{r exampleDNAme}
 data("exampleDNAme")
 head(exampleDNAme)
 ```
@@ -344,7 +344,7 @@ specifically a GPos object, since all ranges have a width of 1 nucleotide) with,
 in the score column, the percentage of DNA methylation. Let's see what happens
 if we plot a heatmap of this signal, with and without smoothing.
 
-```{r}
+```{r plotDNAme}
 o1 <- signal2Matrix(list(noSmooth=exampleDNAme), geneBodies, type="scaled")
 o2 <- signal2Matrix(list(smoothed=exampleDNAme), geneBodies, type="scaled", 
                     smooth=TRUE, limit=c(0,100)) # recommended for DNAme
@@ -385,7 +385,7 @@ Smoothing is performed by `r BiocStyle::Biocpkg("EnrichedHeatmap")`; see
 
 # Session information {-}
 
-```{r}
+```{r sessionInfo}
 sessionInfo()
 ```
 

@@ -278,7 +278,7 @@ callPeaks <- function(
     if(isPaired){
       fsq <- quantile(width(x), c(0,0.05,0.1,0.25,0.5,0.75,0.9,0.95,1))
     }else{
-      x <- trim(suppressWarnings(resize(x, width=fragLength, fix="start")))
+      x <- .safeGRresize(x, width=fragLength, fix="start")
     }
     co <- coverage(x)
     if(useStrand){
@@ -308,7 +308,7 @@ callPeaks <- function(
                                                      param=p)))
       }else{
         ctrl <- GRanges(readGAlignments(ctrl, param=p))
-        ctrl <- suppressWarnings(resize(ctrl, width=fragLength, fix="start"))
+        ctrl <- .safeGRresize(ctrl, width=fragLength, fix="start")
         ctrl <- coverage(trim(ctrl))
       }
     }
@@ -325,9 +325,7 @@ callPeaks <- function(
     minW <- 25L
     if(!is.null(fsq)) minW <- round(fsq[3])
     if(!is.null(fragLength)) minW <- round(fragLength/4)
-    r2 <- suppressWarnings({
-      .breakRegions2(r2, v=r2$cov, minW=minW, maxW=maxSize)
-    })
+    r2 <- .breakRegions2(r2, v=r2$cov, minW=minW, maxW=maxSize)
     v <- Views(co, r2)
     r2$maxCount <- unlist(viewMaxs(v))
     r2$meanCount <- unlist(viewMeans(v))
@@ -408,8 +406,8 @@ callPeaks <- function(
       if(is.null(minW)) minW <- as.integer(round(max(0.9*quantile(x,0.05),20)))
     }
   }
-  medpo <- median(r$pos, na.rm=TRUE)
-  medneg <- median(r$neg, na.rm=TRUE)
+  medpo <- IRanges::median(r$pos, na.rm=TRUE)
+  medneg <- IRanges::median(r$neg, na.rm=TRUE)
   w0 <- r$maxPos > minC & r$maxPos > f*medpo & !is.infinite(r$wPos) &
          r$maxNeg > minC & r$maxNeg > f*medneg & !is.infinite(r$wNeg) &
          (r$wNeg-r$wPos) >= minW
@@ -423,10 +421,11 @@ callPeaks <- function(
     start(r)[w][w2] <- start(r)[w][w2]+wPos[w2]-1L
     end(r)[w][w2] <- start(r)[w][w2]+wNeg[w2]-1L
   }
-  trim(suppressWarnings(resize(r, pmax(minW, width(r)), fix="center")))
+  .safeGRresize(r, pmax(minW, width(r)), fix="center")
 }
 
 .rleMedWhich <- function(rle){
+  if(is(rle, "RleList")) return(median(unlist(lapply(rle, .rleMedWhich))))
   median(cumsum(runLength(rle))[IRanges::which(runValue(rle))])
 }
 
@@ -444,7 +443,7 @@ callPeaks <- function(
   gr <- GRanges(rep(seqnames(x), lengths(ll)),
                 ranges=unlist(ll, recursive=FALSE, use.names=FALSE))
   gr <- reduce(gr, min.gapwidth=as.integer(round(minW/2)))
-  gr <- reduce(resize(gr, pmax(minW, width(gr)), fix="center"))
+  gr <- reduce(.safeGRresize(gr, pmax(minW, width(gr)), fix="center"))
   seqinfo(gr) <- seqinfo(xO)
   gr <- trim(gr)
   sort(c(xO, gr))
@@ -502,7 +501,7 @@ exportNarrowPeaks <- function(p, file){
   bg_max <- rep(0, length(gr))
   if(incRegion){
     for(k in windows){
-      gr_window <- suppressWarnings(trim(resize(gr, width=k, fix="center")))
+      gr_window <- .safeGRresize(gr, width=k, fix="center")
       bg_max <- pmax(bg_max, unlist(viewMeans(Views(co, gr_window)),
                                     use.names=FALSE))
     }
@@ -511,11 +510,9 @@ exportNarrowPeaks <- function(p, file){
     for(k in windows){
       # we look left and right, avoiding the region itself
       k2 <- floor(k/2)
-      wgr <- suppressWarnings(trim(shift(resize(gr, width=k2, fix="start"),
-                                         width(gr))))
+      wgr <- .safeGRshift(.safeGRresize(gr, width=k2, fix="start"), width(gr))
       bg_right <- unlist(viewMeans(Views(co, wgr)), use.names=FALSE)
-      wgr <- suppressWarnings(trim(shift(resize(gr, width=k2, fix="end"),
-                                   -width(gr))))
+      wgr <- .safeGRshift(.safeGRresize(gr, width=k2, fix="end"), -width(gr))
       bg_left <- unlist(viewMeans(Views(co, wgr)), use.names=FALSE)
       bg_max <- pmax(bg_max, bg_right, bg_left, na.rm=TRUE)
     }

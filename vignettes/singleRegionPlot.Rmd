@@ -18,7 +18,7 @@ vignette: |
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include=FALSE}
+```{r prelim, include=FALSE}
 library(BiocStyle)
 ```
 
@@ -131,7 +131,7 @@ other Gviz `DataTrack`).
 For example, if you wish to manually set the same y-axis range for all data 
 tracks, this can be done with:
 
-```{r}
+```{r yaxis}
 plotSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326",
                  tracks.params=list(ylim=c(0,200)))
 ```
@@ -146,7 +146,7 @@ full track customization when needed.
 
 # Session info
 
-```{r}
+```{r sessionInfo}
 sessionInfo()
 ```
 

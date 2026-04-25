@@ -16,8 +16,28 @@ vignette: |
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include=FALSE}
+```{r prelim, include=FALSE}
 library(BiocStyle)
+```
+
+## Getting read counts in regions of interest
+
+The `peakCountsFromBAM` and `peakCountsFromFrags` functions enable the 
+construction of SummarizedExperiment objects containing overlap counts of 
+regions across samples. `peakCountsFromFrags` is especially geared towards
+single-cell data, splitting the frag file by cell barcodes, 
+generating sparse representations and optionally doing pseudo-bulk aggregation
+on the fly.
+
+The functions can also compute fragment length information for each region, 
+which can for instance be used with the `betterChromVAR` package. For example:
+
+```{r peakCountsFromBAM,  message=FALSE}
+suppressPackageStartupMessages(library(epiwraps))
+bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
+# create regions of interest
+peaks <- GRanges(c("seq1","seq1","seq2"), IRanges(c(400,900,500), width=100))
+peakCountsFromBAM(bam, peaks, paired=FALSE, getMedianFragLength=TRUE)
 ```
 
 ## Quality control
@@ -36,7 +56,6 @@ be used to exclude regions likely to be technical artefacts (e.g. blacklisted
 regions). 
 
 ```{r covstats, message=FALSE}
-suppressPackageStartupMessages(library(epiwraps))
 # get the path to an example bigwig file:
 bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
 cs <- getCovStats(bwf, exclude=GRanges("1", IRanges(1, 4300000)))
@@ -76,21 +95,25 @@ function.
 
 ## Peak calling
 
-A very experimental peak calling function can be used, either against an input 
-control or against local or global backgrounds:
+A peak calling function can be used, either against an input control or 
+against local or global backgrounds:
 
-```{r, eval=FALSE}
-p <- callPeaks(bam, fragLength=50)
+```{r callPeaks, eval=FALSE}
+p <- callPeaks(bam)
 ```
 
-Note that this function is still under heavy development, and its usage at the moment is discouraged!
+## Region merging
+
+The merging of genomic regions with `reduce` tends to produce large regions
+which are undesirable for some downstream analyses. As an alternative, the 
+`reduceWithResplit` function splits large merges using local overlap minima.
 
 ## Region overlapping
 
 The `GenomicRanges` package offers fast and powerful functions for overlapping
 genomic regions. `epiwraps` includes wrappers around those for common tasks, 
 such as calculating and visualizing overlaps across multiple sets of regions 
-(see `?regionUpset`, `?regionOverlaps`, and `?regionCAT`).
+(see `?regionsToUpset`, `?regionOverlaps`, and `?regionCAT`).
 
 <br/><br/>
 

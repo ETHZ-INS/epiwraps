@@ -26,6 +26,17 @@
 #' @importFrom rtracklayer import import.gff
 #' @importFrom AnnotationFilter AnnotationFilterList
 #' @export
+#' @examples
+#' # we first create some regions we want to annotate:
+#' regions <- as(c("chrY:2655742-2655890", "chrY:28730110-28730950"), "GRanges")
+#' # we'll use a lightweight ensembldb annotation for the annotation:
+#' chrY <- system.file("chrY", package="ensembldb")
+#' edb <- EnsDb(makeEnsemblSQLiteFromTables(path=chrY ,dbname=tempfile()))
+#' # we run teh annotation:
+#' regions <- annotateRegions(regions, edb)
+#' # this adds metadata columns to the regions:
+#' regions
+#' table(regions$class)
 annotateRegions <- function(regions, anno, proximal=c(2500,1000), 
                             filter=AnnotationFilterList(),
                             extra=list(), ignore.strand=TRUE, ...){
