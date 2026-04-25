@@ -213,16 +213,19 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
                                           method=binMethod, verbose=verbose)
         mat <- .getScaledSignalFromBW(co, regions2, nBins=scaledBins, 
                                       method=binMethod, verbose=verbose)
-        mat <- cbind(upstream, mat, downstream)
+        mat <- unclass(cbind(upstream, mat, downstream))
+        if(is.null(dim(mat))) mat <- t(mat)
         row.names(mat) <- names(regions2)
-        mat <- EnrichedHeatmap::as.normalizedMatrix(unclass(mat), extend=extend,
+        mat <- EnrichedHeatmap::as.normalizedMatrix(mat, extend=extend,
                   signal_name=filename, k_target=scaledBins, keep=args$keep,
                   smooth_fun=args$smooth_fun, background=args$background, 
                   k_upstream=extend[[1]]/w, k_downstream=extend[[2]]/w )
       }else{
         mat <- .getBinSignalFromBW(co, regions2, w=w, 
                                    method=binMethod, verbose=verbose)
-        mat <- EnrichedHeatmap::as.normalizedMatrix(unclass(mat), extend=extend,
+        mat <- unclass(mat)
+        if(is.null(dim(mat))) mat <- t(mat)
+        mat <- EnrichedHeatmap::as.normalizedMatrix(mat, extend=extend,
                   signal_name=filename, k_target=0L, keep=args$keep,
                   smooth_fun=args$smooth_fun, background=args$background, 
                   k_upstream=extend[[1]]/w, k_downstream=extend[[2]]/w )

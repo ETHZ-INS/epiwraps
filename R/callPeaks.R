@@ -406,8 +406,8 @@ callPeaks <- function(
       if(is.null(minW)) minW <- as.integer(round(max(0.9*quantile(x,0.05),20)))
     }
   }
-  medpo <- median(r$pos, na.rm=TRUE)
-  medneg <- median(r$neg, na.rm=TRUE)
+  medpo <- IRanges::median(r$pos, na.rm=TRUE)
+  medneg <- IRanges::median(r$neg, na.rm=TRUE)
   w0 <- r$maxPos > minC & r$maxPos > f*medpo & !is.infinite(r$wPos) &
          r$maxNeg > minC & r$maxNeg > f*medneg & !is.infinite(r$wNeg) &
          (r$wNeg-r$wPos) >= minW
@@ -425,6 +425,7 @@ callPeaks <- function(
 }
 
 .rleMedWhich <- function(rle){
+  if(is(rle, "RleList")) return(median(unlist(lapply(rle, .rleMedWhich))))
   median(cumsum(runLength(rle))[IRanges::which(runValue(rle))])
 }
 

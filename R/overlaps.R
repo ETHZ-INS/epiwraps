@@ -95,13 +95,16 @@ regionsToUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
 #'   index.
 #' @param ignore.strand Logical; whether to ignore strand for overlaps (default
 #'   TRUE).
+#' @param returnValues Logical; whether to return the matrix of requested 
+#'   values instead of plotting.
 #' @param color Heatmap colorscale
 #' @param cluster Logical; whether to cluster rows/columns
 #' @param number_color Values color
 #' @param ... Passed to \code{\link[ComplexHeatmap]{pheatmap}}
 #'
 #' @return A `Heatmap` showing the overlap coefficient as colors, and the 
-#'   overlap size as values.
+#'   overlap size as values. Alternatively, if `returnValues=TRUE`, a matrix 
+#'   of the requested values.
 #' @importFrom IRanges overlapsAny
 #' @importFrom ComplexHeatmap pheatmap
 #' @importFrom viridisLite plasma
@@ -115,16 +118,18 @@ regionsToUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
 regionOverlaps <- function(listOfRegions, mode=c("reduced","pairwise"),
                            ignore.strand=TRUE, cluster=length(listOfRegions)>2,
                            colorBy=c("overlapCoef","jaccard"), ...,
+                           returnValues=FALSE,
                            color=viridis::plasma(100), number_color="black"){
   stopifnot(length(listOfRegions)>1 && all(lengths(listOfRegions)>0) &&
               all(sapply(listOfRegions,class2="GRanges",is)))
   mode <- match.arg(mode)
   colorBy <- match.arg(colorBy)
   if(mode=="reduced"){
-    r <- reduce(GRangesList(listOfRegions), ignore.strand=ignore.strand)
-    m <- sapply(listOfRegions, \(x) overlapsAny(r, m,
-                                                ignore.strand=ignore.strand))
+    r <- reduce(unlist(GRangesList(listOfRegions)), ignore.strand=ignore.strand)
+    m <- vapply(listOfRegions, FUN.VALUE = logical(length(r)),
+                FUN=\(x) overlapsAny(r, x, ignore.strand=ignore.strand))
     o <- t(m) %*% m
+    sizes <- colSums(m)
   }else{
     o <- suppressWarnings(sapply(listOfRegions, FUN=function(x){
       sapply(listOfRegions, FUN=function(y){
@@ -132,13 +137,15 @@ regionOverlaps <- function(listOfRegions, mode=c("reduced","pairwise"),
         sum(overlapsAny(x,y,ignore.strand=ignore.strand))
       })
     }))
+    sizes <- lengths(listOfRegions)
   }
-  sizes <- lengths(listOfRegions)
+  
   if(colorBy=="overlapCoef"){
-    co <- o/outer(sizes, sizes, "min")
+    co <- o/outer(sizes, sizes, FUN="pmin")
   }else{
-    co <- o/(outer(sizes, sizes, "+")-o)
+    co <- o/(outer(sizes, sizes, FUN="+")-o)
   }
+  if(isTRUE(returnValues)) return(co)
   diag(o) <- NA_real_
   h <- NULL
   if(isTRUE(cluster)) h <- hclust(dist(co))

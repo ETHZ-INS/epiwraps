@@ -1,8 +1,8 @@
 Package: epiwraps
 Type: Package
 Title: epiwraps: Wrappers for plotting and dealing with epigenomics data
-Version: 0.99.109
-Date: 2026-03-23
+Version: 0.99.111
+Date: 2026-04-24
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
             role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")))
@@ -44,6 +44,7 @@ Suggests:
     rmarkdown,
     BiocStyle,
     magick,
+    grDevices,
     testthat (>= 3.0.0)
 Description:
     A set of wrappers to facilitate working with epigenomics data.
@@ -58,5 +59,3 @@ RoxygenNote: 7.3.3
 URL: https://ethz-ins.github.io/epiwraps/
 BugReports: http://github.com/ETHZ-INS/epiwraps/issues
 biocViews: Epigenetics, Sequencing, Normalization, Visualization
-LinkingTo: Rcpp, RcppParallel
-SystemRequirements: GNU make
