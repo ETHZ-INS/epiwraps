@@ -108,24 +108,51 @@ overlaps with `extra`.</p></dd>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># we first create some regions we want to annotate:</span></span></span>
 <span class="r-in"><span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu">as</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chrY:2655742-2655890"</span>, <span class="st">"chrY:28730110-28730950"</span><span class="op">)</span>, <span class="st">"GRanges"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># we'll use a lightweight ensembldb annotation for the annotation:</span></span></span>
+<span class="r-in"><span><span class="co"># we'll make a lightweight ensembldb annotation for the annotation:</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jorainer/ensembldb" class="external-link">ensembldb</a></span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: GenomicFeatures</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: AnnotationDbi</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: AnnotationFilter</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Attaching package: 'ensembldb'</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> The following object is masked from 'package:stats':</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>     filter</span>
 <span class="r-in"><span><span class="va">chrY</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"chrY"</span>, package<span class="op">=</span><span class="st">"ensembldb"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">edb</span> <span class="op">&lt;-</span> <span class="fu">EnsDb</span><span class="op">(</span><span class="fu">makeEnsemblSQLiteFromTables</span><span class="op">(</span>path<span class="op">=</span><span class="va">chrY</span> ,dbname<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in EnsDb(makeEnsemblSQLiteFromTables(path = chrY, dbname = tempfile())):</span> could not find function "EnsDb"</span>
+<span class="r-in"><span><span class="va">edb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ensembldb/man/EnsDb.html" class="external-link">EnsDb</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ensembldb/man/makeEnsemblDbPackage.html" class="external-link">makeEnsemblSQLiteFromTables</a></span><span class="op">(</span>path<span class="op">=</span><span class="va">chrY</span> ,dbname<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing 'chromosome' table ... </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> OK</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing 'gene' table ... </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> OK</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing 'trancript' table ... </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> OK</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing 'exon' table ... </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> OK</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Processing 'tx2exon' table ... </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> OK</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating indices ... </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> OK</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Checking validity of the database ... </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> OK</span>
 <span class="r-in"><span><span class="co"># we run teh annotation:</span></span></span>
 <span class="r-in"><span><span class="va">regions</span> <span class="op">&lt;-</span> <span class="fu">annotateRegions</span><span class="op">(</span><span class="va">regions</span>, <span class="va">edb</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'edb' not found</span>
 <span class="r-in"><span><span class="co"># this adds metadata columns to the regions:</span></span></span>
 <span class="r-in"><span><span class="va">regions</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 2 ranges and 0 metadata columns:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       seqnames            ranges strand</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [1]     chrY   2655742-2655890      *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [2]     chrY 28730110-28730950      *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 2 ranges and 5 metadata columns:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       seqnames            ranges strand | distance2nearestTSS</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;Rle&gt;         &lt;IRanges&gt;  &lt;Rle&gt; |           &lt;integer&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1]     chrY   2655742-2655890      * |                   2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [2]     chrY 28730110-28730950      * |               -6798</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       nearestTSS.gene_name      nearestTSS TSS.overlap             class</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                &lt;character&gt;     &lt;character&gt;    &lt;factor&gt;          &lt;factor&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1]                  SRY ENST00000383070  intergenic proximal &lt;=1000bp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [2]           SLC25A15P1 ENST00000456738  intergenic intergenic       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 1 sequence from an unspecified genome; no seqlengths</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">regions</span><span class="op">$</span><span class="va">class</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt; table of extent 0 &gt;</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">regions</span><span class="op">$</span><span class="va">class</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        intergenic proximal &lt;=1000bp </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 1                 1 </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

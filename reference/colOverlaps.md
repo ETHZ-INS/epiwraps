@@ -32,5 +32,8 @@ A matrix of pairwise metric values.
 ``` r
 m <- matrix(sample(c(TRUE,FALSE),12,replace=TRUE), nrow=4)
 colOverlaps(m, metric="jaccard")
-#> Error in colSums(x): 'x' must be an array of at least two dimensions
+#>      [,1] [,2] [,3]
+#> [1,]    1    0    0
+#> [2,]    0    1    1
+#> [3,]    0    1    1
 ```

@@ -38,8 +38,6 @@ addAssayToESE(x, a, name = "normalized", replace = TRUE)
 data(exampleESE)
 # then we will create a new assay which is simply sqrt-transformed, and add 
 # it back in the object
-newAssay <- lapply(getSignalMatrices(x), sqrt)
-#> Error in h(simpleError(msg, call)): error in evaluating the argument 'X' in selecting a method for function 'lapply': object 'x' not found
-exampleESE <- addAssayToESE(exampleESE, newAssay, named="sqrt")
-#> Error in addAssayToESE(exampleESE, newAssay, named = "sqrt"): unused argument (named = "sqrt")
+newAssay <- lapply(getSignalMatrices(exampleESE), sqrt)
+exampleESE <- addAssayToESE(exampleESE, newAssay, name="sqrt")
 ```

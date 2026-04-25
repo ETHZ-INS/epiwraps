@@ -67,22 +67,49 @@ The sorted \`regions\` object with additional annotation columns.
 ``` r
 # we first create some regions we want to annotate:
 regions <- as(c("chrY:2655742-2655890", "chrY:28730110-28730950"), "GRanges")
-# we'll use a lightweight ensembldb annotation for the annotation:
+# we'll make a lightweight ensembldb annotation for the annotation:
+library(ensembldb)
+#> Loading required package: GenomicFeatures
+#> Loading required package: AnnotationDbi
+#> Loading required package: AnnotationFilter
+#> 
+#> Attaching package: 'ensembldb'
+#> The following object is masked from 'package:stats':
+#> 
+#>     filter
 chrY <- system.file("chrY", package="ensembldb")
 edb <- EnsDb(makeEnsemblSQLiteFromTables(path=chrY ,dbname=tempfile()))
-#> Error in EnsDb(makeEnsemblSQLiteFromTables(path = chrY, dbname = tempfile())): could not find function "EnsDb"
+#> Processing 'chromosome' table ... 
+#> OK
+#> Processing 'gene' table ... 
+#> OK
+#> Processing 'trancript' table ... 
+#> OK
+#> Processing 'exon' table ... 
+#> OK
+#> Processing 'tx2exon' table ... 
+#> OK
+#> Creating indices ... 
+#> OK
+#> Checking validity of the database ... 
+#> OK
 # we run teh annotation:
 regions <- annotateRegions(regions, edb)
-#> Error: object 'edb' not found
 # this adds metadata columns to the regions:
 regions
-#> GRanges object with 2 ranges and 0 metadata columns:
-#>       seqnames            ranges strand
-#>          <Rle>         <IRanges>  <Rle>
-#>   [1]     chrY   2655742-2655890      *
-#>   [2]     chrY 28730110-28730950      *
+#> GRanges object with 2 ranges and 5 metadata columns:
+#>       seqnames            ranges strand | distance2nearestTSS
+#>          <Rle>         <IRanges>  <Rle> |           <integer>
+#>   [1]     chrY   2655742-2655890      * |                   2
+#>   [2]     chrY 28730110-28730950      * |               -6798
+#>       nearestTSS.gene_name      nearestTSS TSS.overlap             class
+#>                <character>     <character>    <factor>          <factor>
+#>   [1]                  SRY ENST00000383070  intergenic proximal <=1000bp
+#>   [2]           SLC25A15P1 ENST00000456738  intergenic intergenic       
 #>   -------
 #>   seqinfo: 1 sequence from an unspecified genome; no seqlengths
 table(regions$class)
-#> < table of extent 0 >
+#> 
+#>        intergenic proximal <=1000bp 
+#>                 1                 1 
 ```

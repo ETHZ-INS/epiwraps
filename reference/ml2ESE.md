@@ -49,6 +49,5 @@ regions <- rtracklayer::import(system.file("extdata/example_peaks.bed",
 m <- signal2Matrix(bw, regions, ret="list")
 #> Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw
 # we can then transform this into an EnrichmentSE object:
-m <- ml2ESE(m)
-#> Error in ml2ESE(m): argument "rowRanges" is missing, with no default
+m <- ml2ESE(m, rowRanges=regions)
 ```

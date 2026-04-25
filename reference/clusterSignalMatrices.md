@@ -82,7 +82,7 @@ the variance explained by clusters at each resolution.
 ``` r
 data(exampleESE)
 rowData(exampleESE)$cluster <- clusterSignalMatrices(exampleESE, 3)
-#>   ~87% of the variance explained by clusters
+#>   ~82% of the variance explained by clusters
 # we could plot the data clustered:
 plotEnrichedHeatmaps(exampleESE, row_split="cluster")
 

@@ -86,7 +86,6 @@ normalization factors, for instance obtained through
 # we first get an EnrichmentSE object:
 data(exampleESE)
 # we normalize them
-m <- renormalizeSignalMatrices(m)
-#> Error: object 'm' not found
+exampleESE <- renormalizeSignalMatrices(exampleESE)
 # see the `vignette("multiRegionPlot")` for more info on normalization.
 ```

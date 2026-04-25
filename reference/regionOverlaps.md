@@ -14,7 +14,7 @@ regionOverlaps(
   colorBy = c("overlapCoef", "jaccard"),
   ...,
   returnValues = FALSE,
-  color = viridis::plasma(100),
+  color = viridisLite::plasma(100),
   number_color = "black"
 )
 ```
@@ -77,5 +77,4 @@ grl <- lapply(c(A=10,B=20,C=30), FUN=function(x){
   GRanges("seq1", IRanges(runif(x,1,1000), width=20))
 })
 regionOverlaps(grl)
-#> Error in loadNamespace(x): there is no package called 'viridis'
 ```

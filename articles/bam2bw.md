@@ -46,8 +46,8 @@ rtracklayer::export(gr, bam, format="bam")
 Rsamtools::indexBam(bam)
 ```
 
-    ##       /tmp/RtmpxsAW7F/file394924d16bcc.bam 
-    ## "/tmp/RtmpxsAW7F/file394924d16bcc.bam.bai"
+    ##       /tmp/Rtmpo6m3s1/file1f677b1371b.bam 
+    ## "/tmp/Rtmpo6m3s1/file1f677b1371b.bam.bai"
 
 Using these example reads, we can illustrate different ways of computing
 coverages.

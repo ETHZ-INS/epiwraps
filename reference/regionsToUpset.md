@@ -52,6 +52,5 @@ grl <- lapply(c(A=10,B=20,C=30), FUN=function(x){
 })
 input_for_upset <- regionsToUpset(grl)
 # we would then plot the data with:
-ComplexHeatmap(UpSet(make_comb_mat(input_for_upset)))
-#> Error in ComplexHeatmap(UpSet(make_comb_mat(input_for_upset))): could not find function "ComplexHeatmap"
+ComplexHeatmap::UpSet(make_comb_mat(input_for_upset))
 ```
