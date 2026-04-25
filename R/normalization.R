@@ -366,7 +366,7 @@ renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
 #' # we first get an EnrichmentSE object:
 #' data(exampleESE)
 #' # we normalize them
-#' m <- renormalizeSignalMatrices(m)
+#' exampleESE <- renormalizeSignalMatrices(exampleESE)
 #' # see the `vignette("multiRegionPlot")` for more info on normalization.
 renormalizeSignalMatrices <- function(ml, method=c("border","top","manual"), 
                                       trim=NULL, fromAssay="input", toAssay=NULL,

@@ -18,7 +18,6 @@ Imports:
     GenomeInfoDb,
     GenomicAlignments,
     GenomicFiles,
-    Rsamtools,
     rtracklayer,
     ComplexHeatmap,
     S4Vectors,
@@ -38,6 +37,7 @@ Imports:
     dplyr,
     stats,
     pbapply,
+    Matrix,
     methods
 Suggests: 
     knitr,

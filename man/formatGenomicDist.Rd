@@ -31,5 +31,5 @@ A character vector.
 formatGenomicDist
 }
 \examples{
-formatGenomicDistc(1235000)
+formatGenomicDist(1235000)
 }

@@ -29,6 +29,6 @@ Adds an assay of signal matrices to an existing `EnrichmentSE` object.
 data(exampleESE)
 # then we will create a new assay which is simply sqrt-transformed, and add 
 # it back in the object
-newAssay <- lapply(getSignalMatrices(x), sqrt)
-exampleESE <- addAssayToESE(exampleESE, newAssay, named="sqrt")
+newAssay <- lapply(getSignalMatrices(exampleESE), sqrt)
+exampleESE <- addAssayToESE(exampleESE, newAssay, name="sqrt")
 }

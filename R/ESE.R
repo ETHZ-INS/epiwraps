@@ -145,7 +145,7 @@ showTrackInfo <- function(x, assay="input", doPrint=TRUE){
 #' # want the output as a list of signal matrices:
 #' m <- signal2Matrix(bw, regions, ret="list")
 #' # we can then transform this into an EnrichmentSE object:
-#' m <- ml2ESE(m)
+#' m <- ml2ESE(m, rowRanges=regions)
 ml2ESE <- function(ml, rowRanges, assayName="input", addScore=FALSE, ...){
   a <- .ml2assay(ml)
   stopifnot(is(rowRanges,"GRanges"))
@@ -255,8 +255,8 @@ getSignalMatrices <- function(x, assay=1L){
 #' data(exampleESE)
 #' # then we will create a new assay which is simply sqrt-transformed, and add 
 #' # it back in the object
-#' newAssay <- lapply(getSignalMatrices(x), sqrt)
-#' exampleESE <- addAssayToESE(exampleESE, newAssay, named="sqrt")
+#' newAssay <- lapply(getSignalMatrices(exampleESE), sqrt)
+#' exampleESE <- addAssayToESE(exampleESE, newAssay, name="sqrt")
 addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
   stopifnot(is(x,"EnrichmentSE"))
   if(is(a, "list")) a <- .ml2assay(a)

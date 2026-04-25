@@ -12,7 +12,7 @@ regionOverlaps(
   colorBy = c("overlapCoef", "jaccard"),
   ...,
   returnValues = FALSE,
-  color = viridis::plasma(100),
+  color = viridisLite::plasma(100),
   number_color = "black"
 )
 }
