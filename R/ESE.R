@@ -145,7 +145,7 @@ showTrackInfo <- function(x, assay="input", doPrint=TRUE){
 #' # want the output as a list of signal matrices:
 #' m <- signal2Matrix(bw, regions, ret="list")
 #' # we can then transform this into an EnrichmentSE object:
-#' m <- ml2ESE(m)
+#' m <- ml2ESE(m, rowRanges=regions)
 ml2ESE <- function(ml, rowRanges, assayName="input", addScore=FALSE, ...){
   a <- .ml2assay(ml)
   stopifnot(is(rowRanges,"GRanges"))

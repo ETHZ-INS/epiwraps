@@ -457,7 +457,7 @@ views2Matrix <- function(v, padVal=NA_integer_){
 #' @return A character vector.
 #' @export
 #' @examples
-#' formatGenomicDistc(1235000)
+#' formatGenomicDist(1235000)
 formatGenomicDist <- function(e, allowFraction=TRUE, sameUnits=TRUE, head0=TRUE,
                               units=c("mb"=1000000,"kb"=1000,"bp"=1)){
   stopifnot(is.numeric(e))

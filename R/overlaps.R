@@ -27,7 +27,7 @@
 #' })
 #' input_for_upset <- regionsToUpset(grl)
 #' # we would then plot the data with:
-#' ComplexHeatmap(UpSet(make_comb_mat(input_for_upset)))
+#' ComplexHeatmap::UpSet(make_comb_mat(input_for_upset))
 regionsToUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
                            ignore.strand=FALSE, maxgap=-1L, minoverlap=0L, ...){
   if(is.character(x)) x <- as.list(x)
@@ -255,19 +255,19 @@ regionCAT <- function(regions1, regions2, start=5L,
 colOverlaps <- function(x, y=NULL, metric=c("overlap","jaccard","overlapCoef")){
   metric <- match.arg(metric)
   x <- as(x, "lMatrix")
-  ys <- xs <- colSums(x)
+  ys <- xs <- Matrix::colSums(x)
   if(is.null(y)){
     y <- x
   }else{
     if(is.vector(y)) y <- as.matrix(y)
     y <- as(y, "lMatrix")
-    ys <- colSums(y)
+    ys <- Matrix::colSums(y)
   }
   intersections <- t(x) %*% as.matrix(y)
   if(metric=="overlap"){
     out <- intersections
   }else if(metric=="overlapCoef"){
-    minSize <- outer(xs, ys, "min")
+    minSize <- outer(xs, ys, "pmin")
     out <- intersections/minSize
   }else{
     unions <- outer(xs, ys, "+") - intersections

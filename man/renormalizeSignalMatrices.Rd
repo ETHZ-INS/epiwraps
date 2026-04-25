@@ -71,6 +71,6 @@ factors, for instance obtained through \code{\link{getNormFactors}}.
 # we first get an EnrichmentSE object:
 data(exampleESE)
 # we normalize them
-m <- renormalizeSignalMatrices(m)
+exampleESE <- renormalizeSignalMatrices(exampleESE)
 # see the `vignette("multiRegionPlot")` for more info on normalization.
 }
