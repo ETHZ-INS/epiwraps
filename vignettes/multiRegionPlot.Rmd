@@ -112,7 +112,7 @@ Once the signal has been read and the object prepared, (and eventually
 normalized, see the section below), we can plot heatmaps based on them as follows:
 
 ```{r heatmap1, fig.height=3, fig.width=4}
-plotEnrichedHeatmaps(m)
+plotEnrichedHeatmaps(ese)
 ```
 We can use most arguments that are supported by 
 `r BiocStyle::Biocpkg("EnrichedHeatmap")` (and thus, by extension, by 
@@ -120,7 +120,7 @@ We can use most arguments that are supported by
 
 
 ```{r heatmap2, fig.height=3, fig.width=4}
-plotEnrichedHeatmaps(m, colors=c("white","darkred"), cluster_rows=TRUE,
+plotEnrichedHeatmaps(ese, colors=c("white","darkred"), cluster_rows=TRUE,
                      show_row_dend=TRUE, top_annotation=FALSE, 
                      row_title="My list of cool regions")
 ```
@@ -130,7 +130,7 @@ It is often useful to subset to regions with a high enrichment, which we can do
 with the `score` function:
 
 ```{r heatmap2b, fig.height=3, fig.width=4}
-plotEnrichedHeatmaps(m[head(order(-rowMeans(score(m))),50),])
+plotEnrichedHeatmaps(ese[head(order(-rowMeans(score(ese))),50),])
 ```
 
 
@@ -142,11 +142,11 @@ up to which quantile of data points to keep to establish the colorscale).
 Compare for instance the following two heatmaps:
 
 ```{r heatmapTrim, fig.height=4, fig.width=5}
-plotEnrichedHeatmaps(m[,1], trim=1, scale_title="trim=1", column_title="trim=1 (no trim)",
+plotEnrichedHeatmaps(ese[,1], trim=1, scale_title="trim=1", column_title="trim=1 (no trim)",
                      top_annotation=FALSE) +
-  plotEnrichedHeatmaps(m[,1], trim=0.99, scale_title="trim=0.99",
+  plotEnrichedHeatmaps(ese[,1], trim=0.99, scale_title="trim=0.99",
                        column_title="trim=0.99", top_annotation=FALSE) +
-  plotEnrichedHeatmaps(m[,1], trim=0.9, column_title="trim=0.9",
+  plotEnrichedHeatmaps(ese[,1], trim=0.9, column_title="trim=0.9",
                        scale_title="trim=0.9", top_annotation=FALSE)
 ```
 

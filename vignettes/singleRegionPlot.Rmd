@@ -89,6 +89,27 @@ overlayed on top of one another (`aggregation='overlay'`), or shown as a
 heatmap (`aggregation='heatmap'`), or a mean track with heatmap below 
 (`aggregation="heatmap+mean"`).
 
+To better illustrate this, we'll generate two dummy tracks:
+
+```{r dummyTracks}
+bw1 <- tempfile(fileext=".bw")
+cov1 <- GRanges("chr1", IRanges(1L+round(c(500+rnorm(15, sd=20),1000*runif(20))), width=30))
+bw2 <- tempfile(fileext=".bw")
+cov2 <- GRanges("chr1", IRanges(1L+abs(round(c(490+rnorm(15, sd=30),1000*runif(20)))), width=30))
+seqlengths(cov1) <- seqlengths(cov2) <- c("chr1"=1500)
+rtracklayer::export.bw(coverage(cov1), bw1)
+rtracklayer::export.bw(coverage(cov2), bw2)
+```
+
+Then we can plot them as replicates:
+
+```{r heatmap}
+plotSignalTracks(list(group=c(bw1, bw2)), region="chr1:1-1030", aggregation="heatmap+mean")
+```
+We find this representation particularly useful, as it combines the visual 
+interpretability of the track, while simultaneously providing information about
+the variability across replicates in a compact fashion.
+
 ## Using an EnsDb object
 
 If an `EnsDb` object is available (see the `r BiocStyle::Biocpkg("ensembldb")` 
