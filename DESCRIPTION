@@ -49,7 +49,7 @@ Description:
     Includes in particular wrappers for producing multitrack single-regions plots,
     enrichment heatmaps, bigwig generation, normalization, etc. The focus was 
     put on a simple yet flexible interface.
-License: GPL-3
+License: GPL (>= 3)
 VignetteBuilder: knitr
 Encoding: UTF-8
 Config/testthat/edition: 3

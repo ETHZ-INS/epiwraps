@@ -537,10 +537,10 @@ exportNarrowPeaks <- function(p, file){
     negSummit <- resize(viewRangeMaxs(v), 1L, fix="center")
     negSummitCount<- viewMaxs(v)
   }else{
-    il <- IntegerList(r$pos)
+    il <- IntegerList(gr$pos)
     posSummit <- round(median(which(il==max(il))))
     posSummitCount <- max(il)
-    il <- IntegerList(r$neg)
+    il <- IntegerList(gr$neg)
     negSummit <- round(median(which(il==max(il))))
     negSummitCount <- max(il)
   }
