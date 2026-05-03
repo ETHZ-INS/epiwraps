@@ -171,9 +171,9 @@ plotCorFromCovStats <- function(qc, method=c("pearson","spearman"), col=NULL,
                  error=function(e) FALSE )
   h <- lapply(names(dat), FUN=function(x){
     if(is.null(col)){
-      col = switch(x,
-                   pearson=viridisLite::viridis(50),
-                   spearman=viridisLite::inferno(50))
+      col <- switch(x,
+                    pearson=viridisLite::viridis(50),
+                    spearman=viridisLite::inferno(50))
     }
     if(is.null(column_title)) column_title <- x
     Heatmap(dat[[x]], name=x, col=col, column_title=column_title,

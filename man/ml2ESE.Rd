@@ -20,7 +20,7 @@ object of `ml`.}
 }
 \value{
 An `EnrichedSE` object, inheriting from a 
-  \link[SummarizedExperment]{RangedSummarizedExperiment}.
+  \link[SummarizedExperiment]{RangedSummarizedExperiment}.
 }
 \description{
 Creates an EnrichmentSE from a list of normalizedMatrix objects

@@ -119,7 +119,7 @@ such as calculating and visualizing overlaps across multiple sets of regions
 
 ## Session information {-}
 
-```{r}
+```{r sessionInfo}
 sessionInfo()
 ```
 

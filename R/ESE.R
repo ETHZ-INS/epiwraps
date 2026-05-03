@@ -1,13 +1,13 @@
 #' EnrichmentSE class and constructor
 #'
+#' The `EnrichmentSE` class is a container for epigenomic enrichment data, 
+#' extending the \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}}
+#'  class.
+#'
 #' @name EnrichmentSE-class
 #' @rdname EnrichmentSE-class
-#' @aliases EnrichmentSE
+#' @aliases EnrichmentSE EnrichmentSE-class
 #' @exportClass EnrichmentSE
-#'
-#' @description
-#' The `EnrichmentSE` class is a container for epigenomic enrichment data, 
-#' extending the \code{\link{RangedSummarizedExperiment}} class.
 #'
 #' @param assays A list of matrices or 
 #'   \code{\link[EnrichedHeatmap]{normalizedMatrix}} objects.
@@ -160,7 +160,7 @@ showTrackInfo <- function(x, assay="input", doPrint=TRUE){
 #' @param addScore Logical; whether to add an enriched_score assay.
 #' @param ... Passed to `SummarizedExperiment()`
 #' @return An `EnrichedSE` object, inheriting from a 
-#'   \link[SummarizedExperment]{RangedSummarizedExperiment}.
+#'   \link[SummarizedExperiment]{RangedSummarizedExperiment}.
 #' @importFrom SummarizedExperiment assays<- assay<- assays
 #' @export
 #' @examples
@@ -322,7 +322,12 @@ addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
 }
 
 
+#' @describeIn EnrichmentSE-class Access the score (first assay)
+#' 
+#' @param x An object of class `EnrichmentSE`, as produced by 
+#'   \code{\link{signal2Matrix}}.
+#' @param ... Arguments passed to \code{\link{getSignalMatrices}}.
 #' @export
-setMethod("score", "EnrichmentSE", function(x,...){
-  sapply(getSignalMatrices(x), FUN=EnrichedHeatmap::enriched_score)
+setMethod("score", "EnrichmentSE", function(x, ...){
+  sapply(getSignalMatrices(x, ...), FUN=EnrichedHeatmap::enriched_score)
 })

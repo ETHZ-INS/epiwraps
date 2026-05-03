@@ -321,6 +321,7 @@ bwNormFactors <- function(x, ...){
   ref
 }
 
+#' @param assay The name of the assay to use as input.
 #' @export
 #' @describeIn renormalizeSignalMatrices deprecated > renormalizeSignalMatrices
 renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
