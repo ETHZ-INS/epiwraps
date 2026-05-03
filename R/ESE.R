@@ -331,5 +331,5 @@ addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
 #' @export
 setMethod("score", "EnrichmentSE", function(x, ...){
   vapply(getSignalMatrices(x, ...), FUN=EnrichedHeatmap::enriched_score,
-         FUN.VALUE=nrow(x))
+         FUN.VALUE=numeric(nrow(x)))
 })
