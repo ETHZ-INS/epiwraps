@@ -1,8 +1,6 @@
 #' regionsToUpset
 #' 
 #' Prepares sets of regions for UpSet overlap representation.
-#' A wrapper around \code{\link[UpSetR]{upset}} for comparing multiple sets of
-#' genomic ranges.
 #'
 #' @param x A named list of genomic ranges (or paths to bed files)
 #' @param reference The method for creating the reference windows ('reduce' or
@@ -11,6 +9,10 @@
 #'   plotting.
 #' @param ... Further arguments specifying how the overlaps are done, 
 #' passed to \code{\link[GenomicRanges]{findOverlaps-methods}}).
+#' @param ignore.strand Logical; whether to ignore strand for overlaps (default
+#'   FALSE).
+#' @param maxgap Max gap between regions to consider an overlap.
+#' @param minoverlap Minimum number of overlapping bases.
 #'
 #' @return A data.frame of set inclusions which can be directly input to
 #'   \code{\link[ComplexHeatmap]{make_comb_mat}}, and then

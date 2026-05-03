@@ -25,6 +25,9 @@ renormalizeSignalMatrices(
 \item{trim}{Quantiles trimmed at each extreme before calculating 
 normalization factors.}
 
+\item{nWindows}{Number of border windows/bins to use for border
+normalization.}
+
 \item{method}{Either "border" or "top" (see details below).}
 
 \item{fromAssay}{Assay to use (ignored unless `ml` is an EnrichmentSE 

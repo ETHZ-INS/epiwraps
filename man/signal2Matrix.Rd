@@ -38,6 +38,9 @@ the extension upstream and downstream.}
 \item{w}{Bin width in number of nucleotides. Defaults to a width producing
 200 bins over the whole extended range.}
 
+\item{scaling}{Logical; whether to scale to library size when reading from
+BAM files.}
+
 \item{scaledBins}{The number of bins for the scale region (ignored if 
 `type="center"`)}
 

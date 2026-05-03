@@ -7,9 +7,7 @@
 frag2bw(
   tabixFile,
   output_bw,
-  paired = TRUE,
   binWidth = 20L,
-  extend = 0L,
   scaling = TRUE,
   type = c("full", "center", "start", "end", "ends"),
   barcodes = NULL,
@@ -33,10 +31,6 @@ frag2bw(
 
 \item{output_bw}{The path to the output bigwig file}
 
-\item{paired}{Logical; whether the coordinates are that of fragments, as 
-opposed to single-end reads where the only one end of the fragments is given.
-TRUE by default.}
-
 \item{binWidth}{The window size. A lower value (min 1) means a higher 
 resolution, but larger file size.}
 
@@ -57,6 +51,8 @@ contains the column)}
 \item{shift}{Shift (from 3' to 5') by which reads/fragments will be shifted.
 If `shift` is an integer vector of length 2, the first value will represent
 the shift for the positive strand, and the second for the negative strand.}
+
+\item{log1p}{Whether to log-transform (`log(x+1)`) the (scaled) signal.}
 
 \item{exclude}{An optional GRanges of regions for which overlapping reads 
 should be excluded.}

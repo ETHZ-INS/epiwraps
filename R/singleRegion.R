@@ -9,7 +9,7 @@
 #' \code{\link[Gviz]{DataTrack}}'s `range` argument are also accepted. Can also
 #' include `GRanges ` objects (which will be plotted as 
 #' \code{\link[Gviz]{AnnotationTrack}}) or objects inheriting the 
-#' \code{\link[Gviz]{GdObject}} class (i.e. any `Gviz` track object).
+#' \code{\link[Gviz]{GdObject-class}} class (i.e. any `Gviz` track object).
 #' @param region A genomic region, either as a `GRanges` object or as a string 
 #' (i.e. `region="chr5:10000-12000`). Alternatively, if `ensdb` is provided, a 
 #' gene name can be given, and the gene's coordinates will be used as region.
@@ -48,6 +48,7 @@
 #' @param col.title The color of the track titles.
 #' @param cex.title Expension factor for the font size of the track titles.
 #' @param bed.rotation.title Rotation for track titles of bed files.
+#' @param normFactors Optional normalization factors to apply before plotting.
 #' @param ... Passed to \code{\link[Gviz]{plotTracks}}.
 #'
 #' @return A list of GenomeGraph tracks to be plotted.
@@ -59,6 +60,7 @@
 #' @importFrom Gviz plotTracks DataTrack OverlayTrack GeneRegionTrack 
 #' @importFrom Gviz GenomeAxisTrack AnnotationTrack AlignmentsTrack
 #' @importFrom matrixStats rowMins rowMaxs rowMedians
+#' @importFrom utils object.size
 #'
 #' @export
 #' @examples 

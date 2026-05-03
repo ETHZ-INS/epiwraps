@@ -37,7 +37,7 @@ or aggregated (depending on the `aggregation` argument). Formats accepted by
 \code{\link[Gviz]{DataTrack}}'s `range` argument are also accepted. Can also
 include `GRanges ` objects (which will be plotted as 
 \code{\link[Gviz]{AnnotationTrack}}) or objects inheriting the 
-\code{\link[Gviz]{GdObject}} class (i.e. any `Gviz` track object).}
+\code{\link[Gviz]{GdObject-class}} class (i.e. any `Gviz` track object).}
 
 \item{region}{A genomic region, either as a `GRanges` object or as a string 
 (i.e. `region="chr5:10000-12000`). Alternatively, if `ensdb` is provided, a 
@@ -94,6 +94,8 @@ Alternatively, can be a custom \code{\link[Gviz]{GeneRegionTrack}} object.}
 \item{cex.title}{Expension factor for the font size of the track titles.}
 
 \item{overlay.alpha}{Transparency (0 to 250) when overlaying tracks.}
+
+\item{normFactors}{Optional normalization factors to apply before plotting.}
 
 \item{...}{Passed to \code{\link[Gviz]{plotTracks}}.}
 }

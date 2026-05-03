@@ -109,6 +109,7 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
 #' @param qc A list of coverage statistics, as produced by 
 #'  \code{\link{getCovStats}}.
 #' @param labels Passed to \code{\link[cowplot]{plot_grid}}.
+#' @param show.legend Logical; whether to show the plot legend.
 #'
 #' @return A grid object to be plotted.
 #' @export

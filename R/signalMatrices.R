@@ -205,7 +205,7 @@ clusterSignalMatrices <- function(ml, k, scaleRows=FALSE, scaleCols=FALSE,
 
 # overwrites the subsetting function of EnrichedHeatmap in order to avoid att
 # mismatches
-"[.normalizedMatrix" = function(x, i=NULL, j=NULL, drop=FALSE){
+"[.normalizedMatrix" <- function(x, i=NULL, j=NULL, drop=FALSE){
   .resizeNmatrix(x,i=i,j=j,drop=drop)
 }
 

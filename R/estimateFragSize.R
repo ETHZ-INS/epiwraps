@@ -32,7 +32,7 @@
 #' # get an example bam file
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 #' suppressWarnings(estimateFragSize(bam))
-estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
+estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50),
                              minSummitCount=8L, useSeqLevels=NULL,
                              maxSize=2500L, priorLength=200L, blacklist=NULL, 
                              ret=c("mode", "median", "mean", "tables", "plots", 
@@ -65,7 +65,7 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
     names(bam) <- bam
     res <- bplapply(bam, ctrl=ctrl, binSize=binSize, mfold=mfold, ret=ret2, 
                     maxSize=maxSize, useSeqLevels=useSeqLevels,
-                    minSummitCount=minSummitCount, ...,
+                    minSummitCount=minSummitCount,
                     FUN=estimateFragSize, BPPARAM=BPPARAM)
     if(ret2!="tables") return(unlist(res))
     res <- lapply(setNames(names(res[[1]]),names(res[[1]])), FUN=function(x){
@@ -168,10 +168,7 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50), ...,
   p2 <- ggplot(d1, aes(rel_pos, count, colour=strand)) + geom_line(alpha=0.5) + 
     geom_smooth(formula=y~x, method="loess", span=span, size=1.2) + 
     labs(x="Relative position", y="Read start count")
-  if(requireNamespace("cowplot", quietly=TRUE))
-    return(plot_grid(p1, p2, nrow=2))
-  print(p1)
-  print(p2)
+  plot_grid(p1, p2, nrow=2)
 }
 
 # sets coverages below a threshold to 0

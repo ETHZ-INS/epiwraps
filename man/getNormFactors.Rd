@@ -39,6 +39,16 @@ vector of paths to such files, or a single GRanges of unified peaks to use
 (e.g. for top/MAnorm).}
 
 \item{trim}{Amount of trimming when calculating means.}
+
+\item{useSeqLevels}{An optional vector of seqLevels (i.e. chromosomes) to 
+include.}
+
+\item{paired}{Logical; whether the reads are paired-end. Ignored unless `x` 
+are paths to bam files.}
+
+\item{...}{Passed to internal functions.}
+
+\item{verbose}{Logical; whether to print progress messages.}
 }
 \value{
 A vector of normalization factors, or for the 'S3norm' and '2cLinear'

@@ -80,7 +80,8 @@
 #' 
 #' To export as a narrowPeak file, see \code{\link{exportNarrowPeaks}}.
 #' 
-#' @importFrom IRanges Views viewMaxs viewMeans slice viewRangeMaxs relist IntegerList
+#' @importFrom IRanges Views viewMaxs viewMeans slice viewRangeMaxs relist 
+#' @importFrom IRanges IntegerList NumericList RleViewsList viewWhichMaxs
 #' @importFrom stats setNames pnorm ppois optim density
 #' @importFrom S4Vectors mean.Rle
 #' @importFrom Rsamtools idxstatsBam
@@ -456,6 +457,7 @@ callPeaks <- function(
 #'
 #' @returns Invisible file path.
 #' @export
+#' @importFrom utils write.table
 #' @examples
 #' # call some peaks:
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
@@ -486,6 +488,7 @@ exportNarrowPeaks <- function(p, file){
 }
 
 # get trimmed non-zero mean of a Rle/RleList
+#' @importFrom stats weighted.mean
 .covTrimmedMean <- function(x, q=0.98, th=NULL){
   if(is.null(th)) th <- quantile(unlist(runValue(x)), q)
   if(is(x,"RleList"))

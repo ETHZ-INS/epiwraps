@@ -102,8 +102,9 @@
 #' 
 #' @export
 #' 
-#' @importFrom Rsamtools scanBamHeader scanBamFlag ScanBamParam
-#' @importFrom GenomicAlignments readGAlignmentPairs isProperPair readGAlignments
+#' @importFrom Rsamtools scanBamHeader scanBamFlag ScanBamParam testPairedEndBam
+#' @importFrom GenomicAlignments readGAlignmentPairs readGAlignments
+#' @importFrom GenomicAlignments isProperPair
 #' @importFrom GenomicRanges resize countOverlaps width score score<- coverage 
 #' @importFrom GenomicRanges tileGenome shift trim
 #' @importFrom GenomeInfoDb Seqinfo seqinfo seqinfo<-
@@ -269,9 +270,6 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
 #' @param output_bw The path to the output bigwig file
 #' @param barcodes An optional list of barcodes to use (assuming that the file
 #'   contains the column)
-#' @param paired Logical; whether the coordinates are that of fragments, as 
-#'  opposed to single-end reads where the only one end of the fragments is given.
-#'  TRUE by default.
 #' @param binWidth The window size. A lower value (min 1) means a higher 
 #'  resolution, but larger file size.
 #' @param scaling Either TRUE (performs Count Per Million scaling), FALSE (no 
@@ -301,6 +299,7 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
 #' @param binSummarization The method to summarize nucleotides into each bin,
 #'   either "mean" (default), "min" or "max".
 #' @param verbose Logical; whether to print progress messages
+#' @param log1p Whether to log-transform (`log(x+1)`) the (scaled) signal.
 #' 
 #' @return The bigwig filepath. Alternatively, if `output_bw=NA_character_`, 
 #'   the coverage data is not written to file but returned.
@@ -318,8 +317,8 @@ bam2bw <- function(bamfile, output_bw, bgbam=NULL, paired=NULL,
 #' Rsamtools::indexTabix(bedf, format="bed")
 #' # convert to bigwig
 #' frag2bw(bedf, tempfile(fileext=".bw"))
-frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
-                    scaling=TRUE, type=c("full","center","start","end","ends"),
+frag2bw <- function(tabixFile, output_bw, binWidth=20L, scaling=TRUE,
+                    type=c("full","center","start","end","ends"),
                     barcodes=NULL, strand=c("*","+","-"), shift=0L, log1p=FALSE,
                     exclude=NULL, minFragLength=1L, maxFragLength=5000L,
                     keepSeqLvls=NULL, useScore=FALSE, forceSeqlevelsStyle=NULL,
@@ -329,14 +328,7 @@ frag2bw <- function(tabixFile, output_bw, paired=TRUE, binWidth=20L, extend=0L,
   binSummarization <- match.arg(binSummarization)
   strand <- match.arg(strand)
   type <- match.arg(type)
-  if(type=="ends" && !paired){
-    if(verbose)
-      warning("type='ends' only makes sense with paired-end libraries...")
-    type <- "start"
-  }
-  
-  if(paired) extend <- 0L
-  
+
   if(verbose) message("Reading in signal...")
 
   if(!is(tabixFile, "TabixFile") && 
@@ -610,11 +602,12 @@ reduceRleLists <- function(res, fn="+"){
       if(x %in% names(co)) return(co[[x]])
       return(NULL)
     })
-    w <- sapply(r2, FUN=function(x) !is.null(x) && length(x)>0)
+    w <- vapply(r2, FUN=function(x) !is.null(x) && length(x)>0,
+                FUN.VALUE=logical(1L))
     if(sum(w)==0) return(NULL)
     suppressWarnings(Reduce(fn, r2[which(w)]))
   })
-  as(res[which(!sapply(res,is.null))], "RleList")
+  as(res[which(!vapply(res, FUN=is.null, FUN.VALUE=logical(1L)))], "RleList")
 }
 
 # calculates local background at positions, analogous to MACS

@@ -1,3 +1,4 @@
+#' @importFrom grDevices col2rgb rgb
 .maketrans <- function(tcol, alpha=100){
   c <- col2rgb(tcol)
   rgb(c["red", 1][[1]], c["green", 1][[1]], c["blue", 1][[1]], 

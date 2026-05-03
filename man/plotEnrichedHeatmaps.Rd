@@ -48,6 +48,9 @@ to the 'inferno' viridis palette.}
 
 \item{scale_title}{The title of the scale. Ignored if `multiScale=TRUE`.}
 
+\item{column_title}{The title above the heatmap. If NULL (default), sample
+(i.e. track) names will be used.}
+
 \item{multiScale}{Logical; whether to use a different scale for each track.
 Defaults to TRUE is `colors` is a list, otherwise FALSE.}
 
