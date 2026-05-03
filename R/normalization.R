@@ -380,7 +380,7 @@ renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
 #' # see the `vignette("multiRegionPlot")` for more info on normalization.
 renormalizeSignalMatrices <- function(ml, method=c("border","top","manual"), 
                                       trim=NULL, fromAssay="input", toAssay=NULL,
-                                      nWindows=NULL, scaleFactors=NULL, ...){
+                                      nWindows=NULL, scaleFactors=NULL){
   if(missing(method) && !is.null(scaleFactors)) method <- "manual"
   method <- match.arg(method)
   if(is(ml, "EnrichmentSE")){

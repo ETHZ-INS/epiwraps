@@ -45,6 +45,7 @@ EnrichmentSE <- function(assays, rowRanges=NULL, ...){
 #' @param x An `EnrichmentSE` object.
 #' @param i,j Indices for subsetting.
 #' @param drop Logical; whether to drop dimensions.
+#' @param ... Ignored.
 #' 
 #' @describeIn EnrichmentSE-class Subset method for EnrichmentSE
 #' @export
@@ -158,7 +159,8 @@ showTrackInfo <- function(x, assay="input", doPrint=TRUE){
 #'   object of `ml`.
 #' @param assayName The name of the assay, defaults to 'input'
 #' @param addScore Logical; whether to add an enriched_score assay.
-#' @param ... Passed to `SummarizedExperiment()`
+#' @param ... Passed to the 
+#'   \code{\link[SummarizedExperiment]{SummarizedExperiment}} constructor.
 #' @return An `EnrichedSE` object, inheriting from a 
 #'   \link[SummarizedExperiment]{RangedSummarizedExperiment}.
 #' @importFrom SummarizedExperiment assays<- assay<- assays

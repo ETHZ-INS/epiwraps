@@ -14,8 +14,7 @@ renormalizeSignalMatrices(
   fromAssay = "input",
   toAssay = NULL,
   nWindows = NULL,
-  scaleFactors = NULL,
-  ...
+  scaleFactors = NULL
 )
 }
 \arguments{

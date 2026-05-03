@@ -16,7 +16,8 @@ object of `ml`.}
 
 \item{addScore}{Logical; whether to add an enriched_score assay.}
 
-\item{...}{Passed to `SummarizedExperiment()`}
+\item{...}{Passed to the 
+\code{\link[SummarizedExperiment]{SummarizedExperiment}} constructor.}
 }
 \value{
 An `EnrichedSE` object, inheriting from a 
