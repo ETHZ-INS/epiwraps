@@ -11,15 +11,7 @@ genomics through hands-on exploration of such data. It has now
 evolved into a set of tools around this task, including missing R-based 
 alternatives for some important steps and a more unified interface. 
 
-**Note that the package and documentation are both still under heavy development!**
-
-### Recent changes
-
-Version >0.99.80 introduced some major changes, in particular the introduction
-of `EnrichmentSE` objects, which are now the default output of `signal2Matrix`
-and facilitate manipulations, as well as renaming of some normalization 
-functions under a more standardized interface. Please consult the vignette to 
-update your workflows.
+See [recent updates](NEWS.md)
 
 ### Installation
 
