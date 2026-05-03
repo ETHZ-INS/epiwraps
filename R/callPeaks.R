@@ -150,7 +150,7 @@ callPeaks <- function(
                           minFoldEnr=minFoldEnr, minPeakCount=minPeakCount,
                           breakPeaks=type=="narrow", pseudoCount=pseudoCount,
                           useStrand=useStrand, nf=nf, bgWindow=bgWindow, 
-                          flgs=flags, maxSize=maxSize, globalBg=globalNullH)
+                          flgs2=flags, maxSize=maxSize, globalBg=globalNullH)
     o <- list(o)
   }else{
     if(verbose) message("Reading signal and identifying candidate regions...")
