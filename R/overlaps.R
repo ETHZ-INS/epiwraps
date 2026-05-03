@@ -123,7 +123,7 @@ regionOverlaps <- function(listOfRegions, mode=c("reduced","pairwise"),
                            returnValues=FALSE, color=viridisLite::plasma(100),
                            number_color="black"){
   stopifnot(length(listOfRegions)>1 && all(lengths(listOfRegions)>0) &&
-              all(sapply(listOfRegions,class2="GRanges",is)))
+              all(unlist(lapply(listOfRegions,class2="GRanges",is))))
   mode <- match.arg(mode)
   colorBy <- match.arg(colorBy)
   if(mode=="reduced"){
@@ -133,11 +133,12 @@ regionOverlaps <- function(listOfRegions, mode=c("reduced","pairwise"),
     o <- t(m) %*% m
     sizes <- colSums(m)
   }else{
-    o <- suppressWarnings(sapply(listOfRegions, FUN=function(x){
-      sapply(listOfRegions, FUN=function(y){
-        if(identical(x,y)) return(length(x))
-        sum(overlapsAny(x,y,ignore.strand=ignore.strand))
-      })
+    o <- suppressWarnings(vapply(
+      listOfRegions, FUN.VALUE=integer(length(listOfRegions)), FUN=function(x){
+        unlist(lapply(listOfRegions, FUN=function(y){
+          if(identical(x,y)) return(length(x))
+          sum(overlapsAny(x,y,ignore.strand=ignore.strand))
+        }))
     }))
     sizes <- lengths(listOfRegions)
   }

@@ -19,8 +19,7 @@ EnrichmentSE(assays, rowRanges = NULL, ...)
 \S4method{score}{EnrichmentSE}(x, ...)
 }
 \arguments{
-\item{assays}{A list of matrices or 
-\code{\link[EnrichedHeatmap]{normalizedMatrix}} objects.}
+\item{assays}{A list of matrices or `normalizedMatrix` objects.}
 
 \item{rowRanges}{A \code{\link[GenomicRanges]{GRanges}} object.}
 

@@ -9,8 +9,7 @@
 #' @aliases EnrichmentSE EnrichmentSE-class
 #' @exportClass EnrichmentSE
 #'
-#' @param assays A list of matrices or 
-#'   \code{\link[EnrichedHeatmap]{normalizedMatrix}} objects.
+#' @param assays A list of matrices or `normalizedMatrix` objects.
 #' @param rowRanges A \code{\link[GenomicRanges]{GRanges}} object.
 #' @param ... Passed to the 
 #'   \code{\link[SummarizedExperiment]{SummarizedExperiment}} constructor.
@@ -331,5 +330,6 @@ addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
 #' @param ... Arguments passed to \code{\link{getSignalMatrices}}.
 #' @export
 setMethod("score", "EnrichmentSE", function(x, ...){
-  sapply(getSignalMatrices(x, ...), FUN=EnrichedHeatmap::enriched_score)
+  vapply(getSignalMatrices(x, ...), FUN=EnrichedHeatmap::enriched_score,
+         FUN.VALUE=nrow(x))
 })

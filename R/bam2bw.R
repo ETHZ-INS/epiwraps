@@ -509,7 +509,8 @@ tileRle <- function(x, bs=10L, method=c("max","min","mean"), roundSummary=FALSE)
   method <- match.arg(method)
   if(is(x,"RleList")){
     x <- lapply(x, bs=bs, method=method, FUN=tileRle)
-    x <- x[which(sapply(x, FUN=function(x) !is.null(x) && length(x)>0))]
+    x <- x[which(vapply(x, FUN.VALUE=logical(1),
+                        FUN=\(x) !is.null(x) && length(x)>0))]
     return(as(x, "RleList"))
   }
   stopifnot(is(x,"Rle"))

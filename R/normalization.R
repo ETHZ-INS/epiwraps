@@ -304,11 +304,13 @@ bwNormFactors <- function(x, ...){
 
 .getRefSampleFromPeaks <- function(peaks){
   if(is.list(peaks) && length(peaks)==1) return(1L)
-  po <- sapply(seq_along(peaks), FUN=function(i){
-    sapply(seq_along(peaks), FUN=function(j){
+  
+  po <- vapply(seq_along(peaks), FUN.VALUE=integer(length(peaks)),
+               FUN=function(i){
+    unlist(lapply(seq_along(peaks), FUN=function(j){
       if(i==j) return(NA_integer_)
       sum(overlapsAny(peaks[[i]], peaks[[j]]))
-    })
+    }))
   })
   ref <- which.max(matrixStats::rowMaxs(po,na.rm=TRUE))
   if(min(po[ref,],na.rm=TRUE)<100){
@@ -327,7 +329,7 @@ bwNormFactors <- function(x, ...){
 renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
   message('renormalizeBorders is deprecated, please gradually switch to ',
           '`renormalizeSignalMatrices(..., method="border")`.')
-  renormalizeSignalMatrices(ml, trim=trim, assay=assay, nWindows=nWindows,
+  renormalizeSignalMatrices(ml, trim=trim, fromAssay=assay, nWindows=nWindows,
                             method="border")
 }
 

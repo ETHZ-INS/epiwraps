@@ -1,12 +1,10 @@
-# epiwraps
-
-## epiwraps 0.99.113
+# epiwraps 0.99.113
 
 ## Significant changes
 
 * First Bioc-ready release.
 
-## epiwraps 0.99.80
+# epiwraps 0.99.80
 
 ## Significant changes
 

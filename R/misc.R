@@ -93,7 +93,7 @@ breakStrings <- function (x, minSizeForBreak=20, lb="\n"){
     return(x)
   }
   stopifnot(is.character(x))
-  sapply(x, minSizeForBreak = minSizeForBreak, lb = lb,
+  unlist(lapply(x, minSizeForBreak = minSizeForBreak, lb = lb,
          FUN=function(x, minSizeForBreak, lb){
     if (nchar(x) <= minSizeForBreak) 
       return(x)
@@ -106,7 +106,7 @@ breakStrings <- function (x, minSizeForBreak=20, lb="\n"){
     mid <- g[order(abs(g - mid))[1]]
     substr(x, mid, mid) <- lb
     return(x)
-  })
+  }))
 }
 
 

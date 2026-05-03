@@ -58,7 +58,7 @@ peakCountsFromBAM <- function(
                         "Set to paired='auto' to automatically detect.")
     paired <- FALSE
   }else if(paired=="auto"){
-    paired <- testPairedEndBam(bamfile)
+    paired <- testPairedEndBam(head(bam_files[1]))
     if(verbose) message("Detected ", ifelse(paired,"paired","unpaired")," data")
   }
   if(!paired && !(type %in% c("center","ends")) && verbose && extend!=0)

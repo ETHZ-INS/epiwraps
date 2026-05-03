@@ -116,17 +116,17 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
         names(files) <- .cleanFileNames(files)
       }else if(is.list(files)){
         stopifnot(all(unlist(lapply(files, is.character))))
-        names(files) <- sapply(seq_along(files), FUN=function(x){
+        names(files) <- unlist(lapply(seq_along(files), FUN=function(x){
           if(length(files[[x]])==1)
             return(.cleanFileNames(files[[x]]))
           paste0("track",x)
-        })
+        }))
       }else{
         stop("Invalid `files` argument!")
       }
     }
     if(!is.list(files)) files <- as.list(files)
-    if(any(lengths(fm)>1 & sapply(fm, FUN=function(x) any(x=="bam"))))
+    if(any(lengths(fm)>1 & unlist(lapply(fm, FUN=function(x) any(x=="bam")))))
       warning("It is not advised to overlay/aggregate signals from bam files, ",
               "as these are not normalized.")
     if(any(lengths(fm)>1) && aggregation=="overlay" && !is.null(normFactors))
@@ -135,7 +135,7 @@ plotSignalTracks <- function(files=list(), region, ensdb=NULL, colors="darkblue"
   
   # converting RleLists to temporary bigwigs
   if(length(w <- which(fm=="cov"))>0 && 
-     any(sapply(files[w], FUN=object.size)>10^6))
+     any(unlist(lapply(files[w], FUN=\(x) object.size(x)>10^6))))
     message("Writing coverage objects to temporary bigwigs ",
             "(this might be suboptimal for large objects)...")
   for(i in w){
