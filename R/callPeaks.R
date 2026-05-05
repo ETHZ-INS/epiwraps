@@ -324,13 +324,11 @@ callPeaks <- function(
   
   if(breakPeaks){
     r2 <- r[width(r)>maxSize]
-    if(is.null(minW)){
-      minW <- 25L
-      if(!is.null(fsq)){
-        minW <- round(fsq[3])
-      }else if(!is.null(fragLength)){
-        minW <- round(fragLength/4)
-      }
+    minW <- 25L
+    if(!is.null(fsq)){
+      minW <- round(fsq[3])
+    }else if(!is.null(fragLength)){
+      minW <- round(fragLength/4)
     }
     r2 <- .breakRegions2(r2, v=r2$cov, minW=minW, maxW=maxSize)
     v <- Views(co, r2)
