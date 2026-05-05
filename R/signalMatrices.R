@@ -23,7 +23,7 @@
 #' d <- meltSignals(exampleESE)
 #' head(d)
 #' ## we could then plot for instance using ggplot:
-#' # ggplot(d, aes(position, mean, colour=sample)) + geom_line(size=1.2)
+#' # ggplot(d, aes(position, mean, colour=sample)) + geom_line(linewidth=1.2)
 meltSignals <- function(ml, fun=NULL, splitBy=NULL, trim=0.98, assay=1L){
   if(is(ml, "EnrichmentSE")){
     if(!is.null(splitBy) && length(splitBy)==1){

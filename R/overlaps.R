@@ -228,7 +228,7 @@ regionCAT <- function(regions1, regions2, start=5L,
                       setNames(d[,c("rank","p.top")], c("rank","prop"))),
                 cbind(type=rep("inAll",nrow(d)),
                       setNames(d[,c("rank","p.all")], c("rank","prop"))) )
-    return(ggplot(d, aes(rank, prop, colour=type)) + geom_line(size=1.5) +
+    return(ggplot(d, aes(rank, prop, colour=type)) + geom_line(linewidth=1.5) +
              labs(x="Rank", y="Proportion of overlap"))
   }else if(concord.type=="inTop"){
     d$prop <- d$p.top
@@ -236,7 +236,8 @@ regionCAT <- function(regions1, regions2, start=5L,
     d$prop <- d$p.all
   }
   requireNamespace("ggplot2")
-  ggplot2::ggplot(d, ggplot2::aes(rank, prop)) + ggplot2::geom_line(size=1.5) +
+  ggplot2::ggplot(d, ggplot2::aes(rank, prop)) + 
+    ggplot2::geom_line(linewidth=1.5) +
     ggplot2::labs(x="Rank", y="Proportion of overlap")
 }
 
