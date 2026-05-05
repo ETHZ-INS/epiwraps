@@ -161,9 +161,10 @@ callPeaks <- function(
         o <- tabixChrApply(bam, ..., isPaired=TRUE, ctrl=ctrl, verbose=FALSE,
                            binSize=binSize, bgWindow=bgWindow, progress=verbose,
                            minFoldEnr=minFoldEnr, useStrand=useStrand, 
-                           minPeakCount=minPeakCount, pseudoCount=pseudoCount,
-                           breakPeaks=type=="narrow", globalBg=globalNullH,
-                           nChunks=nChunks, nf=nf, fn=.cpGetCandidates)
+                           maxSize=maxSize, minPeakCount=minPeakCount,
+                           pseudoCount=pseudoCount, breakPeaks=type=="narrow",
+                           globalBg=globalNullH, nChunks=nChunks, nf=nf,
+                           fn=.cpGetCandidates)
         paired <- TRUE
       }
     }else if(sigType=="bam"){
@@ -174,8 +175,8 @@ callPeaks <- function(
                             minPeakCount=minPeakCount, pseudoCount=pseudoCount,
                             useStrand=useStrand, flgs=flags, flgs2=flags,
                             breakPeaks=type=="narrow", globalBg=globalNullH,
-                            FUN=.cpGetCandidates, nChunks=nChunks, nf=nf, 
-                            progress=verbose)
+                            nChunks=nChunks, nf=nf, maxSize=maxSize, 
+                            progress=verbose, FUN=.cpGetCandidates)
     }else{
       stop("Unrecognized file format.")
     }
@@ -323,9 +324,14 @@ callPeaks <- function(
   
   if(breakPeaks){
     r2 <- r[width(r)>maxSize]
-    minW <- 25L
-    if(!is.null(fsq)) minW <- round(fsq[3])
-    if(!is.null(fragLength)) minW <- round(fragLength/4)
+    if(is.null(minW)){
+      minW <- 25L
+      if(!is.null(fsq)){
+        minW <- round(fsq[3])
+      }else if(!is.null(fragLength)){
+        minW <- round(fragLength/4)
+      }
+    }
     r2 <- .breakRegions2(r2, v=r2$cov, minW=minW, maxW=maxSize)
     v <- Views(co, r2)
     r2$maxCount <- unlist(viewMaxs(v))
