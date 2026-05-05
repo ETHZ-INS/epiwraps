@@ -426,7 +426,7 @@ callPeaks <- function(
 }
 
 .rleMedWhich <- function(rle){
-  if(is(rle, "RleList")) return(median(unlist(lapply(rle, .rleMedWhich))))
+  if(is(rle, "RleList")) return(unlist(lapply(rle, .rleMedWhich)))
   median(cumsum(runLength(rle))[IRanges::which(runValue(rle))])
 }
 
