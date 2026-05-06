@@ -65,8 +65,4 @@ gr2 <- GRanges("seq1", c(head(ranges(gr1),5),
                          IRanges(runif(15,1,2000), width=20)),
                score=c(20:16, sample.int(15)))
 regionCAT(gr1,gr2)
-#> Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
-#> ℹ Please use `linewidth` instead.
-#> ℹ The deprecated feature was likely used in the epiwraps package.
-#>   Please report the issue to the authors.
 ```

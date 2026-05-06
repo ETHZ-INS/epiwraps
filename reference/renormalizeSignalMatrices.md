@@ -14,8 +14,7 @@ renormalizeSignalMatrices(
   fromAssay = "input",
   toAssay = NULL,
   nWindows = NULL,
-  scaleFactors = NULL,
-  ...
+  scaleFactors = NULL
 )
 ```
 
@@ -30,6 +29,14 @@ renormalizeSignalMatrices(
 
   Quantiles trimmed at each extreme before calculating normalization
   factors.
+
+- assay:
+
+  The name of the assay to use as input.
+
+- nWindows:
+
+  Number of border windows/bins to use for border normalization.
 
 - method:
 

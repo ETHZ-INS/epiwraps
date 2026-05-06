@@ -20,6 +20,10 @@ plotCovStats(qc, labels = "AUTO", show.legend = TRUE)
   Passed to
   [`plot_grid`](https://wilkelab.org/cowplot/reference/plot_grid.html).
 
+- show.legend:
+
+  Logical; whether to show the plot legend.
+
 ## Value
 
 A grid object to be plotted.

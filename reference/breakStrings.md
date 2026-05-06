@@ -30,6 +30,5 @@ A character vector of length=length(x).
 
 ``` r
 breakStrings("this is too long for practical purposes")
-#>    this is too long for practical purposes 
-#> "this is too long for\npractical purposes" 
+#> [1] "this is too long for\npractical purposes"
 ```

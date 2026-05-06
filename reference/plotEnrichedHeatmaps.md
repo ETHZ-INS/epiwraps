@@ -66,6 +66,11 @@ plotEnrichedHeatmaps(
 
   The title of the scale. Ignored if \`multiScale=TRUE\`.
 
+- column_title:
+
+  The title above the heatmap. If NULL (default), sample (i.e. track)
+  names will be used.
+
 - multiScale:
 
   Logical; whether to use a different scale for each track. Defaults to

@@ -21,6 +21,8 @@ addAssayToESE(x, a, name = "normalized", replace = TRUE)
 
 - name:
 
+  The assay name under which to add \`a\`.
+
 - replace:
 
   Logical, whether to replace any existing assay of the same name

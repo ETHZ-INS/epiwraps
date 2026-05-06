@@ -29,11 +29,14 @@ ml2ESE(ml, rowRanges, assayName = "input", addScore = FALSE, ...)
 
 - ...:
 
-  Passed to \`SummarizedExperiment()\`
+  Passed to the
+  [`SummarizedExperiment`](https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html)
+  constructor.
 
 ## Value
 
-An \`EnrichedSE\` object, inheriting from a RangedSummarizedExperiment.
+An \`EnrichedSE\` object, inheriting from a
+[RangedSummarizedExperiment](https://rdrr.io/pkg/SummarizedExperiment/man/RangedSummarizedExperiment-class.html).
 
 ## Examples
 

@@ -8,9 +8,7 @@ Creates a coverage bigwig file from a Tabix-indexed fragment file.
 frag2bw(
   tabixFile,
   output_bw,
-  paired = TRUE,
   binWidth = 20L,
-  extend = 0L,
   scaling = TRUE,
   type = c("full", "center", "start", "end", "ends"),
   barcodes = NULL,
@@ -39,12 +37,6 @@ frag2bw(
 - output_bw:
 
   The path to the output bigwig file
-
-- paired:
-
-  Logical; whether the coordinates are that of fragments, as opposed to
-  single-end reads where the only one end of the fragments is given.
-  TRUE by default.
 
 - binWidth:
 
@@ -79,6 +71,10 @@ frag2bw(
   \`shift\` is an integer vector of length 2, the first value will
   represent the shift for the positive strand, and the second for the
   negative strand.
+
+- log1p:
+
+  Whether to log-transform (\`log(x+1)\`) the (scaled) signal.
 
 - exclude:
 
@@ -141,7 +137,7 @@ bedf <- tempfile(fileext=".bed")
 rtracklayer::export.bed(reads, bedf)
 bedf <- Rsamtools::bgzip(bedf)
 Rsamtools::indexTabix(bedf, format="bed")
-#> [1] "/tmp/RtmptrFumK/file1ca11f0a1951.bed.bgz.tbi"
+#> [1] "/tmp/RtmpiLSw7S/file350b2286b140.bed.bgz.tbi"
 # convert to bigwig
 frag2bw(bedf, tempfile(fileext=".bw"))
 #> Reading in signal...

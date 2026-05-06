@@ -55,6 +55,23 @@ bwNormFactors(x, ...)
 
   Amount of trimming when calculating means.
 
+- useSeqLevels:
+
+  An optional vector of seqLevels (i.e. chromosomes) to include.
+
+- paired:
+
+  Logical; whether the reads are paired-end. Ignored unless \`x\` are
+  paths to bam files.
+
+- ...:
+
+  Passed to internal functions.
+
+- verbose:
+
+  Logical; whether to print progress messages.
+
 ## Value
 
 A vector of normalization factors, or for the 'S3norm' and '2cLinear'

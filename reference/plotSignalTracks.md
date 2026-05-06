@@ -45,8 +45,9 @@ plotSignalTracks(
   \`range\` argument are also accepted. Can also include \`GRanges \`
   objects (which will be plotted as
   [`AnnotationTrack`](https://rdrr.io/pkg/Gviz/man/AnnotationTrack-class.html))
-  or objects inheriting the `GdObject` class (i.e. any \`Gviz\` track
-  object).
+  or objects inheriting the
+  [`GdObject-class`](https://rdrr.io/pkg/Gviz/man/GdObject-class.html)
+  class (i.e. any \`Gviz\` track object).
 
 - region:
 
@@ -144,6 +145,10 @@ plotSignalTracks(
 - overlay.alpha:
 
   Transparency (0 to 250) when overlaying tracks.
+
+- normFactors:
+
+  Optional normalization factors to apply before plotting.
 
 - ...:
 

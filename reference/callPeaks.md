@@ -2,12 +2,10 @@
 
 This is a native R peak caller loosely based on the general MACS2/3
 strategy (Zhang et al., Genome Biology 2008). It can work from BAM
-files, fragment files, or from coverage tracks. The results are highly
-concordant with MACS, although the significance estimates are slightly
-more conservative, the peak resolution differs, and the function
-requires much more memory (see details). We believe its calls are
-slightly better than MACS3 in the absence of a control, and slightly
-worse when using a control.
+files, fragment files, or from coverage tracks. Note that this was
+developed for teaching purposes, and the results are decent, but might
+not be state-of-the-art. The function also requires much more memory
+than MACS (see details).
 
 ## Usage
 

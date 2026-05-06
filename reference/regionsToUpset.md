@@ -1,7 +1,6 @@
 # regionsToUpset
 
-Prepares sets of regions for UpSet overlap representation. A wrapper
-around `upset` for comparing multiple sets of genomic ranges.
+Prepares sets of regions for UpSet overlap representation.
 
 ## Usage
 
@@ -31,6 +30,18 @@ regionsToUpset(
 - returnList:
 
   Logical; whether to return the list of regions instead of plotting.
+
+- ignore.strand:
+
+  Logical; whether to ignore strand for overlaps (default FALSE).
+
+- maxgap:
+
+  Max gap between regions to consider an overlap.
+
+- minoverlap:
+
+  Minimum number of overlapping bases.
 
 - ...:
 

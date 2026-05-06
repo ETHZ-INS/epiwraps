@@ -10,7 +10,6 @@ estimateFragSize(
   ctrl = NULL,
   binSize = 10L,
   mfold = c(10, 50),
-  ...,
   minSummitCount = 8L,
   useSeqLevels = NULL,
   maxSize = 2500L,

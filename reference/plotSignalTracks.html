@@ -9,7 +9,7 @@ region."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.113</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.115</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,6 +26,7 @@ region."></head><body>
     <li><a class="dropdown-item" href="../articles/normalization.html">Normalizing genomic signals</a></li>
     <li><a class="dropdown-item" href="../articles/singleRegionPlot.html">Visualizing signals in a single region</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="http://github.com/ETHZ-INS/epiwraps/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -87,7 +88,7 @@ or aggregated (depending on the `aggregation` argument). Formats accepted by
 <code><a href="https://rdrr.io/pkg/Gviz/man/DataTrack-class.html" class="external-link">DataTrack</a></code>'s `range` argument are also accepted. Can also
 include `GRanges ` objects (which will be plotted as
 <code><a href="https://rdrr.io/pkg/Gviz/man/AnnotationTrack-class.html" class="external-link">AnnotationTrack</a></code>) or objects inheriting the
-<code>GdObject</code> class (i.e. any `Gviz` track object).</p></dd>
+<code><a href="https://rdrr.io/pkg/Gviz/man/GdObject-class.html" class="external-link">GdObject-class</a></code> class (i.e. any `Gviz` track object).</p></dd>
 
 
 <dt id="arg-region">region<a class="anchor" aria-label="anchor" href="#arg-region"></a></dt>
@@ -180,6 +181,10 @@ Alternatively, can be a custom <code><a href="https://rdrr.io/pkg/Gviz/man/GeneR
 
 <dt id="arg-overlay-alpha">overlay.alpha<a class="anchor" aria-label="anchor" href="#arg-overlay-alpha"></a></dt>
 <dd><p>Transparency (0 to 250) when overlaying tracks.</p></dd>
+
+
+<dt id="arg-normfactors">normFactors<a class="anchor" aria-label="anchor" href="#arg-normfactors"></a></dt>
+<dd><p>Optional normalization factors to apply before plotting.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

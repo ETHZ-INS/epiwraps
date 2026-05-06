@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.113</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.115</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,6 +24,7 @@
     <li><a class="dropdown-item" href="../articles/normalization.html">Normalizing genomic signals</a></li>
     <li><a class="dropdown-item" href="../articles/singleRegionPlot.html">Visualizing signals in a single region</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="http://github.com/ETHZ-INS/epiwraps/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -95,6 +96,24 @@ vector of paths to such files, or a single GRanges of unified peaks to use
 
 <dt id="arg-trim">trim<a class="anchor" aria-label="anchor" href="#arg-trim"></a></dt>
 <dd><p>Amount of trimming when calculating means.</p></dd>
+
+
+<dt id="arg-useseqlevels">useSeqLevels<a class="anchor" aria-label="anchor" href="#arg-useseqlevels"></a></dt>
+<dd><p>An optional vector of seqLevels (i.e. chromosomes) to
+include.</p></dd>
+
+
+<dt id="arg-paired">paired<a class="anchor" aria-label="anchor" href="#arg-paired"></a></dt>
+<dd><p>Logical; whether the reads are paired-end. Ignored unless `x`
+are paths to bam files.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Passed to internal functions.</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Logical; whether to print progress messages.</p></dd>
 
 </dl></div>
     <div class="section level2">

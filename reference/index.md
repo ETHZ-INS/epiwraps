@@ -2,6 +2,11 @@
 
 ## All functions
 
+- [`EnrichmentSE()`](https://ethz-ins.github.io/epiwraps/reference/EnrichmentSE-class.md)
+  [`` `[`( ``*`<EnrichmentSE>`*`,`*`<ANY>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://ethz-ins.github.io/epiwraps/reference/EnrichmentSE-class.md)
+  [`show(`*`<EnrichmentSE>`*`)`](https://ethz-ins.github.io/epiwraps/reference/EnrichmentSE-class.md)
+  [`score(`*`<EnrichmentSE>`*`)`](https://ethz-ins.github.io/epiwraps/reference/EnrichmentSE-class.md)
+  : EnrichmentSE class and constructor
 - [`TSSenrichment()`](https://ethz-ins.github.io/epiwraps/reference/TSSenrichment.md)
   : TSSenrichment
 - [`addAssayToESE()`](https://ethz-ins.github.io/epiwraps/reference/addAssayToESE.md)

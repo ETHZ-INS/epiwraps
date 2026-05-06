@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.113</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.115</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,6 +24,7 @@
     <li><a class="dropdown-item" href="../articles/normalization.html">Normalizing genomic signals</a></li>
     <li><a class="dropdown-item" href="../articles/singleRegionPlot.html">Visualizing signals in a single region</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="http://github.com/ETHZ-INS/epiwraps/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -49,9 +50,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">frag2bw</span><span class="op">(</span></span>
 <span>  <span class="va">tabixFile</span>,</span>
 <span>  <span class="va">output_bw</span>,</span>
-<span>  paired <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  binWidth <span class="op">=</span> <span class="fl">20L</span>,</span>
-<span>  extend <span class="op">=</span> <span class="fl">0L</span>,</span>
 <span>  scaling <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"full"</span>, <span class="st">"center"</span>, <span class="st">"start"</span>, <span class="st">"end"</span>, <span class="st">"ends"</span><span class="op">)</span>,</span>
 <span>  barcodes <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -81,12 +80,6 @@
 
 <dt id="arg-output-bw">output_bw<a class="anchor" aria-label="anchor" href="#arg-output-bw"></a></dt>
 <dd><p>The path to the output bigwig file</p></dd>
-
-
-<dt id="arg-paired">paired<a class="anchor" aria-label="anchor" href="#arg-paired"></a></dt>
-<dd><p>Logical; whether the coordinates are that of fragments, as
-opposed to single-end reads where the only one end of the fragments is given.
-TRUE by default.</p></dd>
 
 
 <dt id="arg-binwidth">binWidth<a class="anchor" aria-label="anchor" href="#arg-binwidth"></a></dt>
@@ -120,6 +113,10 @@ contains the column)</p></dd>
 <dd><p>Shift (from 3' to 5') by which reads/fragments will be shifted.
 If `shift` is an integer vector of length 2, the first value will represent
 the shift for the positive strand, and the second for the negative strand.</p></dd>
+
+
+<dt id="arg-log-p">log1p<a class="anchor" aria-label="anchor" href="#arg-log-p"></a></dt>
+<dd><p>Whether to log-transform (`log(x+1)`) the (scaled) signal.</p></dd>
 
 
 <dt id="arg-exclude">exclude<a class="anchor" aria-label="anchor" href="#arg-exclude"></a></dt>
@@ -185,7 +182,7 @@ either "mean" (default), "min" or "max".</p></dd>
 <span class="r-in"><span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rtracklayer/man/BEDFile-class.html" class="external-link">export.bed</a></span><span class="op">(</span><span class="va">reads</span>, <span class="va">bedf</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bedf</span> <span class="op">&lt;-</span> <span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/zip.html" class="external-link">bgzip</a></span><span class="op">(</span><span class="va">bedf</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/indexTabix.html" class="external-link">indexTabix</a></span><span class="op">(</span><span class="va">bedf</span>, format<span class="op">=</span><span class="st">"bed"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmptrFumK/file1ca11f0a1951.bed.bgz.tbi"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpiLSw7S/file350b2286b140.bed.bgz.tbi"</span>
 <span class="r-in"><span><span class="co"># convert to bigwig</span></span></span>
 <span class="r-in"><span><span class="fu">frag2bw</span><span class="op">(</span><span class="va">bedf</span>, <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext<span class="op">=</span><span class="st">".bw"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Reading in signal...</span>

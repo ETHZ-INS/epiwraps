@@ -57,5 +57,5 @@ head(d)
 #> 5    -1800 H3K27ac 88.02667 192.6586 15.73051   10.0
 #> 6    -1750 H3K27ac 85.52000 173.5301 14.16867   14.5
 ## we could then plot for instance using ggplot:
-# ggplot(d, aes(position, mean, colour=sample)) + geom_line(size=1.2)
+# ggplot(d, aes(position, mean, colour=sample)) + geom_line(linewidth=1.2)
 ```
