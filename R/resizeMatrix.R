@@ -16,6 +16,10 @@
 #' @return A numeric matrix of dimensions `ndim`
 #' @importFrom stats approx
 #' @export
+#' @examples
+#' # generate a dummy matrix
+#' m <- outer(1:50, 1:50, FUN = \(x,y) sqrt(x*y))
+#' m2 <- resizeMatrix(m, c(10,10))
 resizeMatrix <- function(mat, ndim=dim(mat),
                          method=c("mean","max","min")){
   method <- match.arg(method)

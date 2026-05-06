@@ -28,3 +28,8 @@ This works well when the desired dimensions are at least half of the input
 ones. When the desired dimensions are smaller, a different binning method 
 is used, first applied on columns and then on rows.
 }
+\examples{
+# generate a dummy matrix
+m <- outer(1:50, 1:50, FUN = \(x,y) sqrt(x*y))
+m2 <- resizeMatrix(m, c(10,10))
+}

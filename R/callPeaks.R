@@ -2,11 +2,9 @@
 #' 
 #' This is a native R peak caller loosely based on the general MACS2/3 strategy 
 #' (Zhang et al., Genome Biology 2008). It can work from BAM files, fragment 
-#' files, or from coverage tracks. The results are highly concordant with MACS, 
-#' although the significance estimates are slightly more conservative, the peak 
-#' resolution differs, and the function requires much more memory (see details).
-#' We believe its calls are slightly better than MACS3 in the absence of a 
-#' control, and slightly worse when using a control.
+#' files, or from coverage tracks. Note that this was developed for teaching 
+#' purposes, and the results are decent, but might not be state-of-the-art.
+#' The function also requires much more memory than MACS (see details).
 #'
 #' @param bam A signal bam file (which should be accompanied by an index file).
 #'   Alternatively, a TABIX-indexed fragment file, or an RleList object.
@@ -80,7 +78,8 @@
 #' 
 #' To export as a narrowPeak file, see \code{\link{exportNarrowPeaks}}.
 #' 
-#' @importFrom IRanges Views viewMaxs viewMeans slice viewRangeMaxs relist IntegerList
+#' @importFrom IRanges Views viewMaxs viewMeans slice viewRangeMaxs relist 
+#' @importFrom IRanges IntegerList NumericList RleViewsList viewWhichMaxs
 #' @importFrom stats setNames pnorm ppois optim density
 #' @importFrom S4Vectors mean.Rle
 #' @importFrom Rsamtools idxstatsBam
@@ -149,7 +148,7 @@ callPeaks <- function(
                           minFoldEnr=minFoldEnr, minPeakCount=minPeakCount,
                           breakPeaks=type=="narrow", pseudoCount=pseudoCount,
                           useStrand=useStrand, nf=nf, bgWindow=bgWindow, 
-                          flgs=flags, maxSize=maxSize, globalBg=globalNullH)
+                          flgs2=flags, maxSize=maxSize, globalBg=globalNullH)
     o <- list(o)
   }else{
     if(verbose) message("Reading signal and identifying candidate regions...")
@@ -160,9 +159,10 @@ callPeaks <- function(
         o <- tabixChrApply(bam, ..., isPaired=TRUE, ctrl=ctrl, verbose=FALSE,
                            binSize=binSize, bgWindow=bgWindow, progress=verbose,
                            minFoldEnr=minFoldEnr, useStrand=useStrand, 
-                           minPeakCount=minPeakCount, pseudoCount=pseudoCount,
-                           breakPeaks=type=="narrow", globalBg=globalNullH,
-                           nChunks=nChunks, nf=nf, fn=.cpGetCandidates)
+                           maxSize=maxSize, minPeakCount=minPeakCount,
+                           pseudoCount=pseudoCount, breakPeaks=type=="narrow",
+                           globalBg=globalNullH, nChunks=nChunks, nf=nf,
+                           fn=.cpGetCandidates)
         paired <- TRUE
       }
     }else if(sigType=="bam"){
@@ -173,8 +173,8 @@ callPeaks <- function(
                             minPeakCount=minPeakCount, pseudoCount=pseudoCount,
                             useStrand=useStrand, flgs=flags, flgs2=flags,
                             breakPeaks=type=="narrow", globalBg=globalNullH,
-                            FUN=.cpGetCandidates, nChunks=nChunks, nf=nf, 
-                            progress=verbose)
+                            nChunks=nChunks, nf=nf, maxSize=maxSize, 
+                            progress=verbose, FUN=.cpGetCandidates)
     }else{
       stop("Unrecognized file format.")
     }
@@ -193,9 +193,14 @@ callPeaks <- function(
   
   if(verbose) message("Computing significance...")
   
+  if(is.null(r$counts)){
+    fgCnt <- r$maxCount
+  }else{
+    fgCnt <- r$count
+  }
   adjmax <- r$maxCount+pseudoCount
   adjbg <- r$bg+pseudoCount
-  p <- ppois(adjmax, adjbg, lower.tail=FALSE)
+  p <- ppois(fgCnt, r$bg, lower.tail=FALSE)
   r$log10p <- -log10(p)
   r$log10FE <- round(log10(adjmax/adjbg),2)
   
@@ -269,10 +274,12 @@ callPeaks <- function(
                              minSize=10L, maxSize=2000L, minFoldEnr=1.4, 
                              bgWindow=c(1,5,10)*1000, pseudoCount=1L, nf=nf,
                              useStrand=TRUE, breakPeaks=TRUE, globalBg=FALSE,
-                             flgs2=scanBamFlag(), verbose=FALSE, ...){
+                             flgs2=scanBamFlag(), useMaxCov=TRUE, 
+                             verbose=FALSE, ...){
   covtm <- negR <- fsq <- NULL
   if(is(x, "RleList")){
     co <- x
+    useMaxCov <- TRUE
   }else{
     if(verbose) message("Reading signal coverage...")
     if(isPaired){
@@ -287,8 +294,10 @@ callPeaks <- function(
       con <- coverage(resize(x[which(as.factor(strand(x))=="-")], binSize,
                              fix="start"))
     }
-    rm(x)
-    gc(full=TRUE, verbose=FALSE)
+    if(useMaxCov){
+      rm(x)
+      gc(full=TRUE, verbose=FALSE)
+    }
   }
   r <- slice(co, lower=minPeakCount)
   r <- r[width(r)>=minSize]
@@ -323,8 +332,11 @@ callPeaks <- function(
   if(breakPeaks){
     r2 <- r[width(r)>maxSize]
     minW <- 25L
-    if(!is.null(fsq)) minW <- round(fsq[3])
-    if(!is.null(fragLength)) minW <- round(fragLength/4)
+    if(!is.null(fsq)){
+      minW <- round(fsq[3])
+    }else if(!is.null(fragLength)){
+      minW <- round(fragLength/4)
+    }
     r2 <- .breakRegions2(r2, v=r2$cov, minW=minW, maxW=maxSize)
     v <- Views(co, r2)
     r2$maxCount <- unlist(viewMaxs(v))
@@ -385,6 +397,12 @@ callPeaks <- function(
     r$summit <- integer(0)
   }
 
+  if(!useMaxCov){
+    r$count <- countOverlaps(r, x, minoverlap=1L, ignore.strand=TRUE)
+    rm(x)
+    gc(full=TRUE, verbose=FALSE)
+  }
+  
   totCov <- sum(as.numeric(sum(co)))
   rm(co,ctrl)
   gc(verbose=FALSE)
@@ -425,7 +443,7 @@ callPeaks <- function(
 }
 
 .rleMedWhich <- function(rle){
-  if(is(rle, "RleList")) return(median(unlist(lapply(rle, .rleMedWhich))))
+  if(is(rle, "RleList")) return(unlist(lapply(rle, .rleMedWhich)))
   median(cumsum(runLength(rle))[IRanges::which(runValue(rle))])
 }
 
@@ -456,6 +474,7 @@ callPeaks <- function(
 #'
 #' @returns Invisible file path.
 #' @export
+#' @importFrom utils write.table
 #' @examples
 #' # call some peaks:
 #' bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
@@ -486,6 +505,7 @@ exportNarrowPeaks <- function(p, file){
 }
 
 # get trimmed non-zero mean of a Rle/RleList
+#' @importFrom stats weighted.mean
 .covTrimmedMean <- function(x, q=0.98, th=NULL){
   if(is.null(th)) th <- quantile(unlist(runValue(x)), q)
   if(is(x,"RleList"))
@@ -534,10 +554,10 @@ exportNarrowPeaks <- function(p, file){
     negSummit <- resize(viewRangeMaxs(v), 1L, fix="center")
     negSummitCount<- viewMaxs(v)
   }else{
-    il <- IntegerList(r$pos)
+    il <- IntegerList(gr$pos)
     posSummit <- round(median(which(il==max(il))))
     posSummitCount <- max(il)
-    il <- IntegerList(r$neg)
+    il <- IntegerList(gr$neg)
     negSummit <- round(median(which(il==max(il))))
     negSummitCount <- max(il)
   }

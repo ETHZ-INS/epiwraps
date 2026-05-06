@@ -11,6 +11,8 @@ plotCovStats(qc, labels = "AUTO", show.legend = TRUE)
 \code{\link{getCovStats}}.}
 
 \item{labels}{Passed to \code{\link[cowplot]{plot_grid}}.}
+
+\item{show.legend}{Logical; whether to show the plot legend.}
 }
 \value{
 A grid object to be plotted.

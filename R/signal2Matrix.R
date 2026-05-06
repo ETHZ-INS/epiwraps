@@ -24,6 +24,8 @@
 #'   surroundings)
 #' @param binMethod Whether to compute the 'max' (default), 'mean' or 'min' per
 #'   bin.
+#' @param scaling Logical; whether to scale to library size when reading from
+#'   BAM files.
 #' @param BPPARAM A \code{\link[BiocParallel]{BiocParallelParam}} object, or 
 #'   the number of threads to use to read and prepare the data. Note that the 
 #'   rate-limiting process is reading from disk, so unless you have an unusually
@@ -178,7 +180,7 @@ signal2Matrix <- function(filepaths, regions, extend=2000, w=NULL, scaling=TRUE,
           isSecondaryAlignment=ifelse(isFALSE(ll$includeSecondary),FALSE,NA),
           isMinusStrand=switch(strandflag, "*"=NA, "+"=FALSE, "-"=TRUE),
           isNotPassingQualityControls=FALSE)
-        ll$paired <- .parsePairedArg(bamfile, paired=ll$paired, verbose=verbose)
+        ll$paired <- .parsePairedArg(filepath, paired=ll$paired, verbose=verbose)
         co <- coverage(do.call(.bam2bwGetReads, c(ll, list(
                 param=Rsamtools::ScanBamParam(which=readRegions, flag=flgs)))))
       }

@@ -17,6 +17,8 @@
 #' @param multiScale Logical; whether to use a different scale for each track.
 #'   Defaults to TRUE is `colors` is a list, otherwise FALSE.
 #' @param scale_title The title of the scale. Ignored if `multiScale=TRUE`.
+#' @param column_title The title above the heatmap. If NULL (default), sample
+#'   (i.e. track) names will be used.
 #' @param column_title_gp Graphic parameters of the column titles (see 
 #'   \code{\link[grid]{gpar}})
 #' @param row_order Optional order of the rows.

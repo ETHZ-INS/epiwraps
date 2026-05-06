@@ -172,7 +172,7 @@ function for more information.
 # Session information {-}
 
 
-```{r}
+```{r sessionInfo}
 sessionInfo()
 ```
 

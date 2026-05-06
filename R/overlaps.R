@@ -1,8 +1,6 @@
 #' regionsToUpset
 #' 
 #' Prepares sets of regions for UpSet overlap representation.
-#' A wrapper around \code{\link[UpSetR]{upset}} for comparing multiple sets of
-#' genomic ranges.
 #'
 #' @param x A named list of genomic ranges (or paths to bed files)
 #' @param reference The method for creating the reference windows ('reduce' or
@@ -11,6 +9,10 @@
 #'   plotting.
 #' @param ... Further arguments specifying how the overlaps are done, 
 #' passed to \code{\link[GenomicRanges]{findOverlaps-methods}}).
+#' @param ignore.strand Logical; whether to ignore strand for overlaps (default
+#'   FALSE).
+#' @param maxgap Max gap between regions to consider an overlap.
+#' @param minoverlap Minimum number of overlapping bases.
 #'
 #' @return A data.frame of set inclusions which can be directly input to
 #'   \code{\link[ComplexHeatmap]{make_comb_mat}}, and then
@@ -121,7 +123,7 @@ regionOverlaps <- function(listOfRegions, mode=c("reduced","pairwise"),
                            returnValues=FALSE, color=viridisLite::plasma(100),
                            number_color="black"){
   stopifnot(length(listOfRegions)>1 && all(lengths(listOfRegions)>0) &&
-              all(sapply(listOfRegions,class2="GRanges",is)))
+              all(unlist(lapply(listOfRegions,class2="GRanges",is))))
   mode <- match.arg(mode)
   colorBy <- match.arg(colorBy)
   if(mode=="reduced"){
@@ -131,11 +133,12 @@ regionOverlaps <- function(listOfRegions, mode=c("reduced","pairwise"),
     o <- t(m) %*% m
     sizes <- colSums(m)
   }else{
-    o <- suppressWarnings(sapply(listOfRegions, FUN=function(x){
-      sapply(listOfRegions, FUN=function(y){
-        if(identical(x,y)) return(length(x))
-        sum(overlapsAny(x,y,ignore.strand=ignore.strand))
-      })
+    o <- suppressWarnings(vapply(
+      listOfRegions, FUN.VALUE=integer(length(listOfRegions)), FUN=function(x){
+        unlist(lapply(listOfRegions, FUN=function(y){
+          if(identical(x,y)) return(length(x))
+          sum(overlapsAny(x,y,ignore.strand=ignore.strand))
+        }))
     }))
     sizes <- lengths(listOfRegions)
   }
@@ -225,7 +228,7 @@ regionCAT <- function(regions1, regions2, start=5L,
                       setNames(d[,c("rank","p.top")], c("rank","prop"))),
                 cbind(type=rep("inAll",nrow(d)),
                       setNames(d[,c("rank","p.all")], c("rank","prop"))) )
-    return(ggplot(d, aes(rank, prop, colour=type)) + geom_line(size=1.5) +
+    return(ggplot(d, aes(rank, prop, colour=type)) + geom_line(linewidth=1.5) +
              labs(x="Rank", y="Proportion of overlap"))
   }else if(concord.type=="inTop"){
     d$prop <- d$p.top
@@ -233,7 +236,8 @@ regionCAT <- function(regions1, regions2, start=5L,
     d$prop <- d$p.all
   }
   requireNamespace("ggplot2")
-  ggplot2::ggplot(d, ggplot2::aes(rank, prop)) + ggplot2::geom_line(size=1.5) +
+  ggplot2::ggplot(d, ggplot2::aes(rank, prop)) + 
+    ggplot2::geom_line(linewidth=1.5) +
     ggplot2::labs(x="Rank", y="Proportion of overlap")
 }
 

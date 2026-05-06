@@ -12,7 +12,7 @@ addAssayToESE(x, a, name = "normalized", replace = TRUE)
 
 \item{a}{The assay to add, e.g. a list of normalizedMatrix objects}
 
-\item{name}{}
+\item{name}{The assay name under which to add `a`.}
 
 \item{replace}{Logical, whether to replace any existing assay of the same 
 name (default TRUE). If FALSE and the assay already existed, the new assay 

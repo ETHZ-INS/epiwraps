@@ -1,6 +1,23 @@
-
+#' EnrichmentSE class and constructor
+#'
+#' The `EnrichmentSE` class is a container for epigenomic enrichment data, 
+#' extending the \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}}
+#'  class.
+#'
+#' @name EnrichmentSE-class
+#' @rdname EnrichmentSE-class
+#' @aliases EnrichmentSE EnrichmentSE-class
+#' @exportClass EnrichmentSE
+#'
+#' @param assays A list of matrices or `normalizedMatrix` objects.
+#' @param rowRanges A \code{\link[GenomicRanges]{GRanges}} object.
+#' @param ... Passed to the 
+#'   \code{\link[SummarizedExperiment]{SummarizedExperiment}} constructor.
+#'
+#' @return An `EnrichmentSE` object.
 #' @import methods
-#' @importClassesFrom SummarizedExperiment SummarizedExperiment RangedSummarizedExperiment
+#' @importClassesFrom SummarizedExperiment SummarizedExperiment 
+#' @importClassesFrom SummarizedExperiment RangedSummarizedExperiment
 .EnrichmentSE <- setClass("EnrichmentSE",
   contains="RangedSummarizedExperiment",
   representation(
@@ -11,6 +28,9 @@
   )
 )
 
+
+#' @export
+#' @rdname EnrichmentSE-class
 EnrichmentSE <- function(assays, rowRanges=NULL, ...){
   if(is.null(rowRanges)){
     a <- SummarizedExperiment(assays, ...)
@@ -18,20 +38,29 @@ EnrichmentSE <- function(assays, rowRanges=NULL, ...){
     a <- SummarizedExperiment(assays, rowRanges=rowRanges, ...)
   }
   a@NAMES <- NULL
-  epiwraps:::.EnrichmentSE(a)
+  .EnrichmentSE(a)
 }
 
-
-
+#' @param x An `EnrichmentSE` object.
+#' @param i,j Indices for subsetting.
+#' @param drop Logical; whether to drop dimensions.
+#' @param ... Ignored.
+#' 
+#' @describeIn EnrichmentSE-class Subset method for EnrichmentSE
 #' @export
-setMethod("[", c("EnrichmentSE", "ANY", "ANY"), function(x, i, j, ..., drop=TRUE){
+setMethod("[", c("EnrichmentSE", "ANY", "ANY"), function(x, i, j, ..., 
+                                                         drop=TRUE){
   if(missing(j)) j <- NULL
   if(missing(i)) i <- NULL
   .resizeESE(x, i, j, drop=drop)
 })
 
+#' @param object An `EnrichmentSE` object.
+#' 
+#' @describeIn EnrichmentSE-class Show method for EnrichmentSE
 #' @importFrom SummarizedExperiment assays assays<- rowRanges 
 #' @importFrom SummarizedExperiment assayNames assayNames<-
+#' @export
 setMethod("show", "EnrichmentSE", function(object){
   cat("class:", class(object), "\n")
   cat(ncol(object), "tracks across", nrow(object), "regions\n")
@@ -129,9 +158,10 @@ showTrackInfo <- function(x, assay="input", doPrint=TRUE){
 #'   object of `ml`.
 #' @param assayName The name of the assay, defaults to 'input'
 #' @param addScore Logical; whether to add an enriched_score assay.
-#' @param ... Passed to `SummarizedExperiment()`
+#' @param ... Passed to the 
+#'   \code{\link[SummarizedExperiment]{SummarizedExperiment}} constructor.
 #' @return An `EnrichedSE` object, inheriting from a 
-#'   \link[SummarizedExperment]{RangedSummarizedExperiment}.
+#'   \link[SummarizedExperiment]{RangedSummarizedExperiment}.
 #' @importFrom SummarizedExperiment assays<- assay<- assays
 #' @export
 #' @examples
@@ -243,7 +273,7 @@ getSignalMatrices <- function(x, assay=1L){
 #' @param x An object of class `EnrichmentSE`, as produced by 
 #'   \code{\link{signal2Matrix}}.
 #' @param a The assay to add, e.g. a list of normalizedMatrix objects
-#' @param name 
+#' @param name The assay name under which to add `a`.
 #' @param replace Logical, whether to replace any existing assay of the same 
 #'   name (default TRUE). If FALSE and the assay already existed, the new assay 
 #'   name is given a suffix.
@@ -293,7 +323,13 @@ addAssayToESE <- function(x, a, name="normalized", replace=TRUE){
 }
 
 
+#' @describeIn EnrichmentSE-class Access the score (first assay)
+#' 
+#' @param x An object of class `EnrichmentSE`, as produced by 
+#'   \code{\link{signal2Matrix}}.
+#' @param ... Arguments passed to \code{\link{getSignalMatrices}}.
 #' @export
-setMethod("score", "EnrichmentSE", function(x,...){
-  sapply(getSignalMatrices(x), FUN=EnrichedHeatmap::enriched_score)
+setMethod("score", "EnrichmentSE", function(x, ...){
+  vapply(getSignalMatrices(x, ...), FUN=EnrichedHeatmap::enriched_score,
+         FUN.VALUE=numeric(nrow(x)))
 })

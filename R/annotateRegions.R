@@ -103,7 +103,7 @@ annotateRegions <- function(regions, anno, proximal=c(2500,1000),
   mcols(regions)[d@from,c("nearestTSS","nearestTSS.gene_name")] <- 
     mcols(tss)[d@to,c("transcript_id","gene_name")]
   o <- findOverlaps(regions, anno)
-  ll <- sapply(split(o@to, o@from), FUN=function(x) sort(anno$type[x])[1])
+  ll <- unlist(lapply(split(o@to, o@from), FUN=\(x) sort(anno$type[x])[1]))
   regions$TSS.overlap <- "intergenic"
   regions$TSS.overlap[as.numeric(names(ll))] <- 
     c("exonic","intronic","repeat")[as.numeric(ll)]

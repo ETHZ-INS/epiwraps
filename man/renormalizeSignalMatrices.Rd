@@ -14,8 +14,7 @@ renormalizeSignalMatrices(
   fromAssay = "input",
   toAssay = NULL,
   nWindows = NULL,
-  scaleFactors = NULL,
-  ...
+  scaleFactors = NULL
 )
 }
 \arguments{
@@ -24,6 +23,11 @@ renormalizeSignalMatrices(
 
 \item{trim}{Quantiles trimmed at each extreme before calculating 
 normalization factors.}
+
+\item{assay}{The name of the assay to use as input.}
+
+\item{nWindows}{Number of border windows/bins to use for border
+normalization.}
 
 \item{method}{Either "border" or "top" (see details below).}
 

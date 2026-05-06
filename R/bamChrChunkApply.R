@@ -86,7 +86,7 @@ head(paste(missingLvls, collapse=", "), 3)))
     if(is.numeric(nChunks) && nChunks>=2){
       stopifnot(round(nChunks)==nChunks)
       nChunks <- as.integer(nChunks)
-      seqs <- sort(seqs, dec=TRUE)
+      seqs <- sort(seqs, decreasing=TRUE)
       chrGroup <- head(rep(seq_len(nChunks), 
                            ceiling(length(seqs)/nChunks)), length(seqs))
       chrGroup <- split(seqs, chrGroup)

@@ -23,6 +23,13 @@ regionsToUpset(
 \item{returnList}{Logical; whether to return the list of regions instead of 
 plotting.}
 
+\item{ignore.strand}{Logical; whether to ignore strand for overlaps (default
+FALSE).}
+
+\item{maxgap}{Max gap between regions to consider an overlap.}
+
+\item{minoverlap}{Minimum number of overlapping bases.}
+
 \item{...}{Further arguments specifying how the overlaps are done, 
 passed to \code{\link[GenomicRanges]{findOverlaps-methods}}).}
 }
@@ -33,8 +40,6 @@ A data.frame of set inclusions which can be directly input to
 }
 \description{
 Prepares sets of regions for UpSet overlap representation.
-A wrapper around \code{\link[UpSetR]{upset}} for comparing multiple sets of
-genomic ranges.
 }
 \examples{
 # random list of GRanges:

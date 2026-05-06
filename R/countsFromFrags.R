@@ -26,11 +26,10 @@
 #'   in the `rowData` of the object.
 #' @export
 #' @importFrom GenomicRanges GRanges findOverlaps width granges
-#' @importFrom IRanges IRanges ranges
+#' @importFrom IRanges IRanges ranges median
 #' @importFrom S4Vectors queryHits subjectHits splitAsList
 #' @importFrom Matrix sparseMatrix
 #' @importFrom SummarizedExperiment SummarizedExperiment
-#' @importFrom stats median
 #' @examples
 #' # generate dummy regions and save them to a temp file:
 #' frags <- tempfile(fileext = ".tsv")

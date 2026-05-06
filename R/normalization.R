@@ -15,6 +15,12 @@
 #'   vector of paths to such files, or a single GRanges of unified peaks to use 
 #'   (e.g. for top/MAnorm).
 #' @param trim Amount of trimming when calculating means.
+#' @param paired Logical; whether the reads are paired-end. Ignored unless `x` 
+#'  are paths to bam files.
+#' @param useSeqLevels An optional vector of seqLevels (i.e. chromosomes) to 
+#'   include.
+#' @param verbose Logical; whether to print progress messages.
+#' @param ... Passed to internal functions.
 #' 
 #' @return A vector of normalization factors, or for the 'S3norm' and '2cLinear'
 #'   methods, a numeric matrix with a number of rows equal to the length 
@@ -60,6 +66,7 @@
 #' @return A vector of normalization factors or, for methods 'S3norm' and 
 #'   '2cLinear', a matrix of per-sample normalization parameters.
 #' @export
+#' @importFrom GenomeInfoDb seqlengths<-
 #' @examples
 #' # we get an example bigwig file, and use it twice:
 #' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
@@ -297,11 +304,13 @@ bwNormFactors <- function(x, ...){
 
 .getRefSampleFromPeaks <- function(peaks){
   if(is.list(peaks) && length(peaks)==1) return(1L)
-  po <- sapply(seq_along(peaks), FUN=function(i){
-    sapply(seq_along(peaks), FUN=function(j){
+  
+  po <- vapply(seq_along(peaks), FUN.VALUE=integer(length(peaks)),
+               FUN=function(i){
+    unlist(lapply(seq_along(peaks), FUN=function(j){
       if(i==j) return(NA_integer_)
       sum(overlapsAny(peaks[[i]], peaks[[j]]))
-    })
+    }))
   })
   ref <- which.max(matrixStats::rowMaxs(po,na.rm=TRUE))
   if(min(po[ref,],na.rm=TRUE)<100){
@@ -314,12 +323,13 @@ bwNormFactors <- function(x, ...){
   ref
 }
 
+#' @param assay The name of the assay to use as input.
 #' @export
 #' @describeIn renormalizeSignalMatrices deprecated > renormalizeSignalMatrices
 renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
   message('renormalizeBorders is deprecated, please gradually switch to ',
           '`renormalizeSignalMatrices(..., method="border")`.')
-  renormalizeSignalMatrices(ml, trim=trim, assay=assay, nWindows=nWindows,
+  renormalizeSignalMatrices(ml, trim=trim, fromAssay=assay, nWindows=nWindows,
                             method="border")
 }
 
@@ -343,6 +353,8 @@ renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
 #'   Alternatively, a numeric matrix with a number of rows equal to the length 
 #'   of `ml`, and two columns indicating the alpha and beta arguments of a 
 #'   s3norm normalization. Ignored unless `method="manual"`.
+#' @param nWindows Number of border windows/bins to use for border
+#'   normalization.
 #'
 #' @details
 #' * `method="border"` works on the assumption that the left/right borders of the 
@@ -370,7 +382,7 @@ renormalizeBorders <- function(ml, trim=NULL, assay="input", nWindows=NULL){
 #' # see the `vignette("multiRegionPlot")` for more info on normalization.
 renormalizeSignalMatrices <- function(ml, method=c("border","top","manual"), 
                                       trim=NULL, fromAssay="input", toAssay=NULL,
-                                      nWindows=NULL, scaleFactors=NULL, ...){
+                                      nWindows=NULL, scaleFactors=NULL){
   if(missing(method) && !is.null(scaleFactors)) method <- "manual"
   method <- match.arg(method)
   if(is(ml, "EnrichmentSE")){

@@ -124,7 +124,8 @@ plotEnrichedHeatmaps(ese, colors=c("white","darkred"), cluster_rows=TRUE,
                      show_row_dend=TRUE, top_annotation=FALSE, 
                      row_title="My list of cool regions")
 ```
-
+Note however that the default clustering function is typically not ideal for
+such data -- see for instance `?clusterSignalMatrices` instead.
 
 It is often useful to subset to regions with a high enrichment, which we can do
 with the `score` function:
