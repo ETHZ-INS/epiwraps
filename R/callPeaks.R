@@ -2,11 +2,9 @@
 #' 
 #' This is a native R peak caller loosely based on the general MACS2/3 strategy 
 #' (Zhang et al., Genome Biology 2008). It can work from BAM files, fragment 
-#' files, or from coverage tracks. The results are highly concordant with MACS, 
-#' although the significance estimates are slightly more conservative, the peak 
-#' resolution differs, and the function requires much more memory (see details).
-#' We believe its calls are slightly better than MACS3 in the absence of a 
-#' control, and slightly worse when using a control.
+#' files, or from coverage tracks. Note that this was developed for teaching 
+#' purposes, and the results are decent, but might not be state-of-the-art.
+#' The function also requires much more memory than MACS (see details).
 #'
 #' @param bam A signal bam file (which should be accompanied by an index file).
 #'   Alternatively, a TABIX-indexed fragment file, or an RleList object.
@@ -195,9 +193,14 @@ callPeaks <- function(
   
   if(verbose) message("Computing significance...")
   
+  if(is.null(r$counts)){
+    fgCnt <- r$maxCount
+  }else{
+    fgCnt <- r$count
+  }
   adjmax <- r$maxCount+pseudoCount
   adjbg <- r$bg+pseudoCount
-  p <- ppois(adjmax, adjbg, lower.tail=FALSE)
+  p <- ppois(fgCnt, r$bg, lower.tail=FALSE)
   r$log10p <- -log10(p)
   r$log10FE <- round(log10(adjmax/adjbg),2)
   
@@ -271,10 +274,12 @@ callPeaks <- function(
                              minSize=10L, maxSize=2000L, minFoldEnr=1.4, 
                              bgWindow=c(1,5,10)*1000, pseudoCount=1L, nf=nf,
                              useStrand=TRUE, breakPeaks=TRUE, globalBg=FALSE,
-                             flgs2=scanBamFlag(), verbose=FALSE, ...){
+                             flgs2=scanBamFlag(), useMaxCov=TRUE, 
+                             verbose=FALSE, ...){
   covtm <- negR <- fsq <- NULL
   if(is(x, "RleList")){
     co <- x
+    useMaxCov <- TRUE
   }else{
     if(verbose) message("Reading signal coverage...")
     if(isPaired){
@@ -289,8 +294,10 @@ callPeaks <- function(
       con <- coverage(resize(x[which(as.factor(strand(x))=="-")], binSize,
                              fix="start"))
     }
-    rm(x)
-    gc(full=TRUE, verbose=FALSE)
+    if(useMaxCov){
+      rm(x)
+      gc(full=TRUE, verbose=FALSE)
+    }
   }
   r <- slice(co, lower=minPeakCount)
   r <- r[width(r)>=minSize]
@@ -390,6 +397,12 @@ callPeaks <- function(
     r$summit <- integer(0)
   }
 
+  if(!useMaxCov){
+    r$count <- countOverlaps(r, x, minoverlap=1L, ignore.strand=TRUE)
+    rm(x)
+    gc(full=TRUE, verbose=FALSE)
+  }
+  
   totCov <- sum(as.numeric(sum(co)))
   rm(co,ctrl)
   gc(verbose=FALSE)
