@@ -188,7 +188,7 @@ sessionInfo()
     ##  [61] rjson_0.2.23             tools_4.6.0              foreign_0.8-91          
     ##  [64] nnet_7.3-20              glue_1.8.1               restfulr_0.0.16         
     ##  [67] checkmate_2.3.4          cluster_2.1.8.2          gtable_0.3.6            
-    ##  [70] BSgenome_1.80.0          ensembldb_2.36.0         data.table_1.18.2.1     
+    ##  [70] BSgenome_1.80.0          ensembldb_2.36.0         data.table_1.18.4       
     ##  [73] hms_1.1.4                XVector_0.52.0           foreach_1.5.2           
     ##  [76] pillar_1.11.1            stringr_1.6.0            circlize_0.4.18         
     ##  [79] dplyr_1.2.1              BiocFileCache_3.2.0      lattice_0.22-9          

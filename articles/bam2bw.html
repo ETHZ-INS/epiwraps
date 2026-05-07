@@ -106,8 +106,8 @@ you’ve go the following single-end reads:</p>
 <code class="sourceCode R"><span><span class="va">bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bam"</span><span class="op">)</span> <span class="co"># temp file name</span></span>
 <span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="va">gr</span>, <span class="va">bam</span>, format<span class="op">=</span><span class="st">"bam"</span><span class="op">)</span></span>
 <span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">indexBam</a></span><span class="op">(</span><span class="va">bam</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##       /tmp/RtmpOuoJES/file37daaac5b5a.bam </span></span>
-<span><span class="co">## "/tmp/RtmpOuoJES/file37daaac5b5a.bam.bai"</span></span></code></pre>
+<pre><code><span><span class="co">##       /tmp/RtmpXgQLlC/file1f7666b622f.bam </span></span>
+<span><span class="co">## "/tmp/RtmpXgQLlC/file1f7666b622f.bam.bai"</span></span></code></pre>
 <p>Using these example reads, we can illustrate different ways of
 computing coverages.</p>
 <p>First, we can save coverage at different resolutions, from full
@@ -303,7 +303,7 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">##  [61] foreign_0.8-91           nnet_7.3-20              glue_1.8.1              </span></span>
 <span><span class="co">##  [64] restfulr_0.0.16          checkmate_2.3.4          cluster_2.1.8.2         </span></span>
 <span><span class="co">##  [67] gtable_0.3.6             BSgenome_1.80.0          ensembldb_2.36.0        </span></span>
-<span><span class="co">##  [70] data.table_1.18.2.1      hms_1.1.4                XVector_0.52.0          </span></span>
+<span><span class="co">##  [70] data.table_1.18.4        hms_1.1.4                XVector_0.52.0          </span></span>
 <span><span class="co">##  [73] foreach_1.5.2            pillar_1.11.1            stringr_1.6.0           </span></span>
 <span><span class="co">##  [76] circlize_0.4.18          dplyr_1.2.1              BiocFileCache_3.2.0     </span></span>
 <span><span class="co">##  [79] lattice_0.22-9           deldir_2.0-4             rtracklayer_1.72.0      </span></span>

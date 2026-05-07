@@ -62,7 +62,7 @@
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>Bioconductor offers powerful packages for the analysis and visualization of (epi)genomic data, however they are often not always easy to approach for users without an extensive bioinformatics background. The <code>epiwraps</code> package started off as a set of wrappers for the visualization of epigenomics data (in particular ATAC/ChIP-seq), meant to facilitate the teaching of regulatory genomics through hands-on exploration of such data. It has now evolved into a set of tools around this task, including missing R-based alternatives for some important steps and a more unified interface.</p>
+<p>Bioconductor offers powerful packages for the analysis and visualization of (epi)genomic data, however they are often not always easy to approach for users without an extensive bioinformatics background. The <code>epiwraps</code> package started off as a set of wrappers for the visualization of epigenomics data (in particular ATAC/ChIP-seq -like data), meant to facilitate the teaching of regulatory genomics through hands-on exploration of such data. It has now evolved into a set of tools presenting a smoother and more unified interface.</p>
 <p>See <a href="NEWS.html">recent updates</a></p>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -75,7 +75,7 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>While the package’s functions accept many input formats, much of the work usually done involving it uses bigwig files, and the package covers both the flexible <a href="https://ethz-ins.github.io/epiwraps/articles/bam2bw.html">generation</a> of such files, as well as their use for extracting and plotting data, whether in a <a href="https://ethz-ins.github.io/epiwraps/articles/singleRegionPlot.html">single region</a> or <a href="https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html">across many regions</a>.</p>
+<p>While the package’s functions accept many input formats, much of the work is usually done on bigwig files, and the package covers both the flexible <a href="https://ethz-ins.github.io/epiwraps/articles/bam2bw.html">generation</a> of such files, as well as their use for extracting and plotting data, whether in a <a href="https://ethz-ins.github.io/epiwraps/articles/singleRegionPlot.html">single region</a> or <a href="https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html">across many regions</a>.</p>
 <p>This is exemplified in the following figure:</p>
 <p><img src="articles/example_bigwigs_hm.png" width="700"></p>
 <p>All columns are based on the same bam file, but select and/or summarize fragments differently. For example, the heatmap of insertion sites of nucleosome-free fragments was based on a bigwig file generated using:</p>
@@ -83,6 +83,12 @@
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>       <span class="at">binWidth=</span><span class="dv">1</span><span class="dt">L</span>, <span class="at">minFragLength=</span><span class="dv">25</span>, <span class="at">maxFragLength=</span><span class="dv">120</span>, <span class="at">type=</span><span class="st">"ends"`</span><span class="at">)</span></span></code></pre></div>
 <p>More information about bigwig file generation is available in the <a href="https://ethz-ins.github.io/epiwraps/articles/bam2bw.html">bam2bw vignette</a>.</p>
 <p>For information on the extraction of signal from such files (as well as other format) and plotting of such heatmaps, see the <a href="https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html">vignette to this effect</a>.</p>
+<p>The package additionally includes a number of functions to facilitate quality control, clustering, and visualizing region overlaps.</p>
+</div>
+<div class="section level2">
+<h2 id="underlying-bioconductor-tools">Underlying Bioconductor tools<a class="anchor" aria-label="anchor" href="#underlying-bioconductor-tools"></a>
+</h2>
+<p><code>epiwraps</code> builds around a number of high-quality bioconductor packages, in particular (beyond core Bioc packages) the <a href="https://jokergoo.github.io/EnrichedHeatmap" class="external-link">EnrichedHeatmap</a> package from Zuguang Gu, as well as <a href="https://bioconductor.org/packages/release/bioc/html/Gviz.html" class="external-link">Gviz</a> package.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

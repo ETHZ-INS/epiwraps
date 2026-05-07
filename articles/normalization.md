@@ -269,9 +269,9 @@ sessionInfo()
     ##  [61] tools_4.6.0              foreign_0.8-91           nnet_7.3-20             
     ##  [64] glue_1.8.1               restfulr_0.0.16          checkmate_2.3.4         
     ##  [67] cluster_2.1.8.2          gtable_0.3.6             BSgenome_1.80.0         
-    ##  [70] ensembldb_2.36.0         data.table_1.18.2.1      hms_1.1.4               
+    ##  [70] ensembldb_2.36.0         data.table_1.18.4        hms_1.1.4               
     ##  [73] XVector_0.52.0           foreach_1.5.2            pillar_1.11.1           
-    ##  [76] stringr_1.6.0            limma_3.68.1             circlize_0.4.18         
+    ##  [76] stringr_1.6.0            limma_3.68.2             circlize_0.4.18         
     ##  [79] dplyr_1.2.1              BiocFileCache_3.2.0      lattice_0.22-9          
     ##  [82] deldir_2.0-4             rtracklayer_1.72.0       bit_4.6.0               
     ##  [85] biovizBase_1.60.0        tidyselect_1.2.1         locfit_1.5-9.12         

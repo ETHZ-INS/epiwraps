@@ -42,8 +42,8 @@ rtracklayer::export(gr, bam, format="bam")
 Rsamtools::indexBam(bam)
 ```
 
-    ##       /tmp/RtmpOuoJES/file37daaac5b5a.bam 
-    ## "/tmp/RtmpOuoJES/file37daaac5b5a.bam.bai"
+    ##       /tmp/RtmpXgQLlC/file1f7666b622f.bam 
+    ## "/tmp/RtmpXgQLlC/file1f7666b622f.bam.bai"
 
 Using these example reads, we can illustrate different ways of computing
 coverages.
@@ -303,7 +303,7 @@ sessionInfo()
     ##  [61] foreign_0.8-91           nnet_7.3-20              glue_1.8.1              
     ##  [64] restfulr_0.0.16          checkmate_2.3.4          cluster_2.1.8.2         
     ##  [67] gtable_0.3.6             BSgenome_1.80.0          ensembldb_2.36.0        
-    ##  [70] data.table_1.18.2.1      hms_1.1.4                XVector_0.52.0          
+    ##  [70] data.table_1.18.4        hms_1.1.4                XVector_0.52.0          
     ##  [73] foreach_1.5.2            pillar_1.11.1            stringr_1.6.0           
     ##  [76] circlize_0.4.18          dplyr_1.2.1              BiocFileCache_3.2.0     
     ##  [79] lattice_0.22-9           deldir_2.0-4             rtracklayer_1.72.0      

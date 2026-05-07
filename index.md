@@ -6,11 +6,10 @@ Bioconductor offers powerful packages for the analysis and visualization
 of (epi)genomic data, however they are often not always easy to approach
 for users without an extensive bioinformatics background. The `epiwraps`
 package started off as a set of wrappers for the visualization of
-epigenomics data (in particular ATAC/ChIP-seq), meant to facilitate the
-teaching of regulatory genomics through hands-on exploration of such
-data. It has now evolved into a set of tools around this task, including
-missing R-based alternatives for some important steps and a more unified
-interface.
+epigenomics data (in particular ATAC/ChIP-seq -like data), meant to
+facilitate the teaching of regulatory genomics through hands-on
+exploration of such data. It has now evolved into a set of tools
+presenting a smoother and more unified interface.
 
 See [recent updates](https://ethz-ins.github.io/epiwraps/NEWS.md)
 
@@ -26,8 +25,8 @@ BiocManager::install("ETHZ-INS/epiwraps")
 ## Overview
 
 While the package’s functions accept many input formats, much of the
-work usually done involving it uses bigwig files, and the package covers
-both the flexible
+work is usually done on bigwig files, and the package covers both the
+flexible
 [generation](https://ethz-ins.github.io/epiwraps/articles/bam2bw.html)
 of such files, as well as their use for extracting and plotting data,
 whether in a [single
@@ -55,3 +54,15 @@ vignette](https://ethz-ins.github.io/epiwraps/articles/bam2bw.html).
 For information on the extraction of signal from such files (as well as
 other format) and plotting of such heatmaps, see the [vignette to this
 effect](https://ethz-ins.github.io/epiwraps/articles/multiRegionPlot.html).
+
+The package additionally includes a number of functions to facilitate
+quality control, clustering, and visualizing region overlaps.
+
+## Underlying Bioconductor tools
+
+`epiwraps` builds around a number of high-quality bioconductor packages,
+in particular (beyond core Bioc packages) the
+[EnrichedHeatmap](https://jokergoo.github.io/EnrichedHeatmap) package
+from Zuguang Gu, as well as
+[Gviz](https://bioconductor.org/packages/release/bioc/html/Gviz.html)
+package.
