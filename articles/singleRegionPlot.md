@@ -22,7 +22,6 @@ a GRanges or as a string). The function then automatically determines
 the relevant track type and setting from the file types.
 
 ``` r
-
 suppressPackageStartupMessages(library(epiwraps))
 
 # get the path to an example bigwig file:
@@ -33,7 +32,6 @@ plotSignalTracks(list(RNA=bwf1), region="8:22165140-22212326", genomeAxis=TRUE)
 ![](singleRegionPlot_files/figure-html/signal1-1.png)
 
 ``` r
-
 # we could plot multiple tracks as follows:
 plotSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326")
 ```
@@ -44,7 +42,6 @@ plotSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326")
 other data:
 
 ``` r
-
 myregions <- GRanges("8", IRanges(c(22166000,22202300), width=3000))
 plotSignalTracks(list(RNA=bwf1, regions=myregions), region="8:22165140-22212326")
 ```
@@ -55,7 +52,6 @@ Colors, track display types, and such parameters can either be set for
 all tracks or for each individual track, for example:
 
 ``` r
-
 myregions <- GRanges("8", IRanges(c(22166000,22202300), width=3000))
 plotSignalTracks(list(RNA=bwf1, regions=myregions), colors=c("red", "black"),
                  region="8:22165140-22212326")
@@ -66,7 +62,6 @@ plotSignalTracks(list(RNA=bwf1, regions=myregions), colors=c("red", "black"),
 For bam files, we can also plot individual reads:
 
 ``` r
-
 # we fetch an example bam file:
 bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 plotSignalTracks(c("my bam file"=bam), "seq1:1-1500", type="alignments")
@@ -84,7 +79,6 @@ combined in different ways. To do this, the tracks can simply be given
 in a nested fashion:
 
 ``` r
-
 plotSignalTracks(list(track1=bwf1, combined=c(bwf1,bwf1)),
                  region="8:22165140-22212326")
 ```
@@ -101,7 +95,6 @@ operations, the tracks can be overlayed on top of one another
 To better illustrate this, we’ll generate two dummy tracks:
 
 ``` r
-
 bw1 <- tempfile(fileext=".bw")
 cov1 <- GRanges("chr1", IRanges(1L+round(c(500+rnorm(15, sd=20),1000*runif(20))), width=30))
 bw2 <- tempfile(fileext=".bw")
@@ -114,7 +107,6 @@ rtracklayer::export.bw(coverage(cov2), bw2)
 Then we can plot them as replicates:
 
 ``` r
-
 plotSignalTracks(list(group=c(bw1, bw2)), region="chr1:1-1030", aggregation="heatmap+mean")
 ```
 
@@ -137,7 +129,6 @@ the corresponding region will be fetched. In addition, the genes or
 transcripts can be displayed. For example:
 
 ``` r
-
 # we fetch the GRCh38 Ensembl 103 annotation (this is not run in the vignette,
 # as it takes some time to download the annotation the first time is used):
 library(AnnotationHub)
@@ -172,7 +163,6 @@ For example, if you wish to manually set the same y-axis range for all
 data tracks, this can be done with:
 
 ``` r
-
 plotSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326",
                  tracks.params=list(ylim=c(0,200)))
 ```
@@ -189,7 +179,6 @@ passed, enabling full track customization when needed.
 ## Session info
 
 ``` r
-
 sessionInfo()
 ```
 

@@ -18,7 +18,6 @@ See [recent updates](https://ethz-ins.github.io/epiwraps/NEWS.md)
 Install with:
 
 ``` r
-
 BiocManager::install("ETHZ-INS/epiwraps")
 ```
 

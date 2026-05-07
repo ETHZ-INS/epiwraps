@@ -87,7 +87,6 @@ The normalization factors can be computed using
 :
 
 ``` r
-
 suppressPackageStartupMessages(library(epiwraps))
 # we fetch the path to the example bigwig file:
 bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
@@ -99,7 +98,6 @@ nf <- getNormFactors(bwfiles, method="background")
     ## Comparing coverage in random regions...
 
 ``` r
-
 nf
 ```
 
@@ -111,7 +109,6 @@ In this case, since the files are identical, the factors are both 1.
 Some normalization methods additionally require peaks as input, e.g.:
 
 ``` r
-
 peaks <- system.file("extdata/example_peaks.bed", package="epiwraps")
 nf <- getNormFactors(bwfiles, peaks = peaks, method="MAnorm")
 ```
@@ -128,7 +125,6 @@ Once computed, the normalization factors can be applied to an
 `EnrichmentSE` object:
 
 ``` r
-
 sm <- signal2Matrix(bwfiles, peaks, extend=1000L)
 ```
 
@@ -136,7 +132,6 @@ sm <- signal2Matrix(bwfiles, peaks, extend=1000L)
     ## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw
 
 ``` r
-
 sm <- renormalizeSignalMatrices(sm, scaleFactors=nf)
 sm
 ```
@@ -183,7 +178,6 @@ To illustrate these, we will first introduce some difference between our
 two tracks using arbitrary factors:
 
 ``` r
-
 sm <- renormalizeSignalMatrices(sm, scaleFactors=c(1,4), toAssay="test")
 plotEnrichedHeatmaps(sm, assay = "test")
 ```
@@ -193,7 +187,6 @@ plotEnrichedHeatmaps(sm, assay = "test")
 Then we can normalize:
 
 ``` r
-
 sm <- renormalizeSignalMatrices(sm, method="top", fromAssay="test")
 # again this adds an assay to the object, which will be automatically used when plotting:
 plotEnrichedHeatmaps(sm)
@@ -211,7 +204,6 @@ And we’ve recovered comparable signal across the two tracks/samples.
 ## Session information
 
 ``` r
-
 sessionInfo()
 ```
 

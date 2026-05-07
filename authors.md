@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](http://github.com/ETHZ-INS/epiwraps/blob/main/DESCRIPTION)
+[`DESCRIPTION`](http://github.com/ETHZ-INS/epiwraps/blob/devel/DESCRIPTION)
 
 Germain P (2026). *epiwraps: epiwraps: Wrappers for plotting and dealing
 with epigenomics data*. R package version 0.99.115,

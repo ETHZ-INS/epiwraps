@@ -29,7 +29,6 @@ signal you want to visualize, see the [vignette to this
 effect](https://ethz-ins.github.io/epiwraps/articles/bam2bw.md).
 
 ``` r
-
 suppressPackageStartupMessages(library(epiwraps))
 # we fetch the path to the example bigwig file:
 bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
@@ -44,7 +43,6 @@ ese <- signal2Matrix(c(atac1=bwf, atac2=bwf), regions, extend=1000L)
     ## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw
 
 ``` r
-
 ese
 ```
 
@@ -68,7 +66,6 @@ from two tracks.
 We could subset to the first 50 regions as follows:
 
 ``` r
-
 ese[1:50,]
 ```
 
@@ -85,7 +82,6 @@ ese[1:50,]
 or obtain the coordinates of the queried regions :
 
 ``` r
-
 rowRanges(ese)
 ```
 
@@ -110,7 +106,6 @@ One can further obtain more detailed information about the bins saved in
 the object:
 
 ``` r
-
 showTrackInfo(ese)
 ```
 
@@ -131,7 +126,6 @@ It is possible to extract the list of signal matrix for manipulations,
 e.g. for transformation:
 
 ``` r
-
 # square-root transform
 m2 <- lapply(getSignalMatrices(ese), sqrt)
 ```
@@ -161,7 +155,6 @@ normalized, see the section below), we can plot heatmaps based on them
 as follows:
 
 ``` r
-
 plotEnrichedHeatmaps(ese)
 ```
 
@@ -173,7 +166,6 @@ arguments that are supported by
 for example:
 
 ``` r
-
 plotEnrichedHeatmaps(ese, colors=c("white","darkred"), cluster_rows=TRUE,
                      show_row_dend=TRUE, top_annotation=FALSE, 
                      row_title="My list of cool regions")
@@ -189,7 +181,6 @@ It is often useful to subset to regions with a high enrichment, which we
 can do with the `score` function:
 
 ``` r
-
 plotEnrichedHeatmaps(ese[head(order(-rowMeans(score(ese))),50),])
 ```
 
@@ -204,7 +195,6 @@ establish the colorscale). Compare for instance the following two
 heatmaps:
 
 ``` r
-
 plotEnrichedHeatmaps(ese[,1], trim=1, scale_title="trim=1", column_title="trim=1 (no trim)",
                      top_annotation=FALSE) +
   plotEnrichedHeatmaps(ese[,1], trim=0.99, scale_title="trim=0.99",
@@ -231,7 +221,6 @@ which is especially useful when comparing very different signals. To
 illustrate this, let’s load an example with different tracks:
 
 ``` r
-
 data(exampleESE)
 exampleESE
 ```
@@ -249,7 +238,6 @@ exampleESE
 We can put each of the three tracks on its own color scale:
 
 ``` r
-
 plotEnrichedHeatmaps(exampleESE, multiScale=TRUE)
 ```
 
@@ -258,7 +246,6 @@ plotEnrichedHeatmaps(exampleESE, multiScale=TRUE)
 One could also specify colors separately by providing them as a list:
 
 ``` r
-
 plotEnrichedHeatmaps(exampleESE,
                      colors=list(c("white","darkblue"), "darkgreen", "darkred"))
 ```
@@ -269,7 +256,6 @@ This information can also be stored in the object, rather than specified
 everytime:
 
 ``` r
-
 exampleESE$hmcolors <- list(viridisLite::inferno(100),  "darkgreen", "darkred")
 plotEnrichedHeatmaps(exampleESE)
 ```
@@ -286,7 +272,6 @@ width, which can be done using the `type="scaled"` argument. Consider
 the following example:
 
 ``` r
-
 ese <- cbind(
   signal2Matrix(c(center=bwf), regions, extend=1000L),
   signal2Matrix(c(scaled=bwf), regions, extend=1000L, type="scaled")
@@ -297,7 +282,6 @@ ese <- cbind(
     ## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw
 
 ``` r
-
 plotEnrichedHeatmaps(ese)
 ```
 
@@ -309,7 +293,6 @@ be useful for the target region to consist of multiple regions
 `GRangesList` as regions:
 
 ``` r
-
 # we make a dummy GRangesList:
 a <- sort(rtracklayer::import(regions))
 dummy.grl <- GRangesList(split(a, rep(LETTERS[1:15],each=10)))
@@ -319,7 +302,6 @@ sm <- signal2Matrix(c(scaled=bwf), dummy.grl, extend=1000L, type="scaled")
     ## Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw
 
 ``` r
-
 plotEnrichedHeatmaps(sm)
 ```
 
@@ -353,7 +335,6 @@ patterns in the data, which are instead revealed by clustering. One
 approach is to use hierarchical clustering of the rows:
 
 ``` r
-
 plotEnrichedHeatmaps(exampleESE, cluster_rows=TRUE)
 ```
 
@@ -370,7 +351,6 @@ score weighted by distance to the center, eventually row-normalized, to
 cluster the regions. We provide a function to this end:
 
 ``` r
-
 # we cluster the regions using 2 clusters, and store the cluster labels in the 
 # rowData of the object: 
 rowData(exampleESE)$cluster <- clusterSignalMatrices(exampleESE, k=2, scaleRows=TRUE)
@@ -379,7 +359,6 @@ rowData(exampleESE)$cluster <- clusterSignalMatrices(exampleESE, k=2, scaleRows=
     ##   ~95% of the variance explained by clusters
 
 ``` r
-
 # we additionally label the clusters with colors:
 plotEnrichedHeatmaps(exampleESE, row_split="cluster",
                      mean_color=c("1"="red", "2"="blue"))
@@ -399,7 +378,6 @@ center of the target (see
 This can be done for the default assay with the `score` method:
 
 ``` r
-
 head(score(exampleESE))
 ```
 
@@ -421,7 +399,6 @@ standard deviation, standard error and median at each position relative
 to the center, for each sample/matrix:
 
 ``` r
-
 d <- meltSignals(exampleESE)
 head(d)
 ```
@@ -437,7 +414,6 @@ head(d)
 This can then be used for plotting, simply with `ggplot`:
 
 ``` r
-
 library(ggplot2)
 ggplot(d, aes(position, mean, colour=sample)) +
   geom_vline(xintercept=0, linetype="dashed") +
@@ -451,7 +427,6 @@ ggplot(d, aes(position, mean, colour=sample)) +
 We could also include cluster information:
 
 ``` r
-
 d <- meltSignals(exampleESE, splitBy = "cluster")
 ggplot(d, aes(position, mean, colour=sample)) +
   geom_vline(xintercept=0, linetype="dashed") +
@@ -478,7 +453,6 @@ As an example, let’s look at the gene bodies of some active genes from
 chr8 of the A549 cell lines:
 
 ``` r
-
 data("exampleDNAme")
 head(exampleDNAme)
 ```
@@ -502,14 +476,12 @@ methylation. Let’s see what happens if we plot a heatmap of this signal,
 with and without smoothing.
 
 ``` r
-
 o1 <- signal2Matrix(list(noSmooth=exampleDNAme), geneBodies, type="scaled")
 ```
 
     ## Computing signal from GRanges 'noSmooth'...
 
 ``` r
-
 o2 <- signal2Matrix(list(smoothed=exampleDNAme), geneBodies, type="scaled", 
                     smooth=TRUE, limit=c(0,100)) # recommended for DNAme
 ```
@@ -517,7 +489,6 @@ o2 <- signal2Matrix(list(smoothed=exampleDNAme), geneBodies, type="scaled",
     ## Computing signal from GRanges 'smoothed'...
 
 ``` r
-
 # we add a third one to visualize the CpGs:
 o3 <- signal2Matrix(list("noSmooth only CpGs"=exampleDNAme), geneBodies, type="scaled", background=NA)
 ```
@@ -525,7 +496,6 @@ o3 <- signal2Matrix(list("noSmooth only CpGs"=exampleDNAme), geneBodies, type="s
     ## Computing signal from GRanges 'noSmooth only CpGs'...
 
 ``` r
-
 o <- cbind(o1,o2,o3)
 plotEnrichedHeatmaps(o, scale_title="%\nmethylation", axis_name=c("TSS","TES"))
 ```
@@ -568,7 +538,6 @@ for more information/customization.
 ## Session information
 
 ``` r
-
 sessionInfo()
 ```
 

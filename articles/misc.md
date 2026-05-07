@@ -18,7 +18,6 @@ region, which can for instance be used with the `betterChromVAR`
 package. For example:
 
 ``` r
-
 suppressPackageStartupMessages(library(epiwraps))
 bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 # create regions of interest
@@ -51,7 +50,6 @@ normally be used to exclude regions likely to be technical artefacts
 (e.g. blacklisted regions).
 
 ``` r
-
 # get the path to an example bigwig file:
 bwf <- system.file("extdata/example_atac.bw", package="epiwraps")
 cs <- getCovStats(bwf, exclude=GRanges("1", IRanges(1, 4300000)))
@@ -84,7 +82,6 @@ Given one or more paired-end bam files, we can extract and plot the
 fragment length distribution using:
 
 ``` r
-
 fragSizesDist(bam, what=100)
 ```
 
@@ -99,7 +96,6 @@ A peak calling function can be used, either against an input control or
 against local or global backgrounds:
 
 ``` r
-
 p <- callPeaks(bam)
 ```
 
@@ -130,7 +126,6 @@ and
 ## Session information
 
 ``` r
-
 sessionInfo()
 ```
 

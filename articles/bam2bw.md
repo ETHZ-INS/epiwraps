@@ -23,7 +23,6 @@ To introduce the different variations on coverage, let’s assume you’ve
 go the following single-end reads:
 
 ``` r
-
 suppressPackageStartupMessages(library(epiwraps))
 # we create some arbitrary genomic ranges
 gr <- GRanges("chr1", IRanges(c(30,70,120), width=50), strand=c("+","+","-"),
@@ -36,14 +35,13 @@ plotSignalTracks(list(reads=gr), region="chr1:1:180", extend=0, genomeAxis=FALSE
 For testing purposes, we’ll save this as a bam file and index it:
 
 ``` r
-
 bam <- tempfile(fileext = ".bam") # temp file name
 rtracklayer::export(gr, bam, format="bam")
 Rsamtools::indexBam(bam)
 ```
 
-    ##       /tmp/RtmpXgQLlC/file1f7666b622f.bam 
-    ## "/tmp/RtmpXgQLlC/file1f7666b622f.bam.bai"
+    ##       /tmp/RtmpfXUG56/file3741cbe66b6.bam 
+    ## "/tmp/RtmpfXUG56/file3741cbe66b6.bam.bai"
 
 Using these example reads, we can illustrate different ways of computing
 coverages.
@@ -53,7 +51,6 @@ resolution (each nucleotide is a single bin) to larger bin sizes, the
 latter giving smaller filesizes:
 
 ``` r
-
 # Full coverage with bin width of 1 nucleotide (i.e. full resolution)
 cov_full_bw1 <- tempfile(fileext = ".bw") # temp file name
 bam2bw(bam, cov_full_bw1, binWidth=1L, scaling=FALSE)
@@ -66,7 +63,6 @@ bam2bw(bam, cov_full_bw1, binWidth=1L, scaling=FALSE)
     ## Writing bigwig...
 
 ``` r
-
 # Full coverage with larger bins
 cov_full_bw25 <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_full_bw25, binWidth=25L, scaling=FALSE)
@@ -79,7 +75,6 @@ bam2bw(bam, cov_full_bw25, binWidth=25L, scaling=FALSE)
     ## Writing bigwig...
 
 ``` r
-
 plotSignalTracks(list(reads=gr, "binWidth=1"=cov_full_bw1, "binWidth=25"=cov_full_bw25),
                  region="chr1:1:180", extend=0)
 ```
@@ -92,7 +87,6 @@ default, the maximum signal inside a bin is used, however it is possible
 to change this:
 
 ``` r
-
 # Using mean per bin:
 cov_full_bw25mean <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_full_bw25mean, binWidth=25L, binSummarization = "mean", scaling=FALSE)
@@ -105,7 +99,6 @@ bam2bw(bam, cov_full_bw25mean, binWidth=25L, binSummarization = "mean", scaling=
     ## Writing bigwig...
 
 ``` r
-
 plotSignalTracks(list(reads=gr, "binWidth=1"=cov_full_bw1, 
                       "binWidth=25\n(max)"=cov_full_bw25,
                       "binWidth=25\n(mean)"=cov_full_bw25mean),
@@ -124,7 +117,6 @@ coverage, so as to obtain the number of fragments (rather than reads)
 coverage each position. This can be done as follows:
 
 ``` r
-
 # Here the reads are 50bp, and we want to extend them to 100bp, hence _by_ 50:
 cov_full_ext <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_full_ext, binWidth=1L, extend=50L, scaling=FALSE)
@@ -137,7 +129,6 @@ bam2bw(bam, cov_full_ext, binWidth=1L, extend=50L, scaling=FALSE)
     ## Writing bigwig...
 
 ``` r
-
 plotSignalTracks(list(reads=gr, "no extension"=cov_full_bw1, 
                       "read extension"=cov_full_ext),
                  region="chr1:1:190", extend=0)
@@ -153,7 +144,6 @@ Instead of computing coverage, we could compute the number of reads
 starting, ending, or being centered at each position:
 
 ``` r
-
 # Here the reads are 50bp, and we want to extend them to 100bp, hence _by_ 50:
 cov_start <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_start, binWidth=1L, extend=50L, scaling=FALSE, type="start")
@@ -166,7 +156,6 @@ bam2bw(bam, cov_start, binWidth=1L, extend=50L, scaling=FALSE, type="start")
     ## Writing bigwig...
 
 ``` r
-
 cov_center <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_center, binWidth=1L, extend=50L, scaling=FALSE, type="center")
 ```
@@ -178,7 +167,6 @@ bam2bw(bam, cov_center, binWidth=1L, extend=50L, scaling=FALSE, type="center")
     ## Writing bigwig...
 
 ``` r
-
 plotSignalTracks(list(reads=gr, "type=full"=cov_full_bw1, 
                       "type=start"=cov_start, "type=center"=cov_center),
                  region="chr1:1:190", extend=0)
@@ -245,7 +233,6 @@ function for more information.
 ## Session information
 
 ``` r
-
 sessionInfo()
 ```
 

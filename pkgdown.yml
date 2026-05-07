@@ -1,4 +1,4 @@
-pandoc: 3.8.3
+pandoc: 3.1.3
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
@@ -7,7 +7,7 @@ articles:
   multiRegionPlot: multiRegionPlot.html
   normalization: normalization.html
   singleRegionPlot: singleRegionPlot.html
-last_built: 2026-05-07T10:20Z
+last_built: 2026-05-07T12:01Z
 urls:
   reference: https://ethz-ins.github.io/epiwraps/reference
   article: https://ethz-ins.github.io/epiwraps/articles

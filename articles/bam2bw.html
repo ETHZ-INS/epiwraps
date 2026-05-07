@@ -66,7 +66,7 @@ Germain</h4>
             <address class="author_afil">
       Lab of Statistical Bioinformatics, University of Zürich;D-HEST
 Institute for Neuroscience, ETH Zürich,
-Switzerland<br><small class="dont-index">Source: <a href="http://github.com/ETHZ-INS/epiwraps/blob/main/vignettes/bam2bw.Rmd" class="external-link"><code>vignettes/bam2bw.Rmd</code></a></small>
+Switzerland<br><small class="dont-index">Source: <a href="http://github.com/ETHZ-INS/epiwraps/blob/devel/vignettes/bam2bw.Rmd" class="external-link"><code>vignettes/bam2bw.Rmd</code></a></small>
       <div class="d-none name"><code>bam2bw.Rmd</code></div>
     </address>
 </div>
@@ -106,8 +106,8 @@ you’ve go the following single-end reads:</p>
 <code class="sourceCode R"><span><span class="va">bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bam"</span><span class="op">)</span> <span class="co"># temp file name</span></span>
 <span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="va">gr</span>, <span class="va">bam</span>, format<span class="op">=</span><span class="st">"bam"</span><span class="op">)</span></span>
 <span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">indexBam</a></span><span class="op">(</span><span class="va">bam</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##       /tmp/RtmpXgQLlC/file1f7666b622f.bam </span></span>
-<span><span class="co">## "/tmp/RtmpXgQLlC/file1f7666b622f.bam.bai"</span></span></code></pre>
+<pre><code><span><span class="co">##       /tmp/RtmpfXUG56/file3741cbe66b6.bam </span></span>
+<span><span class="co">## "/tmp/RtmpfXUG56/file3741cbe66b6.bam.bai"</span></span></code></pre>
 <p>Using these example reads, we can illustrate different ways of
 computing coverages.</p>
 <p>First, we can save coverage at different resolutions, from full
