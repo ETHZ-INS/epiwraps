@@ -30,6 +30,7 @@
 #'   multithreading can lead to high memory usage.
 #' @inheritParams bam2bw
 #' @importFrom S4Vectors from to metadata countSubjectHits splitAsList
+#' @importFrom BiocParallel bpnworkers SerialParam
 #' 
 #' @return A \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}} 
 #'   with a 'counts' assay.
@@ -88,7 +89,7 @@ peakCountsFromBAM <- function(
 
   if(!randomAcc){
     if(is.null(splitByChr)){
-      if(BiocParallel::bpnworkers(SerialParam())==1){
+      if(bpnworkers(SerialParam())==1){
         splitByChr <- 3L
       }else{
         splitByChr <- 8L
@@ -104,7 +105,8 @@ peakCountsFromBAM <- function(
   }
   
   cnts <- bplapply(bam_files, BPPARAM=BPPARAM, FUN=function(bamfile){
-    if(verbose) message("Reading file ",bamfile)
+    if(verbose && bpnworkers(BPPARAM)==1)
+      message("Reading file ",bamfile)
     res <- lapply(names(param), FUN=function(x){
       r <- .bam2bwGetReads(bamfile, paired=paired, param=param[[x]], type=type,
                           extend=extend, shift=shift, minFragL=minFragLength,
