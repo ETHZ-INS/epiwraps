@@ -133,7 +133,11 @@ peakCountsFromFrags <- function(fragfile, regions, barcodes = NULL,
     fl <- fl/Matrix::rowSums(mat)
     regions$flbias <- log10(1+fl)
   }
-  row.names(mat) <- as.character(granges(regions))
+  if(is.null(names(regions))){
+    names(regions) <- row.names(mat) <- as.character(granges(regions))
+  }else{
+    row.names(mat) <- names(regions)
+  }
   se <- SummarizedExperiment(list(counts=mat), rowRanges=regions)
   if(!is.null(depth)) se$depth <- depth
   se

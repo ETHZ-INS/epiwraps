@@ -146,7 +146,11 @@ peakCountsFromBAM <- function(
   }else{
     colnames(cnts) <- names(bam_files)
   }
-  row.names(cnts) <- as.character(granges(regions))
+  if(is.null(names(regions))){
+    names(regions) <- row.names(cnts) <- as.character(granges(regions))
+  }else{
+    row.names(cnts) <- names(regions)
+  }
   se <- SummarizedExperiment(list(counts=cnts), rowRanges=regions)
   se$total_depth <- total_depth
   se$depth <- depths
