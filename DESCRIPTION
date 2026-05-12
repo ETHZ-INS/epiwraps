@@ -53,7 +53,7 @@ License: GPL (>= 3)
 VignetteBuilder: knitr
 Encoding: UTF-8
 Config/testthat/edition: 3
-RoxygenNote: 7.3.3
 URL: https://ethz-ins.github.io/epiwraps/
 BugReports: http://github.com/ETHZ-INS/epiwraps/issues
 biocViews: Epigenetics, Sequencing, Normalization, Visualization
+Config/roxygen2/version: 8.0.0

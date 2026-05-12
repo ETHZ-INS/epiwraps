@@ -26,6 +26,8 @@
 #'   length per region. This is slightly slower. The log10-transformed, 
 #'   (weighted mean across samples of the) median fragment length per region is
 #'   stored in `rowData(results)$flbias`.
+#' @param BPPARAM BiocParallel params for multithreading. Note that
+#'   multithreading can lead to high memory usage.
 #' @inheritParams bam2bw
 #' @importFrom S4Vectors from to metadata countSubjectHits splitAsList
 #' 
@@ -45,8 +47,9 @@ peakCountsFromBAM <- function(
                       ov.type="any", maxgap=-1L, minoverlap=1L,
                       ignore.strand=TRUE, strandMode=1, includeDuplicates=TRUE, 
                       includeSecondary=FALSE, minMapq=1L, minFragLength=1L,
-                      maxFragLength=5000L, splitByChr=3, randomAcc=FALSE,
-                      getMedianFragLength=FALSE, verbose=TRUE){
+                      maxFragLength=5000L, splitByChr=NULL, randomAcc=FALSE,
+                      getMedianFragLength=FALSE, BPPARAM=SerialParam(),
+                      verbose=TRUE){
   # check inputs
   stopifnot(is(regions, "GRanges"))
   stopifnot(all(vapply(bam_files, FUN.VALUE=logical(1L), FUN=file.exists)))
@@ -84,6 +87,13 @@ peakCountsFromBAM <- function(
     randomAcc <- length(regions)<1000 & maxFragLength<=10000
 
   if(!randomAcc){
+    if(is.null(splitByChr)){
+      if(BiocParallel::bpnworkers(SerialParam())==1){
+        splitByChr <- 3L
+      }else{
+        splitByChr <- 8L
+      }
+    }
     param <- .getBamChunkParams(bam_files[[1]], flgs=flgs,
                                 keepSeqLvls=names(seqs),  nChunks=splitByChr)
   }else{
@@ -93,7 +103,7 @@ peakCountsFromBAM <- function(
     param <- list(x=ScanBamParam(flag=flgs, which=regions2))
   }
   
-  cnts <- lapply(bam_files, FUN=function(bamfile){
+  cnts <- bplapply(bam_files, BPPARAM=BPPARAM, FUN=function(bamfile){
     if(verbose) message("Reading file ",bamfile)
     res <- lapply(names(param), FUN=function(x){
       r <- .bam2bwGetReads(bamfile, paired=paired, param=param[[x]], type=type,
