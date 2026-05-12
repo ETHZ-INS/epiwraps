@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.115</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.116</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -106,8 +106,8 @@ you’ve go the following single-end reads:</p>
 <code class="sourceCode R"><span><span class="va">bam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".bam"</span><span class="op">)</span> <span class="co"># temp file name</span></span>
 <span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="va">gr</span>, <span class="va">bam</span>, format<span class="op">=</span><span class="st">"bam"</span><span class="op">)</span></span>
 <span><span class="fu">Rsamtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Rsamtools/man/scanBam.html" class="external-link">indexBam</a></span><span class="op">(</span><span class="va">bam</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##       /tmp/RtmpjIb9tc/file1f0d25a19444.bam </span></span>
-<span><span class="co">## "/tmp/RtmpjIb9tc/file1f0d25a19444.bam.bai"</span></span></code></pre>
+<pre><code><span><span class="co">##       /tmp/RtmpWET0aT/file1f1559acb502.bam </span></span>
+<span><span class="co">## "/tmp/RtmpWET0aT/file1f1559acb502.bam.bai"</span></span></code></pre>
 <p>Using these example reads, we can illustrate different ways of
 computing coverages.</p>
 <p>First, we can save coverage at different resolutions, from full
@@ -271,7 +271,7 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">## [8] methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">##  [1] epiwraps_0.99.115           EnrichedHeatmap_1.42.0     </span></span>
+<span><span class="co">##  [1] epiwraps_0.99.116           EnrichedHeatmap_1.42.0     </span></span>
 <span><span class="co">##  [3] ComplexHeatmap_2.28.0       SummarizedExperiment_1.42.0</span></span>
 <span><span class="co">##  [5] Biobase_2.72.0              GenomicRanges_1.64.0       </span></span>
 <span><span class="co">##  [7] Seqinfo_1.2.0               IRanges_2.46.0             </span></span>
@@ -294,7 +294,7 @@ files as input, you can still perform most of the above tasks. See the
 <span><span class="co">##  [34] pkgconfig_2.0.3          Matrix_1.7-5             R6_2.6.1                </span></span>
 <span><span class="co">##  [37] fastmap_1.2.0            clue_0.3-68              digest_0.6.39           </span></span>
 <span><span class="co">##  [40] colorspace_2.1-2         AnnotationDbi_1.74.0     textshaping_1.0.5       </span></span>
-<span><span class="co">##  [43] Hmisc_5.2-5              RSQLite_2.4.6            filelock_1.0.3          </span></span>
+<span><span class="co">##  [43] Hmisc_5.2-5              RSQLite_3.52.0           filelock_1.0.3          </span></span>
 <span><span class="co">##  [46] httr_1.4.8               abind_1.4-8              compiler_4.6.0          </span></span>
 <span><span class="co">##  [49] bit64_4.8.0              doParallel_1.0.17        backports_1.5.1         </span></span>
 <span><span class="co">##  [52] htmlTable_2.5.0          S7_0.2.2                 BiocParallel_1.46.0     </span></span>

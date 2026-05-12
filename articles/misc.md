@@ -151,7 +151,7 @@ sessionInfo()
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] epiwraps_0.99.115           EnrichedHeatmap_1.42.0     
+    ##  [1] epiwraps_0.99.116           EnrichedHeatmap_1.42.0     
     ##  [3] ComplexHeatmap_2.28.0       SummarizedExperiment_1.42.0
     ##  [5] Biobase_2.72.0              GenomicRanges_1.64.0       
     ##  [7] Seqinfo_1.2.0               IRanges_2.46.0             
@@ -174,7 +174,7 @@ sessionInfo()
     ##  [34] pkgconfig_2.0.3          Matrix_1.7-5             R6_2.6.1                
     ##  [37] fastmap_1.2.0            clue_0.3-68              digest_0.6.39           
     ##  [40] colorspace_2.1-2         AnnotationDbi_1.74.0     textshaping_1.0.5       
-    ##  [43] Hmisc_5.2-5              RSQLite_2.4.6            labeling_0.4.3          
+    ##  [43] Hmisc_5.2-5              RSQLite_3.52.0           labeling_0.4.3          
     ##  [46] filelock_1.0.3           httr_1.4.8               abind_1.4-8             
     ##  [49] compiler_4.6.0           withr_3.0.2              bit64_4.8.0             
     ##  [52] doParallel_1.0.17        backports_1.5.1          htmlTable_2.5.0         
