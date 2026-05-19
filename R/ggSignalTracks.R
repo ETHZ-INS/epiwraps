@@ -21,10 +21,13 @@
 #' @param showSE Logical; whether to show the standard error on the coverage
 #'   tracks of aggregated data.
 #' @param nbins The number of bins in which to divide the region.
-#' @param heatmap.palette The RColorBrewer palette to use.
+#' @param heatmap.palette A character vector specifying the colors for the 
+#'   heatmap. If of length 1, is assumed to indicate the RColorBrewer palette 
+#'   to use. If of length>1, the colors will be used with
+#'   \code{\link[ggplot2]{scale_fill_gradientn}}.
 #' @param binSummFn How to summarize date within a display bin. Either 
 #'   'mean' (default) or 'max'.
-#' @param sameLimits Logical; should the tracks have the same y-axis limts (and
+#' @param sameLimits Logical; should the tracks have the same y-axis limits (and
 #'   same color scale for heatmaps)?
 #' @param gene_label What labels to print for genes. Either "symbol", "gene_id",
 #'   "tx_name", or NULL.
@@ -43,6 +46,7 @@
 #' @importFrom ggplot2 geom_segment geom_text scale_x_continuous margin labs
 #' @importFrom ggplot2 scale_y_continuous scale_fill_distiller theme_classic 
 #' @importFrom ggplot2 theme element_blank element_text unit arrow annotate
+#' @importFrom ggplot2 scale_fill_gradientn
 #' @importFrom patchwork wrap_plots plot_layout
 #' @importFrom AnnotationFilter GRangesFilter
 #' @importFrom scales comma
@@ -65,8 +69,9 @@
 ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
                             transcripts=c("full", "collapsed", "none"),
                             aggregation=c("mean+heatmap","mean","heatmap",
-                                          "heatmap+mean"), extend=0, 
-                            showSE=FALSE, nbins=1000, heatmap.palette="Blues",
+                                          "heatmap+mean"),
+                            extend=0, showSE=FALSE, nbins=1000,
+                            heatmap.palette=c("white", "blue", "black"),
                             binSummFn=c("mean", "max"), sameLimits=TRUE,
                             gene_label="symbol", trans=c("none","sqrt","log1p"),
                             gene_color="black", baseTextSize=9, xAxis=TRUE,
@@ -216,9 +221,14 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
   p <- ggplot(df_all, aes(x=pos, y=sample, fill=score)) + geom_tile()
   if(is(palette, "ScaleContinuous")){
     p <- p + palette
-  }else{
+  }else if(length(palette)==1){
     p <- p + 
       scale_fill_distiller(palette=palette, direction=1, name="coverage",
+                           limits=c(0, ifelse(is.null(ymax), NA, ymax)),
+                           transform=ifelse(trans=="none", "identity", trans))
+  }else{
+    p <- p +
+      scale_fill_gradientn(colours=palette, name="coverage",
                            limits=c(0, ifelse(is.null(ymax), NA, ymax)),
                            transform=ifelse(trans=="none", "identity", trans))
   }
