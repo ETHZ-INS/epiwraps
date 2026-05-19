@@ -31,7 +31,6 @@ Imports:
     viridisLite,
     ggplot2,
     patchwork,
-    cowplot,
     edgeR,
     dplyr,
     scales,

@@ -114,7 +114,7 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
 #' @return A grid object to be plotted.
 #' @export
 #' @import ggplot2
-#' @importFrom cowplot plot_grid get_legend
+#' @importFrom patchwork wrap_plots
 #' 
 #' @examples 
 #' # we use an example bigwig file
@@ -132,10 +132,7 @@ plotCovStats <- function(qc, labels="AUTO", show.legend=TRUE){
     geom_abline(slope=1, intercept=0, linetype="dashed", colour="grey") +
     geom_line() + labs(x="Region rank", y="Fraction of highest density") +
     theme(legend.position="none")
-  p <- plot_grid(p1 + theme(legend.position="none"), p2, 
-                 labels=labels, nrow=1, scale=0.95)
-  if(!show.legend || length(unique(qc$coverage$file))==1) return(p)
-  plot_grid(p, get_legend(p1), nrow=2, rel_heights = c(3,1))
+  patchwork::wrap_plots(p1, p2, nrow=1, guides="collect")
 }
 
 #' plotCorFromCovStats
