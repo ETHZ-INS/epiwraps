@@ -24,9 +24,12 @@ library(BiocStyle)
 
 # Plotting signals in a region
 
-The `plotSignalTracks` function is a wrapper around the 
-`r BiocStyle::Biocpkg("Gviz")` package, which plots one or more signals along 
-genomic coordinates (in a genome-browser like fashion). 
+`epiwraps` has two functions to plot signals along genomic coordinates in a 
+single region: the `plotSignalTracks()` function is a wrapper around the 
+`r BiocStyle::Biocpkg("Gviz")` package, and the `ggSignalTracks()` function is
+a slightly less flexible, ggplot-based equivalent. Both have been designed to 
+have a very similar interface. We first focus on `plotSignalTracks()`.
+
 The function lacks the full flexibility of the `r BiocStyle::Biocpkg("Gviz")` 
 package, but presents a considerable simpler interface, with automatic default 
 parameters, etc. It has two essential arguments: a (named) list of files whose 
@@ -162,6 +165,37 @@ Also, in addition to passing filepaths or `GRanges`, any Gviz track(s) can be
 passed (i.e. objects inheriting the `GdObject` class) can be passed, enabling 
 full track customization when needed.
 
+
+# ggplot version with ggSignalTracks
+
+`plotSignalTracks` relies on `r BiocStyle::Biocpkg("Gviz")`, which is very 
+feature-rich. However, when composing complex figures it is often useful to 
+have `r BiocStyle::CRANpkg("ggplot2")` objects that can be theme in a standard
+fashion. To this end there is also the `ggSignalTracks()` function, which can 
+only show coverage tracks and heatmaps (and a genes track), but was
+designed with a largely similar interface. For example:
+
+```{r ggSignalTracks}
+pl <- ggSignalTracks(list(group=c(A=bw1, B=bw2)), region="chr1:1-1030",
+                     aggregation="heatmap+mean")
+```
+
+The output, `pl`, is a list of ggplot2 objects, which can be plotted together
+using `r BiocStyle::CRANpkg("patchwork")` :
+
+```{r}
+library(patchwork)
+patchwork::wrap_plots(pl, ncol=1, heights=c(3,1))
+```
+Since they are ggplot objects, they can also be edited as such, either 
+individually or as whole via patchwork:
+
+```{r}
+library(ggplot2)
+pl[[1]] <- pl[[1]] + theme(axis.title.y=element_text(colour="darkblue"))
+patchwork::wrap_plots(pl, ncol=1, heights=c(3,1)) & 
+   theme(axis.title.y=element_text(face="bold"))
+```
 
 <br/><br/>
 

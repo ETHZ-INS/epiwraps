@@ -16,7 +16,7 @@
 .safeGRshift <- function(gr, ...){
   sinfo <- seqinfo(gr)
   seqlengths(gr) <- NA
-  shift(gr, ...)
+  gr <- shift(gr, ...)
   seqinfo(gr) <- sinfo
   trim(gr)
 }

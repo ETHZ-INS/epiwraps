@@ -1,7 +1,7 @@
 Package: epiwraps
 Type: Package
 Title: epiwraps: Wrappers for plotting and dealing with epigenomics data
-Version: 0.99.116
+Version: 0.99.118
 Date: 2026-05-03
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
@@ -30,9 +30,10 @@ Imports:
     circlize,
     viridisLite,
     ggplot2,
-    cowplot,
+    patchwork,
     edgeR,
     dplyr,
+    scales,
     stats,
     pbapply,
     Matrix,

@@ -16,6 +16,10 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v2
 
+      - name: Install missing R deps
+        run: BiocManager::install("patchwork")
+        shell: Rscript {0}
+
       - name: Install latest BiocCheck
         run: BiocManager::install(c("BiocCheck"))
         shell: Rscript {0}
