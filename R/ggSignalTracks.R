@@ -44,6 +44,7 @@
 #' @importFrom ggplot2 scale_y_continuous scale_fill_distiller theme_classic 
 #' @importFrom ggplot2 theme element_blank element_text unit arrow annotate
 #' @importFrom patchwork wrap_plots plot_layout
+#' @importFrom AnnotationFilter GRangesFilter
 #' @importFrom scales comma
 #' @export
 #' @examples
@@ -73,14 +74,12 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
   binSummFn <- match.arg(binSummFn)
   transcripts <- match.arg(transcripts)
   aggregation <- match.arg(aggregation)
-  region <- epiwraps:::.parseRegion(region, ensdb, asGR=TRUE)
+  region <- .parseRegion(region, ensdb, asGR=TRUE)
   trans <- match.arg(trans)
   stopifnot(length(extend)==1 && extend>=0)
   if(extend>0){
     if(extend<=1) extend <- extend*width(region)
-    region <- epiwraps:::.safeGRresize(region, width=2*extend+width(region),
-                                       fix="center")
-    print(region)
+    region <- .safeGRresize(region, width=2*extend+width(region), fix="center")
     isCirc <- seqinfo(region)@is_circular
     if(is.na(isCirc) || is.null(isCirc) || !isCirc){
       start(region) <- max(start(region),1L)
@@ -96,7 +95,8 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
     if(is.null(names(bw_paths))) names(bw_paths) <- .getBwNames(bw_paths)
     lapply(bw_paths, function(bw) {
       if(verbose) message("  Importing: ", bw)
-      .binSignal(.importSingleRegionBW(bw, region), region, nbins, summFn=binSummFn)
+      .binSignal(.importSingleRegionBW(bw, region), region, nbins, 
+                 summFn=binSummFn)
     })
   })
   
@@ -275,22 +275,20 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
   is_ensdb <- inherits(txdb, "EnsDb")
   if (is_ensdb) {
     filter  <- AnnotationFilter::GRangesFilter(region)
-    exons   <- ensembldb::exons(txdb, filter=filter,
-                                columns=c("gene_id", "gene_name", "tx_id"))
+    exons   <- exons(txdb, filter=filter, 
+                     columns=c("gene_id", "gene_name", "tx_id"))
     if(!collapse){
-      txs <- ensembldb::transcripts(txdb, filter=filter,
+      txs <- transcripts(txdb, filter=filter,
                                       columns=c("gene_id", "gene_name",
                                                   "tx_id"))
     }else{
       exons$tx_id <- exons$gene_name
-      txs <- ensembldb::genes(txdb, filter=filter, columns=c("gene_id", 
-                                                                 "gene_name"))
+      txs <- genes(txdb, filter=filter, columns=c("gene_id", "gene_name"))
     }
   } else {
-    exons <- GenomicFeatures::exons(txdb, columns=c("gene_id", "tx_name"),
-                                    filter=list(
-                                      "gene_chrom"=as.character(
-                                        GenomicRanges::seqnames(region))))
+    exons <- exons(txdb, columns=c("gene_id", "tx_name"),
+                   filter=list("gene_chrom"=
+                                 as.character(GenomicRanges::seqnames(region))))
     exons <- IRanges::subsetByOverlaps(exons, region)
     if(!collapse){
       exons$tx_id <- exons$tx_name
@@ -414,7 +412,7 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
 
 .bottomXLab <- function(region){
   xlab(paste0(as.character(seqnames(region)),
-                "  (", scales::comma(start(region)), " – ", 
+                " : ", scales::comma(start(region)), " - ", 
                 scales::comma(end(region)), ")"))
 }
 
