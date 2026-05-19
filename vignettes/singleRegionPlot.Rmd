@@ -191,8 +191,10 @@ Since they are ggplot objects, they can also be edited as such, either
 individually or as whole via patchwork:
 
 ```{r}
+library(ggplot2)
 pl[[1]] <- pl[[1]] + theme(axis.title.y=element_text(colour="darkblue"))
-patchwork::wrap_plots(pl, ncol=1, heights=c(3,1)) & theme(axis.title.y=element_text(face="bold"))
+patchwork::wrap_plots(pl, ncol=1, heights=c(3,1)) & 
+   theme(axis.title.y=element_text(face="bold"))
 ```
 
 <br/><br/>
