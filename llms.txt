@@ -119,6 +119,8 @@ package.
   files
 - [`getSignalMatrices()`](https://ethz-ins.github.io/epiwraps/reference/getSignalMatrices.md)
   : getSignalMatrices
+- [`ggSignalTracks()`](https://ethz-ins.github.io/epiwraps/reference/ggSignalTracks.md)
+  : ggSignalTracks: Plot genomic signal tracks with ggplot2
 - [`importBedlike()`](https://ethz-ins.github.io/epiwraps/reference/importBedlike.md)
   : importBedlike
 - [`inject()`](https://ethz-ins.github.io/epiwraps/reference/inject.md)

@@ -40,8 +40,8 @@ rtracklayer::export(gr, bam, format="bam")
 Rsamtools::indexBam(bam)
 ```
 
-    ##       /tmp/RtmppcVjCQ/file1f6e695b33cc.bam 
-    ## "/tmp/RtmppcVjCQ/file1f6e695b33cc.bam.bai"
+    ##       /tmp/RtmpFCtaMv/file1eb957fcecbe.bam 
+    ## "/tmp/RtmpFCtaMv/file1eb957fcecbe.bam.bai"
 
 Using these example reads, we can illustrate different ways of computing
 coverages.
@@ -258,7 +258,7 @@ sessionInfo()
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] epiwraps_0.99.116           EnrichedHeatmap_1.42.0     
+    ##  [1] epiwraps_0.99.118           EnrichedHeatmap_1.42.0     
     ##  [3] ComplexHeatmap_2.28.0       SummarizedExperiment_1.42.0
     ##  [5] Biobase_2.72.0              GenomicRanges_1.64.0       
     ##  [7] Seqinfo_1.2.0               IRanges_2.46.0             
@@ -280,34 +280,34 @@ sessionInfo()
     ##  [31] GenomicAlignments_1.48.0 lifecycle_1.0.5          iterators_1.0.14        
     ##  [34] pkgconfig_2.0.3          Matrix_1.7-5             R6_2.6.1                
     ##  [37] fastmap_1.2.0            clue_0.3-68              digest_0.6.39           
-    ##  [40] colorspace_2.1-2         AnnotationDbi_1.74.0     textshaping_1.0.5       
-    ##  [43] Hmisc_5.2-5              RSQLite_3.52.0           filelock_1.0.3          
-    ##  [46] httr_1.4.8               abind_1.4-8              compiler_4.6.0          
-    ##  [49] bit64_4.8.0              doParallel_1.0.17        backports_1.5.1         
-    ##  [52] htmlTable_2.5.0          S7_0.2.2                 BiocParallel_1.46.0     
-    ##  [55] DBI_1.3.0                biomaRt_2.68.0           rappdirs_0.3.4          
-    ##  [58] DelayedArray_0.38.1      rjson_0.2.23             tools_4.6.0             
-    ##  [61] foreign_0.8-91           nnet_7.3-20              glue_1.8.1              
-    ##  [64] restfulr_0.0.16          checkmate_2.3.4          cluster_2.1.8.2         
-    ##  [67] gtable_0.3.6             BSgenome_1.80.0          ensembldb_2.36.0        
-    ##  [70] data.table_1.18.4        hms_1.1.4                XVector_0.52.0          
-    ##  [73] foreach_1.5.2            pillar_1.11.1            stringr_1.6.0           
-    ##  [76] circlize_0.4.18          dplyr_1.2.1              BiocFileCache_3.2.0     
-    ##  [79] lattice_0.22-9           deldir_2.0-4             rtracklayer_1.72.0      
-    ##  [82] bit_4.6.0                biovizBase_1.60.0        tidyselect_1.2.1        
-    ##  [85] locfit_1.5-9.12          pbapply_1.7-4            Biostrings_2.80.0       
-    ##  [88] knitr_1.51               gridExtra_2.3            bookdown_0.46           
-    ##  [91] ProtGenerics_1.44.0      xfun_0.57                stringi_1.8.7           
-    ##  [94] UCSC.utils_1.8.0         lazyeval_0.2.3           yaml_2.3.12             
-    ##  [97] evaluate_1.0.5           codetools_0.2-20         cigarillo_1.2.0         
-    ## [100] interp_1.1-6             GenomicFiles_1.48.0      tibble_3.3.1            
-    ## [103] BiocManager_1.30.27      cli_3.6.6                rpart_4.1.27            
-    ## [106] systemfonts_1.3.2        jquerylib_0.1.4          dichromat_2.0-0.1       
-    ## [109] Rcpp_1.1.1-1.1           GenomeInfoDb_1.48.0      dbplyr_2.5.2            
-    ## [112] png_0.1-9                XML_3.99-0.23            parallel_4.6.0          
-    ## [115] pkgdown_2.2.0            ggplot2_4.0.3            blob_1.3.0              
-    ## [118] prettyunits_1.2.0        jpeg_0.1-11              latticeExtra_0.6-31     
-    ## [121] AnnotationFilter_1.36.0  bitops_1.0-9             viridisLite_0.4.3       
-    ## [124] VariantAnnotation_1.58.0 scales_1.4.0             crayon_1.5.3            
-    ## [127] GetoptLong_1.1.1         rlang_1.2.0              cowplot_1.2.0           
+    ##  [40] colorspace_2.1-2         patchwork_1.3.2          AnnotationDbi_1.74.0    
+    ##  [43] textshaping_1.0.5        Hmisc_5.2-5              RSQLite_3.52.0          
+    ##  [46] filelock_1.0.3           httr_1.4.8               abind_1.4-8             
+    ##  [49] compiler_4.6.0           bit64_4.8.0              doParallel_1.0.17       
+    ##  [52] backports_1.5.1          htmlTable_2.5.0          S7_0.2.2                
+    ##  [55] BiocParallel_1.46.0      DBI_1.3.0                biomaRt_2.68.0          
+    ##  [58] rappdirs_0.3.4           DelayedArray_0.38.1      rjson_0.2.23            
+    ##  [61] tools_4.6.0              foreign_0.8-91           nnet_7.3-20             
+    ##  [64] glue_1.8.1               restfulr_0.0.16          checkmate_2.3.4         
+    ##  [67] cluster_2.1.8.2          gtable_0.3.6             BSgenome_1.80.0         
+    ##  [70] ensembldb_2.36.0         data.table_1.18.4        hms_1.1.4               
+    ##  [73] XVector_0.52.0           foreach_1.5.2            pillar_1.11.1           
+    ##  [76] stringr_1.6.0            circlize_0.4.18          dplyr_1.2.1             
+    ##  [79] BiocFileCache_3.2.0      lattice_0.22-9           deldir_2.0-4            
+    ##  [82] rtracklayer_1.72.0       bit_4.6.0                biovizBase_1.60.0       
+    ##  [85] tidyselect_1.2.1         locfit_1.5-9.12          pbapply_1.7-4           
+    ##  [88] Biostrings_2.80.0        knitr_1.51               gridExtra_2.3           
+    ##  [91] bookdown_0.46            ProtGenerics_1.44.0      xfun_0.57               
+    ##  [94] stringi_1.8.7            UCSC.utils_1.8.0         lazyeval_0.2.3          
+    ##  [97] yaml_2.3.12              evaluate_1.0.5           codetools_0.2-20        
+    ## [100] cigarillo_1.2.0          interp_1.1-6             GenomicFiles_1.48.0     
+    ## [103] tibble_3.3.1             BiocManager_1.30.27      cli_3.6.6               
+    ## [106] rpart_4.1.27             systemfonts_1.3.2        jquerylib_0.1.4         
+    ## [109] dichromat_2.0-0.1        Rcpp_1.1.1-1.1           GenomeInfoDb_1.48.0     
+    ## [112] dbplyr_2.5.2             png_0.1-9                XML_3.99-0.23           
+    ## [115] parallel_4.6.0           pkgdown_2.2.0            ggplot2_4.0.3           
+    ## [118] blob_1.3.0               prettyunits_1.2.0        jpeg_0.1-11             
+    ## [121] latticeExtra_0.6-31      AnnotationFilter_1.36.0  bitops_1.0-9            
+    ## [124] viridisLite_0.4.3        VariantAnnotation_1.58.0 scales_1.4.0            
+    ## [127] crayon_1.5.3             GetoptLong_1.1.1         rlang_1.2.0             
     ## [130] KEGGREST_1.52.0
