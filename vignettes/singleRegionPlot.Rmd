@@ -109,6 +109,7 @@ Then we can plot them as replicates:
 ```{r heatmap}
 plotSignalTracks(list(group=c(bw1, bw2)), region="chr1:1-1030", aggregation="heatmap+mean")
 ```
+
 We find this representation particularly useful, as it combines the visual 
 interpretability of the track, while simultaneously providing information about
 the variability across replicates in a compact fashion.
@@ -187,6 +188,7 @@ using `r BiocStyle::CRANpkg("patchwork")` :
 library(patchwork)
 patchwork::wrap_plots(pl, ncol=1, heights=c(3,1))
 ```
+
 Since they are ggplot objects, they can also be edited as such, either 
 individually or as whole via patchwork:
 
