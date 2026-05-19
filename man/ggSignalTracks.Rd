@@ -14,7 +14,7 @@ ggSignalTracks(
   extend = 0,
   showSE = FALSE,
   nbins = 1000,
-  heatmap.palette = "Blues",
+  heatmap.palette = c("white", "blue", "black"),
   binSummFn = c("mean", "max"),
   sameLimits = TRUE,
   gene_label = "symbol",
@@ -57,12 +57,15 @@ tracks of aggregated data.}
 
 \item{nbins}{The number of bins in which to divide the region.}
 
-\item{heatmap.palette}{The RColorBrewer palette to use.}
+\item{heatmap.palette}{A character vector specifying the colors for the 
+heatmap. If of length 1, is assumed to indicate the RColorBrewer palette 
+to use. If of length>1, the colors will be used with
+\code{\link[ggplot2]{scale_fill_gradientn}}.}
 
 \item{binSummFn}{How to summarize date within a display bin. Either 
 'mean' (default) or 'max'.}
 
-\item{sameLimits}{Logical; should the tracks have the same y-axis limts (and
+\item{sameLimits}{Logical; should the tracks have the same y-axis limits (and
 same color scale for heatmaps)?}
 
 \item{gene_label}{What labels to print for genes. Either "symbol", "gene_id",
