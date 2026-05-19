@@ -117,9 +117,10 @@ Then we can plot them as replicates:
 plotSignalTracks(list(group=c(bw1, bw2)), region="chr1:1-1030", aggregation="heatmap+mean")
 ```
 
-![](singleRegionPlot_files/figure-html/heatmap-1.png) We find this
-representation particularly useful, as it combines the visual
-interpretability of the track, while simultaneously providing
+![](singleRegionPlot_files/figure-html/heatmap-1.png)
+
+We find this representation particularly useful, as it combines the
+visual interpretability of the track, while simultaneously providing
 information about the variability across replicates in a compact
 fashion.
 
@@ -198,9 +199,9 @@ pl <- ggSignalTracks(list(group=c(A=bw1, B=bw2)), region="chr1:1-1030",
 
     ## Loading BigWig data...
 
-    ##   Importing: /tmp/Rtmpb3Kr5D/file1fcc4041bb66.bw
+    ##   Importing: /tmp/Rtmp4D1Jc7/file1fb9533d6cce.bw
 
-    ##   Importing: /tmp/Rtmpb3Kr5D/file1fcc2fe32ae0.bw
+    ##   Importing: /tmp/Rtmp4D1Jc7/file1fb9c0c4cd1.bw
 
 The output, `pl`, is a list of ggplot2 objects, which can be plotted
 together using
@@ -211,9 +212,10 @@ library(patchwork)
 patchwork::wrap_plots(pl, ncol=1, heights=c(3,1))
 ```
 
-![](singleRegionPlot_files/figure-html/unnamed-chunk-1-1.png) Since they
-are ggplot objects, they can also be edited as such, either individually
-or as whole via patchwork:
+![](singleRegionPlot_files/figure-html/unnamed-chunk-1-1.png)
+
+Since they are ggplot objects, they can also be edited as such, either
+individually or as whole via patchwork:
 
 ``` r
 library(ggplot2)

@@ -15,7 +15,7 @@ ggSignalTracks(
   extend = 0,
   showSE = FALSE,
   nbins = 1000,
-  heatmap.palette = "Blues",
+  heatmap.palette = c("white", "blue", "black"),
   binSummFn = c("mean", "max"),
   sameLimits = TRUE,
   gene_label = "symbol",
@@ -81,7 +81,10 @@ ggSignalTracks(
 
 - heatmap.palette:
 
-  The RColorBrewer palette to use.
+  A character vector specifying the colors for the heatmap. If of length
+  1, is assumed to indicate the RColorBrewer palette to use. If of
+  length\>1, the colors will be used with
+  [`scale_fill_gradientn`](https://ggplot2.tidyverse.org/reference/scale_gradient.html).
 
 - binSummFn:
 
@@ -90,7 +93,7 @@ ggSignalTracks(
 
 - sameLimits:
 
-  Logical; should the tracks have the same y-axis limts (and same color
+  Logical; should the tracks have the same y-axis limits (and same color
   scale for heatmaps)?
 
 - gene_label:
@@ -140,7 +143,7 @@ rtracklayer::export.bw(coverage(cov2), bw2)
 pl <- ggSignalTracks(list(group=c(rep1=bw1, rep2=bw2)), region="chr1:1-1030",
                      aggregation="heatmap+mean")
 #> Loading BigWig data...
-#>   Importing: /tmp/RtmpGmJifm/file1bdb23d5a411.bw
-#>   Importing: /tmp/RtmpGmJifm/file1bdb65e4c8e9.bw
+#>   Importing: /tmp/RtmpROo5oN/file1bcb42a605bd.bw
+#>   Importing: /tmp/RtmpROo5oN/file1bcb24598b72.bw
 patchwork::wrap_plots(pl, ncol=1, heights=c(2,1))
 ```
