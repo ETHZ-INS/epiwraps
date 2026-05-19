@@ -8,7 +8,7 @@
 .safeGRresize <- function(gr, ...){
   sinfo <- seqinfo(gr)
   seqlengths(gr) <- NA
-  resize(gr, ...)
+  gr <- resize(gr, ...)
   seqinfo(gr) <- sinfo
   trim(gr)
 }
