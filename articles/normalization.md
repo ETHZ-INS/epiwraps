@@ -233,7 +233,7 @@ sessionInfo()
     ##  [3] ComplexHeatmap_2.28.0       SummarizedExperiment_1.42.0
     ##  [5] Biobase_2.72.0              GenomicRanges_1.64.0       
     ##  [7] Seqinfo_1.2.0               IRanges_2.46.0             
-    ##  [9] S4Vectors_0.50.0            BiocGenerics_0.58.0        
+    ##  [9] S4Vectors_0.50.1            BiocGenerics_0.58.1        
     ## [11] generics_0.1.4              MatrixGenerics_1.24.0      
     ## [13] matrixStats_1.5.0           BiocStyle_2.40.0           
     ## 
@@ -246,7 +246,7 @@ sessionInfo()
     ##  [16] Rsamtools_2.28.0         RCurl_1.98-1.18          base64enc_0.1-6         
     ##  [19] htmltools_0.5.9          S4Arrays_1.12.0          progress_1.2.3          
     ##  [22] curl_7.1.0               SparseArray_1.12.2       Formula_1.2-5           
-    ##  [25] sass_0.4.10              bslib_0.10.0             htmlwidgets_1.6.4       
+    ##  [25] sass_0.4.10              bslib_0.11.0             htmlwidgets_1.6.4       
     ##  [28] desc_1.4.3               Gviz_1.56.0              httr2_1.2.2             
     ##  [31] cachem_1.1.0             GenomicAlignments_1.48.0 lifecycle_1.0.5         
     ##  [34] iterators_1.0.14         pkgconfig_2.0.3          Matrix_1.7-5            
@@ -269,7 +269,7 @@ sessionInfo()
     ##  [85] biovizBase_1.60.0        tidyselect_1.2.1         locfit_1.5-9.12         
     ##  [88] pbapply_1.7-4            Biostrings_2.80.0        knitr_1.51              
     ##  [91] gridExtra_2.3            bookdown_0.46            ProtGenerics_1.44.0     
-    ##  [94] edgeR_4.10.0             xfun_0.57                statmod_1.5.1           
+    ##  [94] edgeR_4.10.0             xfun_0.57                statmod_1.5.2           
     ##  [97] stringi_1.8.7            UCSC.utils_1.8.0         lazyeval_0.2.3          
     ## [100] yaml_2.3.12              evaluate_1.0.5           codetools_0.2-20        
     ## [103] cigarillo_1.2.0          interp_1.1-6             GenomicFiles_1.48.0     

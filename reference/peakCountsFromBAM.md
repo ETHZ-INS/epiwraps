@@ -23,9 +23,10 @@ peakCountsFromBAM(
   minMapq = 1L,
   minFragLength = 1L,
   maxFragLength = 5000L,
-  splitByChr = 3,
+  splitByChr = NULL,
   randomAcc = FALSE,
   getMedianFragLength = FALSE,
+  BPPARAM = SerialParam(),
   verbose = TRUE
 )
 ```
@@ -138,6 +139,11 @@ peakCountsFromBAM(
   This is slightly slower. The log10-transformed, (weighted mean across
   samples of the) median fragment length per region is stored in
   \`rowData(results)\$flbias\`.
+
+- BPPARAM:
+
+  BiocParallel params for multithreading. Note that multithreading can
+  lead to high memory usage.
 
 - verbose:
 

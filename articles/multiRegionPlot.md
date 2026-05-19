@@ -567,8 +567,8 @@ sessionInfo()
     ##  [3] EnrichedHeatmap_1.42.0      ComplexHeatmap_2.28.0      
     ##  [5] SummarizedExperiment_1.42.0 Biobase_2.72.0             
     ##  [7] GenomicRanges_1.64.0        Seqinfo_1.2.0              
-    ##  [9] IRanges_2.46.0              S4Vectors_0.50.0           
-    ## [11] BiocGenerics_0.58.0         generics_0.1.4             
+    ##  [9] IRanges_2.46.0              S4Vectors_0.50.1           
+    ## [11] BiocGenerics_0.58.1         generics_0.1.4             
     ## [13] MatrixGenerics_1.24.0       matrixStats_1.5.0          
     ## [15] BiocStyle_2.40.0           
     ## 
@@ -581,7 +581,7 @@ sessionInfo()
     ##  [16] Rsamtools_2.28.0         RCurl_1.98-1.18          base64enc_0.1-6         
     ##  [19] htmltools_0.5.9          S4Arrays_1.12.0          progress_1.2.3          
     ##  [22] curl_7.1.0               SparseArray_1.12.2       Formula_1.2-5           
-    ##  [25] sass_0.4.10              bslib_0.10.0             htmlwidgets_1.6.4       
+    ##  [25] sass_0.4.10              bslib_0.11.0             htmlwidgets_1.6.4       
     ##  [28] desc_1.4.3               Gviz_1.56.0              httr2_1.2.2             
     ##  [31] cachem_1.1.0             GenomicAlignments_1.48.0 lifecycle_1.0.5         
     ##  [34] iterators_1.0.14         pkgconfig_2.0.3          Matrix_1.7-5            

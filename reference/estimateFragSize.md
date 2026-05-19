@@ -87,5 +87,5 @@ argument
 # get an example bam file
 bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 suppressWarnings(estimateFragSize(bam))
-#> [1] 1433
+#> [1] 984
 ```
