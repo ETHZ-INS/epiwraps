@@ -106,9 +106,8 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
   })
   
   ymax <- NULL
-  if(sameLimits){
-    ymax <- unlist(lapply(track_data_all, \(x) lapply(x, \(y) max(y$score))))
-  }
+  if(sameLimits) ymax <-
+        max(unlist(lapply(track_data_all, \(x) lapply(x, \(y) max(y$score)))))
   
   panels <- list()
   
