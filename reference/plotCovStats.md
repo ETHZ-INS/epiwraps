@@ -17,8 +17,7 @@ plotCovStats(qc, labels = "AUTO", show.legend = TRUE)
 
 - labels:
 
-  Passed to
-  [`plot_grid`](https://wilkelab.org/cowplot/reference/plot_grid.html).
+  Passed to `plot_grid`.
 
 - show.legend:
 
