@@ -108,8 +108,6 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
 #'
 #' @param qc A list of coverage statistics, as produced by 
 #'  \code{\link{getCovStats}}.
-#' @param labels Passed to \code{\link[cowplot]{plot_grid}}.
-#' @param show.legend Logical; whether to show the plot legend.
 #'
 #' @return A grid object to be plotted.
 #' @export
@@ -122,7 +120,7 @@ getCovStats <- function(x, binSize=1000, nbBins=10000, exclude=NULL,
 #' # because most of the file is empty, we'll exclude some of the ranges
 #' cs <- getCovStats(bwf, exclude=GRanges("1", IRanges(1, 4300000)))
 #' plotCovStats(cs)
-plotCovStats <- function(qc, labels="AUTO", show.legend=TRUE){
+plotCovStats <- function(qc){
   p1 <- ggplot(qc$coverage, aes(coverage, fraction.above, colour=file)) + 
     geom_line() + labs(x="Read density", y="Fraction of regions > density") +
     theme(legend.position="top", legend.direction = "horizontal") +

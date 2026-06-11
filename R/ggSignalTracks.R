@@ -38,6 +38,8 @@
 #' @param xAxis Logical; whether to plot the xAxis in the bottom panel.
 #' @param coverage.linewidth Line width of the coverage plots (above ribbons).
 #' @param verbose Logical; whether to print progress messages.
+#' 
+#' @return A list of ggplot objects.
 #'
 #' @importFrom rtracklayer import
 #' @importFrom GenomicRanges GRanges start end seqnames restrict
@@ -49,6 +51,7 @@
 #' @importFrom ggplot2 scale_fill_gradientn
 #' @importFrom patchwork wrap_plots plot_layout
 #' @importFrom AnnotationFilter GRangesFilter
+#' @importFrom GenomicFeatures transcripts genes
 #' @importFrom scales comma
 #' @export
 #' @examples
