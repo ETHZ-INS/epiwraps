@@ -1,8 +1,8 @@
 Package: epiwraps
 Type: Package
 Title: epiwraps: Wrappers for plotting and dealing with epigenomics data
-Version: 0.99.119
-Date: 2026-05-03
+Version: 0.99.120
+Date: 2026-06-11
 Authors@R: c(
     person("Pierre-Luc", "Germain", email="pierre-luc.germain@hest.ethz.ch", 
             role=c("cre","aut"), comment=c(ORCID="0000-0003-3418-4218")))
@@ -17,6 +17,7 @@ Imports:
     BiocParallel,
     GenomeInfoDb,
     GenomicAlignments,
+    GenomicFeatures,
     GenomicFiles,
     rtracklayer,
     ComplexHeatmap,

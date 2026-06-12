@@ -4,15 +4,11 @@
 \alias{plotCovStats}
 \title{plotCovStats}
 \usage{
-plotCovStats(qc, labels = "AUTO", show.legend = TRUE)
+plotCovStats(qc)
 }
 \arguments{
 \item{qc}{A list of coverage statistics, as produced by 
 \code{\link{getCovStats}}.}
-
-\item{labels}{Passed to \code{\link[cowplot]{plot_grid}}.}
-
-\item{show.legend}{Logical; whether to show the plot legend.}
 }
 \value{
 A grid object to be plotted.

@@ -84,6 +84,9 @@ same color scale for heatmaps)?}
 
 \item{verbose}{Logical; whether to print progress messages.}
 }
+\value{
+A list of ggplot objects.
+}
 \description{
 ggSignalTracks: Plot genomic signal tracks with ggplot2
 }
