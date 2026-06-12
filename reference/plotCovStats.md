@@ -5,7 +5,7 @@ Plots coverage statistics, such as as fingerprint plot.
 ## Usage
 
 ``` r
-plotCovStats(qc, labels = "AUTO", show.legend = TRUE)
+plotCovStats(qc)
 ```
 
 ## Arguments
@@ -14,14 +14,6 @@ plotCovStats(qc, labels = "AUTO", show.legend = TRUE)
 
   A list of coverage statistics, as produced by
   [`getCovStats`](https://ethz-ins.github.io/epiwraps/reference/getCovStats.md).
-
-- labels:
-
-  Passed to `plot_grid`.
-
-- show.legend:
-
-  Logical; whether to show the plot legend.
 
 ## Value
 

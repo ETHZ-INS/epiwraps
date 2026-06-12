@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.119</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.120</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -169,6 +169,10 @@ same color scale for heatmaps)?</p></dd>
 <dd><p>Logical; whether to print progress messages.</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    <p>A list of ggplot objects.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -186,8 +190,8 @@ same color scale for heatmaps)?</p></dd>
 <span class="r-in"><span><span class="va">pl</span> <span class="op">&lt;-</span> <span class="fu">ggSignalTracks</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>group<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>rep1<span class="op">=</span><span class="va">bw1</span>, rep2<span class="op">=</span><span class="va">bw2</span><span class="op">)</span><span class="op">)</span>, region<span class="op">=</span><span class="st">"chr1:1-1030"</span>,</span></span>
 <span class="r-in"><span>                     aggregation<span class="op">=</span><span class="st">"heatmap+mean"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading BigWig data...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   Importing: /tmp/RtmpNWWhxB/file356825ab3166.bw</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   Importing: /tmp/RtmpNWWhxB/file35686bb44aa.bw</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Importing: /tmp/RtmpVf3tYd/file1c9368ff726.bw</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   Importing: /tmp/RtmpVf3tYd/file1c93176a9c40.bw</span>
 <span class="r-in"><span><span class="fu">patchwork</span><span class="fu">::</span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">pl</span>, ncol<span class="op">=</span><span class="fl">1</span>, heights<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="ggSignalTracks-1.png" alt="" width="700" height="433"></span>
 </code></pre></div>

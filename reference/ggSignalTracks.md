@@ -126,6 +126,10 @@ ggSignalTracks(
 
   Logical; whether to print progress messages.
 
+## Value
+
+A list of ggplot objects.
+
 ## Examples
 
 ``` r
@@ -143,7 +147,7 @@ rtracklayer::export.bw(coverage(cov2), bw2)
 pl <- ggSignalTracks(list(group=c(rep1=bw1, rep2=bw2)), region="chr1:1-1030",
                      aggregation="heatmap+mean")
 #> Loading BigWig data...
-#>   Importing: /tmp/RtmpNWWhxB/file356825ab3166.bw
-#>   Importing: /tmp/RtmpNWWhxB/file35686bb44aa.bw
+#>   Importing: /tmp/RtmpVf3tYd/file1c9368ff726.bw
+#>   Importing: /tmp/RtmpVf3tYd/file1c93176a9c40.bw
 patchwork::wrap_plots(pl, ncol=1, heights=c(2,1))
 ```

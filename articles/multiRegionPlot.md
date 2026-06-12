@@ -563,7 +563,7 @@ sessionInfo()
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] ggplot2_4.0.3               epiwraps_0.99.119          
+    ##  [1] ggplot2_4.0.3               epiwraps_0.99.120          
     ##  [3] EnrichedHeatmap_1.42.0      ComplexHeatmap_2.28.0      
     ##  [5] SummarizedExperiment_1.42.0 Biobase_2.72.0             
     ##  [7] GenomicRanges_1.64.0        Seqinfo_1.2.0              
@@ -573,7 +573,7 @@ sessionInfo()
     ## [15] BiocStyle_2.40.0           
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] RColorBrewer_1.1-3       rstudioapi_0.18.0        jsonlite_2.0.0          
+    ##   [1] RColorBrewer_1.1-3       rstudioapi_0.19.0        jsonlite_2.0.0          
     ##   [4] shape_1.4.6.1            magrittr_2.0.5           magick_2.9.1            
     ##   [7] GenomicFeatures_1.64.0   farver_2.1.2             rmarkdown_2.31          
     ##  [10] GlobalOptions_0.1.4      fs_2.1.0                 BiocIO_1.22.0           
@@ -595,7 +595,7 @@ sessionInfo()
     ##  [58] BiocParallel_1.46.0      DBI_1.3.0                biomaRt_2.68.0          
     ##  [61] rappdirs_0.3.4           DelayedArray_0.38.2      rjson_0.2.23            
     ##  [64] tools_4.6.0              foreign_0.8-91           otel_0.2.0              
-    ##  [67] nnet_7.3-20              glue_1.8.1               restfulr_0.0.16         
+    ##  [67] nnet_7.3-20              glue_1.8.1               restfulr_0.0.17         
     ##  [70] checkmate_2.3.4          cluster_2.1.8.2          gtable_0.3.6            
     ##  [73] BSgenome_1.80.0          ensembldb_2.36.1         data.table_1.18.4       
     ##  [76] hms_1.1.4                XVector_0.52.0           foreach_1.5.2           

@@ -199,9 +199,9 @@ pl <- ggSignalTracks(list(group=c(A=bw1, B=bw2)), region="chr1:1-1030",
 
     ## Loading BigWig data...
 
-    ##   Importing: /tmp/RtmptloxoP/file397327fbc94c.bw
+    ##   Importing: /tmp/Rtmpi4XFvu/file20832bd2ce30.bw
 
-    ##   Importing: /tmp/RtmptloxoP/file397344134419.bw
+    ##   Importing: /tmp/Rtmpi4XFvu/file208320dc90d.bw
 
 The output, `pl`, is a list of ggplot2 objects, which can be plotted
 together using
@@ -258,7 +258,7 @@ sessionInfo()
     ## 
     ## other attached packages:
     ##  [1] ggplot2_4.0.3               patchwork_1.3.2            
-    ##  [3] epiwraps_0.99.119           EnrichedHeatmap_1.42.0     
+    ##  [3] epiwraps_0.99.120           EnrichedHeatmap_1.42.0     
     ##  [5] ComplexHeatmap_2.28.0       SummarizedExperiment_1.42.0
     ##  [7] Biobase_2.72.0              GenomicRanges_1.64.0       
     ##  [9] Seqinfo_1.2.0               IRanges_2.46.0             
@@ -267,7 +267,7 @@ sessionInfo()
     ## [15] matrixStats_1.5.0           BiocStyle_2.40.0           
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] RColorBrewer_1.1-3       rstudioapi_0.18.0        jsonlite_2.0.0          
+    ##   [1] RColorBrewer_1.1-3       rstudioapi_0.19.0        jsonlite_2.0.0          
     ##   [4] shape_1.4.6.1            magrittr_2.0.5           GenomicFeatures_1.64.0  
     ##   [7] farver_2.1.2             rmarkdown_2.31           GlobalOptions_0.1.4     
     ##  [10] fs_2.1.0                 BiocIO_1.22.0            ragg_1.5.2              
@@ -289,7 +289,7 @@ sessionInfo()
     ##  [58] biomaRt_2.68.0           rappdirs_0.3.4           DelayedArray_0.38.2     
     ##  [61] rjson_0.2.23             tools_4.6.0              foreign_0.8-91          
     ##  [64] otel_0.2.0               nnet_7.3-20              glue_1.8.1              
-    ##  [67] restfulr_0.0.16          checkmate_2.3.4          cluster_2.1.8.2         
+    ##  [67] restfulr_0.0.17          checkmate_2.3.4          cluster_2.1.8.2         
     ##  [70] gtable_0.3.6             BSgenome_1.80.0          ensembldb_2.36.1        
     ##  [73] data.table_1.18.4        hms_1.1.4                XVector_0.52.0          
     ##  [76] foreach_1.5.2            pillar_1.11.1            stringr_1.6.0           
