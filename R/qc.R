@@ -252,17 +252,13 @@ fragSizesDist <- function(x, what=10000, flags=scanBamFlag(isProperPair=TRUE),
 #' 
 #' @export
 #' @examples
-#' # we first fetch the path to the example bigwig file:
-#' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-#' ## normally, we would load an ensembldb object using AnnotationHub. For the 
-#' ## purpose of this example, we'll pretend that the following set of regions
-#' ## represent TSS:
-#' tss <- system.file("extdata/example_peaks.bed", package="epiwraps")
-#' tss <- rtracklayer::import(tss)
-#' en <- TSSenrichment(bw, tss)
+#' \dontrun{
+#' # assuming we have a bigwig file and an ensdb object:
+#' en <- TSSenrichment(bw, ensb)
 #' en$score
-#' ## you can also plot using something like this:
-#' ## ggplot(en$data, aes(position, enrichment, colour=sample)) + geom_line()
+#' # you can also plot using something like this:
+#' ggplot(en$data, aes(position, enrichment, colour=sample)) + geom_line()
+#' }
 TSSenrichment <- function(tracks, ensdb, useSeqLevels=NULL){
   stopifnot(is(ensdb, "EnsDb") || is(ensdb, "GRanges"))
   if(!is(tracks, "character") || !all(file.exists(tracks)) ||

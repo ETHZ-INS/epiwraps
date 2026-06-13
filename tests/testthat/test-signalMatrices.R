@@ -2,6 +2,11 @@ bw <- system.file("extdata/example_atac.bw", package="epiwraps")
 regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
 regions <- importBedlike(regions)
 
+skipOnWindows <- function(){
+  if(.Platform$OS.type == "windows")
+    skip("Skipping UCSC-dependent tests on Windows")
+}
+
 checkESE <- function(m, enc=1L, enr=NULL, wAssay=1L){
   expect_true(is(m, "EnrichmentSE") && ncol(m)==enc)
   if(!is.null(enr)) expect_true(nrow(m)==enr)
@@ -10,6 +15,7 @@ checkESE <- function(m, enc=1L, enr=NULL, wAssay=1L){
 }
 
 test_that("signal2Matrix works with bw files", {
+  skipOnWindows()
   m <- signal2Matrix(bw, regions, scaling=2, w=20)
   checkESE(m, enr=length(regions))
   m <- signal2Matrix(bw, regions, type = "scaled", smooth=TRUE)
@@ -17,15 +23,18 @@ test_that("signal2Matrix works with bw files", {
   h <- plotEnrichedHeatmaps(m)
 })
 
-m_ref <- signal2Matrix(list(test=bw), regions)
+if(.Platform$OS.type != "windows")
+  m_ref <- signal2Matrix(list(test=bw), regions)
 
 test_that("signal2Matrix works with RleList", {
+  skipOnWindows()
   rle <- rtracklayer::import(bw, as="RleList")
   m <- signal2Matrix(list(test=rle), regions)
   expect_true(identical(m,m_ref))
 })
 
 test_that("signal2Matrix works with GRanges", {
+  skipOnWindows()
   gr <- rtracklayer::import(bw)
   m <- signal2Matrix(list(test=gr), regions)
   cc <- cor(as.numeric(assay(m)[,1]),as.numeric(assay(m_ref)[,1]))
@@ -35,6 +44,7 @@ test_that("signal2Matrix works with GRanges", {
 bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
 
 test_that("signal2Matrix works with Bam", {
+  skipOnWindows()
   m <- signal2Matrix(bam, as(c("seq1:500-800"), "GRanges"))
   checkESE(m, enr = 1)
 })
