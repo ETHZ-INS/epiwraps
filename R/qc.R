@@ -17,7 +17,7 @@
 #' @export
 #' @importFrom BiocParallel bplapply SerialParam
 #' @import GenomicRanges S4Vectors
-#' @importFrom GenomeInfoDb seqlengths
+#' @importFrom Seqinfo seqlengths
 #' @importFrom dplyr bind_rows
 #' @importFrom rtracklayer import BigWigSelection BigWigFile
 #' @importFrom Rsamtools BamFile scanBamFlag ScanBamParam

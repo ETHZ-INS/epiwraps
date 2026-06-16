@@ -56,7 +56,7 @@
 #' @importFrom GenomicRanges reduce seqnames start end
 #' @importFrom ensembldb getGeneRegionTrackForGviz genes
 #' @importFrom S4Vectors mcols
-#' @importFrom GenomeInfoDb genome seqlevels
+#' @importFrom Seqinfo genome seqlevels
 #' @importFrom Gviz plotTracks DataTrack OverlayTrack GeneRegionTrack 
 #' @importFrom Gviz GenomeAxisTrack AnnotationTrack AlignmentsTrack
 #' @importFrom matrixStats rowMins rowMaxs rowMedians

@@ -107,7 +107,7 @@
 #' @importFrom GenomicAlignments isProperPair
 #' @importFrom GenomicRanges resize countOverlaps width score score<- coverage 
 #' @importFrom GenomicRanges tileGenome shift trim
-#' @importFrom GenomeInfoDb Seqinfo seqinfo seqinfo<-
+#' @importFrom Seqinfo Seqinfo seqinfo seqinfo<-
 #' @importFrom S4Vectors metadata metadata<- runmean Rle
 #' @importFrom IRanges RleList viewMeans viewMaxs
 #' @importFrom pbapply pblapply

@@ -66,7 +66,7 @@
 #' @return A vector of normalization factors or, for methods 'S3norm' and 
 #'   '2cLinear', a matrix of per-sample normalization parameters.
 #' @export
-#' @importFrom GenomeInfoDb seqlengths<-
+#' @importFrom Seqinfo seqlengths<-
 #' @examples
 #' # we get an example bigwig file, and use it twice:
 #' bw <- system.file("extdata/example_atac.bw", package="epiwraps")
