@@ -563,7 +563,7 @@ sessionInfo()
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] ggplot2_4.0.3               epiwraps_0.99.120          
+    ##  [1] ggplot2_4.0.3               epiwraps_0.99.122          
     ##  [3] EnrichedHeatmap_1.42.0      ComplexHeatmap_2.28.0      
     ##  [5] SummarizedExperiment_1.42.0 Biobase_2.72.0             
     ##  [7] GenomicRanges_1.64.0        Seqinfo_1.2.0              

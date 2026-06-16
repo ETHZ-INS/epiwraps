@@ -36,18 +36,11 @@ per sample) and \`data\` (per bin enrichment, for plotting)
 ## Examples
 
 ``` r
-# we first fetch the path to the example bigwig file:
-bw <- system.file("extdata/example_atac.bw", package="epiwraps")
-## normally, we would load an ensembldb object using AnnotationHub. For the 
-## purpose of this example, we'll pretend that the following set of regions
-## represent TSS:
-tss <- system.file("extdata/example_peaks.bed", package="epiwraps")
-tss <- rtracklayer::import(tss)
-en <- TSSenrichment(bw, tss)
-#> Reading /home/runner/work/_temp/Library/epiwraps/extdata/example_atac.bw
+if (FALSE) { # \dontrun{
+# assuming we have a bigwig file and an ensdb object:
+en <- TSSenrichment(bw, ensb)
 en$score
-#> example_atac 
-#>     5.768383 
-## you can also plot using something like this:
-## ggplot(en$data, aes(position, enrichment, colour=sample)) + geom_line()
+# you can also plot using something like this:
+ggplot(en$data, aes(position, enrichment, colour=sample)) + geom_line()
+} # }
 ```

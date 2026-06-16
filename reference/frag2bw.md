@@ -137,7 +137,7 @@ bedf <- tempfile(fileext=".bed")
 rtracklayer::export.bed(reads, bedf)
 bedf <- Rsamtools::bgzip(bedf)
 Rsamtools::indexTabix(bedf, format="bed")
-#> [1] "/tmp/RtmpVf3tYd/file1c932c888369.bed.bgz.tbi"
+#> [1] "/tmp/RtmpMM6sor/file1c865ab95d80.bed.bgz.tbi"
 # convert to bigwig
 frag2bw(bedf, tempfile(fileext=".bw"))
 #> Reading in signal...

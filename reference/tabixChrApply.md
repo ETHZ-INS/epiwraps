@@ -74,7 +74,7 @@ write.table(d, frags, col.names=FALSE, row.names=FALSE, sep="\t")
 # tabix-index it
 frags <- Rsamtools::bgzip(frags)
 Rsamtools::indexTabix(frags, format = "bed")
-#> [1] "/tmp/RtmpVf3tYd/file1c936b1871d5.tsv.bgz.tbi"
+#> [1] "/tmp/RtmpMM6sor/file1c861cb93a0c.tsv.bgz.tbi"
 # now we can do something chunk-wise, e.g. extract coverage:
 res <- tabixChrApply(frags, fn=coverage)
 # aggregate the chunk results into an RleList object:
