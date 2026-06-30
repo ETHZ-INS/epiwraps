@@ -207,7 +207,7 @@ And we’ve recovered comparable signal across the two tracks/samples.
 sessionInfo()
 ```
 
-    ## R version 4.6.0 (2026-04-24)
+    ## R version 4.6.1 (2026-06-24)
     ## Platform: x86_64-pc-linux-gnu
     ## Running under: Ubuntu 24.04.4 LTS
     ## 
@@ -247,18 +247,18 @@ sessionInfo()
     ##  [19] htmltools_0.5.9          S4Arrays_1.12.0          progress_1.2.3          
     ##  [22] curl_7.1.0               SparseArray_1.12.2       Formula_1.2-5           
     ##  [25] sass_0.4.10              bslib_0.11.0             htmlwidgets_1.6.4       
-    ##  [28] desc_1.4.3               Gviz_1.56.0              httr2_1.2.2             
+    ##  [28] desc_1.4.3               Gviz_1.56.0              httr2_1.2.3             
     ##  [31] cachem_1.1.0             GenomicAlignments_1.48.0 lifecycle_1.0.5         
     ##  [34] iterators_1.0.14         pkgconfig_2.0.3          Matrix_1.7-5            
     ##  [37] R6_2.6.1                 fastmap_1.2.0            clue_0.3-68             
     ##  [40] digest_0.6.39            colorspace_2.1-2         patchwork_1.3.2         
-    ##  [43] AnnotationDbi_1.74.0     textshaping_1.0.5        Hmisc_5.2-5             
-    ##  [46] RSQLite_3.53.1           filelock_1.0.3           httr_1.4.8              
-    ##  [49] abind_1.4-8              compiler_4.6.0           bit64_4.8.2             
+    ##  [43] AnnotationDbi_1.74.0     textshaping_1.0.5        Hmisc_5.2-6             
+    ##  [46] RSQLite_3.53.2           filelock_1.0.3           httr_1.4.8              
+    ##  [49] abind_1.4-8              compiler_4.6.1           bit64_4.8.2             
     ##  [52] doParallel_1.0.17        backports_1.5.1          htmlTable_2.5.0         
     ##  [55] S7_0.2.2                 BiocParallel_1.46.0      DBI_1.3.0               
     ##  [58] biomaRt_2.68.0           rappdirs_0.3.4           DelayedArray_0.38.2     
-    ##  [61] rjson_0.2.23             tools_4.6.0              foreign_0.8-91          
+    ##  [61] rjson_0.2.23             tools_4.6.1              foreign_0.8-91          
     ##  [64] otel_0.2.0               nnet_7.3-20              glue_1.8.1              
     ##  [67] restfulr_0.0.17          checkmate_2.3.4          cluster_2.1.8.2         
     ##  [70] gtable_0.3.6             BSgenome_1.80.0          ensembldb_2.36.1        
@@ -268,18 +268,18 @@ sessionInfo()
     ##  [82] BiocFileCache_3.2.0      lattice_0.22-9           deldir_2.0-4            
     ##  [85] rtracklayer_1.72.0       bit_4.6.0                biovizBase_1.60.0       
     ##  [88] tidyselect_1.2.1         locfit_1.5-9.12          pbapply_1.7-4           
-    ##  [91] Biostrings_2.80.1        knitr_1.51               gridExtra_2.3           
-    ##  [94] bookdown_0.46            ProtGenerics_1.44.0      edgeR_4.10.1            
-    ##  [97] xfun_0.58                statmod_1.5.2            stringi_1.8.7           
+    ##  [91] Biostrings_2.80.1        knitr_1.51               gridExtra_2.3.1         
+    ##  [94] bookdown_0.47            ProtGenerics_1.44.0      edgeR_4.10.1            
+    ##  [97] xfun_0.59                statmod_1.5.2            stringi_1.8.7           
     ## [100] UCSC.utils_1.8.0         lazyeval_0.2.3           yaml_2.3.12             
     ## [103] evaluate_1.0.5           codetools_0.2-20         cigarillo_1.2.0         
     ## [106] interp_1.1-6             GenomicFiles_1.48.0      tibble_3.3.1            
     ## [109] BiocManager_1.30.27      cli_3.6.6                rpart_4.1.27            
     ## [112] systemfonts_1.3.2        jquerylib_0.1.4          dichromat_2.0-0.1       
-    ## [115] Rcpp_1.1.1-1.1           GenomeInfoDb_1.48.0      dbplyr_2.5.2            
-    ## [118] png_0.1-9                XML_3.99-0.23            parallel_4.6.0          
+    ## [115] Rcpp_1.1.1-1.1           GenomeInfoDb_1.48.0      dbplyr_2.6.0            
+    ## [118] png_0.1-9                XML_3.99-0.23            parallel_4.6.1          
     ## [121] pkgdown_2.2.0            ggplot2_4.0.3            blob_1.3.0              
     ## [124] prettyunits_1.2.0        jpeg_0.1-11              latticeExtra_0.6-31     
     ## [127] AnnotationFilter_1.36.0  bitops_1.0-9             viridisLite_0.4.3       
     ## [130] VariantAnnotation_1.58.0 scales_1.4.0             crayon_1.5.3            
-    ## [133] GetoptLong_1.1.1         rlang_1.2.0              KEGGREST_1.52.0
+    ## [133] GetoptLong_1.1.1         rlang_1.2.0              KEGGREST_1.52.2

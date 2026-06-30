@@ -21,6 +21,12 @@ Install with:
 BiocManager::install("ETHZ-INS/epiwraps")
 ```
 
+If working with Bioconductor 3.23 or earlier, use:
+
+``` r
+BiocManager::install("ETHZ-INS/epiwraps" ref="bioc3.23")
+```
+
 ## Overview
 
 While the package’s functions accept many input formats, much of the
