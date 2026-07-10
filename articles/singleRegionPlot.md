@@ -2,45 +2,36 @@
 
 Abstract
 
-This vignette documents the use of the ‘plotSignalTracks’ to generate
+This vignette documents the use of the ‘ggSignalTracks’ to generate
 genome-browser-like plots of signals and annotations along genomic
-coordinates in a single given region. It is chiefly a wrapper around the
-‘Gviz’ package.
+coordinates in a single given region.
 
 ## Plotting signals in a region
 
-`epiwraps` has two functions to plot signals along genomic coordinates
-in a single region: the
-[`plotSignalTracks()`](https://ethz-ins.github.io/epiwraps/reference/plotSignalTracks.md)
-function is a wrapper around the
-*[Gviz](https://bioconductor.org/packages/3.23/Gviz)* package, and the
+The
 [`ggSignalTracks()`](https://ethz-ins.github.io/epiwraps/reference/ggSignalTracks.md)
-function is a slightly less flexible, ggplot-based equivalent. Both have
-been designed to have a very similar interface. We first focus on
-[`plotSignalTracks()`](https://ethz-ins.github.io/epiwraps/reference/plotSignalTracks.md).
-
-The function lacks the full flexibility of the
-*[Gviz](https://bioconductor.org/packages/3.23/Gviz)* package, but
-presents a considerable simpler interface, with automatic default
-parameters, etc. It has two essential arguments: a (named) list of files
-whose signal to display (can be a mixture of bigwig, bam, or bed-like
-files), and the region in which to display the signals (can be given as
-a GRanges or as a string). The function then automatically determines
-the relevant track type and setting from the file types.
+function of `epiwraps` plots one or more signals along a given genomic
+region, producing `ggplot` objects:
 
 ``` r
-suppressPackageStartupMessages(library(epiwraps))
+suppressPackageStartupMessages({
+  library(epiwraps)
+  library(patchwork)
+})
 
 # get the path to an example bigwig file:
 bwf1 <- system.file("extdata/example_rna.bw", package="epiwraps")
-plotSignalTracks(list(RNA=bwf1), region="8:22165140-22212326", genomeAxis=TRUE)
+ggSignalTracks(list(RNA=bwf1), region="8:22165140-22212326")
 ```
+
+    ## [[1]]
 
 ![](singleRegionPlot_files/figure-html/signal1-1.png)
 
 ``` r
 # we could plot multiple tracks as follows:
-plotSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326")
+pl <- ggSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326")
+wrap_plots(pl, ncol=1)
 ```
 
 ![](singleRegionPlot_files/figure-html/signal1-2.png)
@@ -50,7 +41,8 @@ other data:
 
 ``` r
 myregions <- GRanges("8", IRanges(c(22166000,22202300), width=3000))
-plotSignalTracks(list(RNA=bwf1, regions=myregions), region="8:22165140-22212326")
+pl <- ggSignalTracks(list(RNA=bwf1, regions=myregions), region="8:22165140-22212326")
+wrap_plots(pl, ncol=1)
 ```
 
 ![](singleRegionPlot_files/figure-html/signal2-1.png)
@@ -59,25 +51,12 @@ Colors, track display types, and such parameters can either be set for
 all tracks or for each individual track, for example:
 
 ``` r
-myregions <- GRanges("8", IRanges(c(22166000,22202300), width=3000))
-plotSignalTracks(list(RNA=bwf1, regions=myregions), colors=c("red", "black"),
-                 region="8:22165140-22212326")
+pl <- ggSignalTracks(list(RNA=bwf1, regions=myregions),
+                     region="8:22165140-22212326", colors=c("red", "black"))
+wrap_plots(pl, ncol=1)
 ```
 
 ![](singleRegionPlot_files/figure-html/signal3-1.png)
-
-For bam files, we can also plot individual reads:
-
-``` r
-# we fetch an example bam file:
-bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
-plotSignalTracks(c("my bam file"=bam), "seq1:1-1500", type="alignments")
-```
-
-    ## Warning in call_new_fun_in_cigarillo("sequenceLayer", "project_sequences", : sequenceLayer() is formally deprecated in GenomicAlignments >= 1.45.5 and
-    ##   replaced with the project_sequences() function from the new cigarillo package
-
-![](singleRegionPlot_files/figure-html/signalAlignments-1.png)
 
 ### Merging signal from different tracks
 
@@ -86,9 +65,12 @@ combined in different ways. To do this, the tracks can simply be given
 in a nested fashion:
 
 ``` r
-plotSignalTracks(list(track1=bwf1, combined=c(bwf1,bwf1)),
-                 region="8:22165140-22212326")
+pl <- ggSignalTracks(list(combined=c(bwf1, bwf1)), region="8:22165140-22212326",
+                     aggregation="mean")
+wrap_plots(pl, ncol=1)
 ```
+
+![](singleRegionPlot_files/figure-html/mergingSignals-1.png)
 
 In this example we are always using the same track, but the first
 element (‘track1’) plots the track alone, while the second (‘combined’)
@@ -114,7 +96,9 @@ rtracklayer::export.bw(coverage(cov2), bw2)
 Then we can plot them as replicates:
 
 ``` r
-plotSignalTracks(list(group=c(bw1, bw2)), region="chr1:1-1030", aggregation="heatmap+mean")
+pl <- ggSignalTracks(list(group=c(rep1=bw1, rep2=bw2)), region="chr1:1-1030",
+                     aggregation="heatmap+mean") # this is actually the default
+wrap_plots(pl, ncol=1)
 ```
 
 ![](singleRegionPlot_files/figure-html/heatmap-1.png)
@@ -143,8 +127,10 @@ library(AnnotationHub)
 ah <- AnnotationHub()
 ensdb <- ah[["AH89426"]]
 # we plot our previous RNA bigwig file, around the BMP1 locus:
-plotSignalTracks(c(coverage=bwf1), region="BMP1", ensdb=ensdb, 
-                 transcripts="full")
+pl <- ggSignalTracks(list(coverage=bwf1), region="BMP1", ensdb=ensdb,
+                     transcripts="full")
+# we can adjust the size of the different tracks:
+wrap_plots(pl, ncol=1, heights=c(2,5))
 ```
 
 ![](TracksWithTranscripts.png)
@@ -154,77 +140,26 @@ some transcripts/exons are not expressed as highly as others. The
 transcripts could also have been collapsed into a gene model using
 `transcripts="collapsed"` (the default).
 
-To display only the gene track, the first argument can simply be
-omitted.
+To display only the gene track, the first argument can simply be empty,
+e.g. `ggSignalTracks(list(), region="BMP1", ensdb=ensdb)`.
 
 ### Further track customization
 
-In addition to the `colors` and `type` argument (and a number of
-others), which can customize the appearance of tracks, any additional
-parameters supported by the respective
-*[Gviz](https://bioconductor.org/packages/3.23/Gviz)* function can be
-passed through the `genes.params` (for Gviz’s `GeneRegionTrack`),
-`align.params` (for Gviz’s `AlignmentsTrack`, when plotting individual
-reads), or `tracks.params` (for any other Gviz `DataTrack`).
-
-For example, if you wish to manually set the same y-axis range for all
-data tracks, this can be done with:
-
-``` r
-plotSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326",
-                 tracks.params=list(ylim=c(0,200)))
-```
-
-![](singleRegionPlot_files/figure-html/yaxis-1.png)
-
-Also, in addition to passing filepaths or `GRanges`, any Gviz track(s)
-can be passed (i.e. objects inheriting the `GdObject` class) can be
-passed, enabling full track customization when needed.
-
-## ggplot version with ggSignalTracks
-
-`plotSignalTracks` relies on
-*[Gviz](https://bioconductor.org/packages/3.23/Gviz)*, which is very
-feature-rich. However, when composing complex figures it is often useful
-to have *[ggplot2](https://CRAN.R-project.org/package=ggplot2)* objects
-that can be theme in a standard fashion. To this end there is also the
+The output of
 [`ggSignalTracks()`](https://ethz-ins.github.io/epiwraps/reference/ggSignalTracks.md)
-function, which can only show coverage tracks and heatmaps (and a genes
-track), but was designed with a largely similar interface. For example:
-
-``` r
-pl <- ggSignalTracks(list(group=c(A=bw1, B=bw2)), region="chr1:1-1030",
-                     aggregation="heatmap+mean")
-```
-
-    ## Loading BigWig data...
-
-    ##   Importing: /tmp/Rtmp3fOewZ/file38aa73afb10d.bw
-
-    ##   Importing: /tmp/Rtmp3fOewZ/file38aa4ef17a9c.bw
-
-The output, `pl`, is a list of ggplot2 objects, which can be plotted
-together using
-*[patchwork](https://CRAN.R-project.org/package=patchwork)* :
-
-``` r
-library(patchwork)
-patchwork::wrap_plots(pl, ncol=1, heights=c(3,1))
-```
-
-![](singleRegionPlot_files/figure-html/unnamed-chunk-1-1.png)
-
-Since they are ggplot objects, they can also be edited as such, either
-individually or as whole via patchwork:
+is a list of ggplot objects. This means that we can customize individual
+panels after they have been generated, before we wrap them together. For
+example:
 
 ``` r
 library(ggplot2)
-pl[[1]] <- pl[[1]] + theme(axis.title.y=element_text(colour="darkblue"))
+pl <- ggSignalTracks(list(group=c(rep1=bw1, rep2=bw2)), region="chr1:1-1030")
+pl[[1]] <- pl[[1]] + theme(axis.title.y=element_text(colour="darkblue", size=12))
 patchwork::wrap_plots(pl, ncol=1, heights=c(3,1)) & 
    theme(axis.title.y=element_text(face="bold"))
 ```
 
-![](singleRegionPlot_files/figure-html/unnamed-chunk-2-1.png)
+![](singleRegionPlot_files/figure-html/unnamed-chunk-1-1.png)
 
   
   
@@ -258,7 +193,7 @@ sessionInfo()
     ## 
     ## other attached packages:
     ##  [1] ggplot2_4.0.3               patchwork_1.3.2            
-    ##  [3] epiwraps_0.99.122           EnrichedHeatmap_1.42.0     
+    ##  [3] epiwraps_0.99.125           EnrichedHeatmap_1.42.0     
     ##  [5] ComplexHeatmap_2.28.0       SummarizedExperiment_1.42.0
     ##  [7] Biobase_2.72.0              GenomicRanges_1.64.0       
     ##  [9] Seqinfo_1.2.0               IRanges_2.46.0             
@@ -267,47 +202,38 @@ sessionInfo()
     ## [15] matrixStats_1.5.0           BiocStyle_2.40.0           
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] RColorBrewer_1.1-3       rstudioapi_0.19.0        jsonlite_2.0.0          
-    ##   [4] shape_1.4.6.1            magrittr_2.0.5           GenomicFeatures_1.64.0  
-    ##   [7] farver_2.1.2             rmarkdown_2.31           GlobalOptions_0.1.4     
-    ##  [10] fs_2.1.0                 BiocIO_1.22.0            ragg_1.5.2              
-    ##  [13] vctrs_0.7.3              memoise_2.0.1            Rsamtools_2.28.0        
-    ##  [16] RCurl_1.98-1.19          base64enc_0.1-6          htmltools_0.5.9         
-    ##  [19] S4Arrays_1.12.0          progress_1.2.3           curl_7.1.0              
-    ##  [22] SparseArray_1.12.2       Formula_1.2-5            sass_0.4.10             
-    ##  [25] bslib_0.11.0             htmlwidgets_1.6.4        desc_1.4.3              
-    ##  [28] Gviz_1.56.0              httr2_1.2.3              cachem_1.1.0            
-    ##  [31] GenomicAlignments_1.48.0 lifecycle_1.0.5          iterators_1.0.14        
-    ##  [34] pkgconfig_2.0.3          Matrix_1.7-5             R6_2.6.1                
-    ##  [37] fastmap_1.2.0            clue_0.3-68              digest_0.6.39           
-    ##  [40] colorspace_2.1-2         AnnotationDbi_1.74.0     textshaping_1.0.5       
-    ##  [43] Hmisc_5.2-6              RSQLite_3.53.2           labeling_0.4.3          
-    ##  [46] filelock_1.0.3           httr_1.4.8               abind_1.4-8             
-    ##  [49] compiler_4.6.1           withr_3.0.3              bit64_4.8.2             
-    ##  [52] doParallel_1.0.17        backports_1.5.1          htmlTable_2.5.0         
-    ##  [55] S7_0.2.2                 BiocParallel_1.46.0      DBI_1.3.0               
-    ##  [58] biomaRt_2.68.0           rappdirs_0.3.4           DelayedArray_0.38.2     
-    ##  [61] rjson_0.2.23             tools_4.6.1              foreign_0.8-91          
-    ##  [64] otel_0.2.0               nnet_7.3-20              glue_1.8.1              
-    ##  [67] restfulr_0.0.17          checkmate_2.3.4          cluster_2.1.8.2         
-    ##  [70] gtable_0.3.6             BSgenome_1.80.0          ensembldb_2.36.1        
-    ##  [73] data.table_1.18.4        hms_1.1.4                XVector_0.52.0          
-    ##  [76] foreach_1.5.2            pillar_1.11.1            stringr_1.6.0           
-    ##  [79] circlize_0.4.18          dplyr_1.2.1              BiocFileCache_3.2.0     
-    ##  [82] lattice_0.22-9           deldir_2.0-4             rtracklayer_1.72.0      
-    ##  [85] bit_4.6.0                biovizBase_1.60.0        tidyselect_1.2.1        
-    ##  [88] locfit_1.5-9.12          pbapply_1.7-4            Biostrings_2.80.1       
-    ##  [91] knitr_1.51               gridExtra_2.3.1          bookdown_0.47           
-    ##  [94] ProtGenerics_1.44.0      xfun_0.59                stringi_1.8.7           
-    ##  [97] UCSC.utils_1.8.0         lazyeval_0.2.3           yaml_2.3.12             
-    ## [100] evaluate_1.0.5           codetools_0.2-20         cigarillo_1.2.0         
-    ## [103] interp_1.1-6             GenomicFiles_1.48.0      tibble_3.3.1            
-    ## [106] BiocManager_1.30.27      cli_3.6.6                rpart_4.1.27            
-    ## [109] systemfonts_1.3.2        jquerylib_0.1.4          dichromat_2.0-0.1       
-    ## [112] Rcpp_1.1.1-1.1           GenomeInfoDb_1.48.0      dbplyr_2.6.0            
-    ## [115] png_0.1-9                XML_3.99-0.23            parallel_4.6.1          
-    ## [118] pkgdown_2.2.0            blob_1.3.0               prettyunits_1.2.0       
-    ## [121] jpeg_0.1-11              latticeExtra_0.6-31      AnnotationFilter_1.36.0 
-    ## [124] bitops_1.0-9             viridisLite_0.4.3        VariantAnnotation_1.58.0
-    ## [127] scales_1.4.0             crayon_1.5.3             GetoptLong_1.1.1        
-    ## [130] rlang_1.2.0              KEGGREST_1.52.2
+    ##   [1] DBI_1.3.0                bitops_1.0-9             pbapply_1.7-4           
+    ##   [4] rlang_1.3.0              magrittr_2.0.5           clue_0.3-68             
+    ##   [7] GetoptLong_1.1.1         otel_0.2.0               compiler_4.6.1          
+    ##  [10] RSQLite_3.53.3           GenomicFeatures_1.64.0   png_0.1-9               
+    ##  [13] systemfonts_1.3.2        vctrs_0.7.3              ProtGenerics_1.44.0     
+    ##  [16] pkgconfig_2.0.3          shape_1.4.6.1            crayon_1.5.3            
+    ##  [19] fastmap_1.2.0            XVector_0.52.0           labeling_0.4.3          
+    ##  [22] Rsamtools_2.28.0         rmarkdown_2.31           UCSC.utils_1.8.0        
+    ##  [25] ragg_1.5.2               bit_4.6.0                xfun_0.60               
+    ##  [28] cachem_1.1.0             cigarillo_1.2.0          GenomeInfoDb_1.48.0     
+    ##  [31] jsonlite_2.0.0           blob_1.3.0               DelayedArray_0.38.2     
+    ##  [34] BiocParallel_1.46.0      parallel_4.6.1           cluster_2.1.8.2         
+    ##  [37] VariantAnnotation_1.58.0 R6_2.6.1                 bslib_0.11.0            
+    ##  [40] RColorBrewer_1.1-3       rtracklayer_1.72.0       jquerylib_0.1.4         
+    ##  [43] Rcpp_1.1.2               bookdown_0.47            iterators_1.0.14        
+    ##  [46] knitr_1.51               Matrix_1.7-5             tidyselect_1.2.1        
+    ##  [49] dichromat_2.0-0.1        abind_1.4-8              yaml_2.3.12             
+    ##  [52] doParallel_1.0.17        codetools_0.2-20         curl_7.1.0              
+    ##  [55] lattice_0.22-9           tibble_3.3.1             withr_3.0.3             
+    ##  [58] KEGGREST_1.52.2          S7_0.2.2                 evaluate_1.0.5          
+    ##  [61] desc_1.4.3               circlize_0.4.18          Biostrings_2.80.1       
+    ##  [64] pillar_1.11.1            BiocManager_1.30.27      foreach_1.5.2           
+    ##  [67] RCurl_1.98-1.19          ensembldb_2.36.1         scales_1.4.0            
+    ##  [70] GenomicFiles_1.48.0      glue_1.8.1               lazyeval_0.2.3          
+    ##  [73] tools_4.6.1              BiocIO_1.22.0            data.table_1.18.4       
+    ##  [76] BSgenome_1.80.0          locfit_1.5-9.12          GenomicAlignments_1.48.0
+    ##  [79] XML_3.99-0.23            fs_2.1.0                 AnnotationDbi_1.74.0    
+    ##  [82] colorspace_2.1-2         restfulr_0.0.17          cli_3.6.6               
+    ##  [85] textshaping_1.0.5        viridisLite_0.4.3        S4Arrays_1.12.0         
+    ##  [88] dplyr_1.2.1              AnnotationFilter_1.36.0  gtable_0.3.6            
+    ##  [91] sass_0.4.10              digest_0.6.39            SparseArray_1.12.2      
+    ##  [94] rjson_0.2.23             htmlwidgets_1.6.4        farver_2.1.2            
+    ##  [97] memoise_2.0.1            htmltools_0.5.9          pkgdown_2.2.1           
+    ## [100] lifecycle_1.0.5          httr_1.4.8               GlobalOptions_0.1.4     
+    ## [103] bit64_4.8.2

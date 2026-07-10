@@ -74,8 +74,6 @@
 - [`plotEnrichedHeatmaps()`](https://ethz-ins.github.io/epiwraps/reference/plotEnrichedHeatmaps.md)
   : plotEnrichedHeatmaps: Plots heatmaps of signals around a set of
   regions
-- [`plotSignalTracks()`](https://ethz-ins.github.io/epiwraps/reference/plotSignalTracks.md)
-  : plotSignalTracks
 - [`reduceRleLists()`](https://ethz-ins.github.io/epiwraps/reference/reduceRleLists.md)
   : reduceRleLists
 - [`reduceWithResplit()`](https://ethz-ins.github.io/epiwraps/reference/reduceWithResplit.md)
@@ -95,8 +93,6 @@
   : showTrackInfo
 - [`signal2Matrix()`](https://ethz-ins.github.io/epiwraps/reference/signal2Matrix.md)
   : signal2Matrix: reads the signals in/around a set of genomic regions.
-- [`signalsAcrossSamples()`](https://ethz-ins.github.io/epiwraps/reference/signalsAcrossSamples.md)
-  : signalsAcrossSamples
 - [`tabixChrApply()`](https://ethz-ins.github.io/epiwraps/reference/tabixChrApply.md)
   : tabixChrApply
 - [`tileRle()`](https://ethz-ins.github.io/epiwraps/reference/tileRle.md)

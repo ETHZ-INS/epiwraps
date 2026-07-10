@@ -24,7 +24,7 @@ ggSignalTracks(
   baseTextSize = 9,
   xAxis = TRUE,
   coverage.linewidth = 0.2,
-  verbose = TRUE
+  verbose = FALSE
 )
 ```
 
@@ -32,8 +32,10 @@ ggSignalTracks(
 
 - tracks:
 
-  A named list or named character vector, where each element is the path
-  to one or multiple bigwig files (nesting indicates grouping).
+  A named list, where each element represents a track. Each track can be
+  either 1) the path to one or multiple bigwig files (that will be
+  grouped), 2) an \`RleList\` object, or 3) a GRanges object that will
+  be shown as boxes.
 
 - region:
 
@@ -124,7 +126,7 @@ ggSignalTracks(
 
 - verbose:
 
-  Logical; whether to print progress messages.
+  Logical; whether to print progress
 
 ## Value
 
@@ -146,8 +148,5 @@ rtracklayer::export.bw(coverage(cov2), bw2)
 # then we create the ggplots, and plot them:
 pl <- ggSignalTracks(list(group=c(rep1=bw1, rep2=bw2)), region="chr1:1-1030",
                      aggregation="heatmap+mean")
-#> Loading BigWig data...
-#>   Importing: /tmp/RtmpUZROjS/file34e06823a907.bw
-#>   Importing: /tmp/RtmpUZROjS/file34e030882936.bw
 patchwork::wrap_plots(pl, ncol=1, heights=c(2,1))
 ```

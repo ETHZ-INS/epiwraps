@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">epiwraps</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.122</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.125</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,13 +130,16 @@ quite slow, hence multithreading is recommended for large sets of regions.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># consider the following example set of regions:</span></span></span>
 <span class="r-in"><span><span class="va">gr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="st">"1"</span>, <span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/IRanges-constructor.html" class="external-link">IRanges</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>,<span class="fl">120</span>,<span class="fl">140</span>,<span class="fl">390</span>,<span class="fl">410</span>,<span class="fl">430</span>,<span class="fl">120</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                           width<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">200</span>,<span class="fl">520</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">6</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>regions<span class="op">=</span><span class="va">gr</span>, <span class="st">"# overlapping regions"</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/coverage-methods.html" class="external-link">coverage</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                      reduced<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/inter-range-methods.html" class="external-link">reduce</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span><span class="op">)</span>, region<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/inter-range-methods.html" class="external-link">reduce</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pl</span> <span class="op">&lt;-</span> <span class="fu"><a href="ggSignalTracks.html">ggSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>regions<span class="op">=</span><span class="va">gr</span>,</span></span>
+<span class="r-in"><span>                          <span class="st">"# overlapping regions"</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/coverage-methods.html" class="external-link">coverage</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                          reduced<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/inter-range-methods.html" class="external-link">reduce</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                     region<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/inter-range-methods.html" class="external-link">reduce</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">patchwork</span><span class="fu">::</span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">pl</span>, ncol<span class="op">=</span><span class="fl">1</span>, heights<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>,<span class="fl">3</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="reduceWithResplit-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># if we are interested in having smaller regions, clearly it would seem </span></span></span>
 <span class="r-in"><span><span class="co"># sensible here to cut roughly in the middle, since we have two distinct </span></span></span>
 <span class="r-in"><span><span class="co"># groups of regions that are only joined by a single region</span></span></span>
-<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">redGr</span> <span class="op">&lt;-</span> <span class="fu">reduceWithResplit</span><span class="op">(</span><span class="va">gr</span>, softMaxSize<span class="op">=</span><span class="fl">100</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GRanges object with 2 ranges and 0 metadata columns:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       seqnames    ranges strand</span>
@@ -145,9 +148,10 @@ quite slow, hence multithreading is recommended for large sets of regions.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [2]        1   365-639      *</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   -------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   seqinfo: 1 sequence from an unspecified genome; no seqlengths</span>
-<span class="r-in"><span><span class="fu"><a href="plotSignalTracks.html">plotSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"# overlapping regions"</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/coverage-methods.html" class="external-link">coverage</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                      reduced<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/inter-range-methods.html" class="external-link">reduce</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span>, <span class="st">"reduced\n\\w resplit"</span><span class="op">=</span><span class="va">redGr</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                      region<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/inter-range-methods.html" class="external-link">reduce</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pl</span> <span class="op">&lt;-</span> <span class="fu"><a href="ggSignalTracks.html">ggSignalTracks</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"# overlapping regions"</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/coverage-methods.html" class="external-link">coverage</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                          reduced<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/inter-range-methods.html" class="external-link">reduce</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span>, <span class="st">"reduced\n\\w resplit"</span><span class="op">=</span><span class="va">redGr</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                     region<span class="op">=</span><span class="fu"><a href="https://rdrr.io/pkg/IRanges/man/inter-range-methods.html" class="external-link">reduce</a></span><span class="op">(</span><span class="va">gr</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">patchwork</span><span class="fu">::</span><span class="fu"><a href="https://patchwork.data-imaginist.com/reference/wrap_plots.html" class="external-link">wrap_plots</a></span><span class="op">(</span><span class="va">pl</span>, ncol<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="reduceWithResplit-2.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
@@ -160,7 +164,7 @@ quite slow, hence multithreading is recommended for large sets of regions.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

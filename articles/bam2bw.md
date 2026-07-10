@@ -23,11 +23,14 @@ To introduce the different variations on coverage, let’s assume you’ve
 go the following single-end reads:
 
 ``` r
-suppressPackageStartupMessages(library(epiwraps))
+suppressPackageStartupMessages({
+  library(epiwraps)
+  library(patchwork) # to combine the signal plots
+})
 # we create some arbitrary genomic ranges
 gr <- GRanges("chr1", IRanges(c(30,70,120), width=50), strand=c("+","+","-"),
               seqlengths=c(chr1=500))
-plotSignalTracks(list(reads=gr), region="chr1:1:180", extend=0, genomeAxis=FALSE)
+ggSignalTracks(list(reads=gr), region="chr1:1:180", xAxis = FALSE)[[1]]
 ```
 
 ![](bam2bw_files/figure-html/plotGR-1.png)
@@ -40,8 +43,8 @@ rtracklayer::export(gr, bam, format="bam")
 Rsamtools::indexBam(bam)
 ```
 
-    ##       /tmp/Rtmp3GAUBm/file37bd4a29f411.bam 
-    ## "/tmp/Rtmp3GAUBm/file37bd4a29f411.bam.bai"
+    ##       /tmp/RtmpNOYoi7/file1e32163db198.bam 
+    ## "/tmp/RtmpNOYoi7/file1e32163db198.bam.bai"
 
 Using these example reads, we can illustrate different ways of computing
 coverages.
@@ -75,8 +78,10 @@ bam2bw(bam, cov_full_bw25, binWidth=25L, scaling=FALSE)
     ## Writing bigwig...
 
 ``` r
-plotSignalTracks(list(reads=gr, "binWidth=1"=cov_full_bw1, "binWidth=25"=cov_full_bw25),
-                 region="chr1:1:180", extend=0)
+pl <- ggSignalTracks(list(reads=gr, "binWidth=1"=cov_full_bw1,
+                          "binWidth=25"=cov_full_bw25),
+                     region="chr1:1:180", xAxis = FALSE)
+wrap_plots(pl, ncol=1)
 ```
 
 ![](bam2bw_files/figure-html/plotBw1-1.png)
@@ -88,8 +93,8 @@ to change this:
 
 ``` r
 # Using mean per bin:
-cov_full_bw25mean <- tempfile(fileext = ".bw")
-bam2bw(bam, cov_full_bw25mean, binWidth=25L, binSummarization = "mean", scaling=FALSE)
+cov_full_bw25max <- tempfile(fileext = ".bw")
+bam2bw(bam, cov_full_bw25max, binWidth=25L, binSummarization = "max", scaling=FALSE)
 ```
 
     ## `paired` not specified, assuming single-end reads. Set to paired='auto' to automatically detect.
@@ -99,10 +104,11 @@ bam2bw(bam, cov_full_bw25mean, binWidth=25L, binSummarization = "mean", scaling=
     ## Writing bigwig...
 
 ``` r
-plotSignalTracks(list(reads=gr, "binWidth=1"=cov_full_bw1, 
-                      "binWidth=25\n(max)"=cov_full_bw25,
-                      "binWidth=25\n(mean)"=cov_full_bw25mean),
-                 region="chr1:1:180", extend=0)
+pl <- ggSignalTracks(list(reads=gr, "binWidth=1"=cov_full_bw1, 
+                          "binWidth=25\n(mean)"=cov_full_bw25,
+                          "binWidth=25\n(max)"=cov_full_bw25max),
+                     region="chr1:1:180", xAxis=FALSE)
+wrap_plots(pl, ncol=1)
 ```
 
 ![](bam2bw_files/figure-html/plotBw2-1.png)
@@ -129,9 +135,10 @@ bam2bw(bam, cov_full_ext, binWidth=1L, extend=50L, scaling=FALSE)
     ## Writing bigwig...
 
 ``` r
-plotSignalTracks(list(reads=gr, "no extension"=cov_full_bw1, 
-                      "read extension"=cov_full_ext),
-                 region="chr1:1:190", extend=0)
+pl <- ggSignalTracks(list(reads=gr, "no extension"=cov_full_bw1, 
+                          "read extension"=cov_full_ext),
+                     region="chr1:1:180", xAxis=FALSE)
+wrap_plots(pl, ncol=1)
 ```
 
 ![](bam2bw_files/figure-html/plotBwExtended-1.png)
@@ -167,9 +174,10 @@ bam2bw(bam, cov_center, binWidth=1L, extend=50L, scaling=FALSE, type="center")
     ## Writing bigwig...
 
 ``` r
-plotSignalTracks(list(reads=gr, "type=full"=cov_full_bw1, 
-                      "type=start"=cov_start, "type=center"=cov_center),
-                 region="chr1:1:190", extend=0)
+pl <- ggSignalTracks(list(reads=gr, "type=full"=cov_full_bw1, 
+                          "type=start"=cov_start, "type=center"=cov_center),
+                     region="chr1:1:180", xAxis=FALSE)
+wrap_plots(pl, ncol=1)
 ```
 
 ![](bam2bw_files/figure-html/plotBwEnds-1.png)
@@ -258,56 +266,48 @@ sessionInfo()
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] epiwraps_0.99.122           EnrichedHeatmap_1.42.0     
-    ##  [3] ComplexHeatmap_2.28.0       SummarizedExperiment_1.42.0
-    ##  [5] Biobase_2.72.0              GenomicRanges_1.64.0       
-    ##  [7] Seqinfo_1.2.0               IRanges_2.46.0             
-    ##  [9] S4Vectors_0.50.1            BiocGenerics_0.58.1        
-    ## [11] generics_0.1.4              MatrixGenerics_1.24.0      
-    ## [13] matrixStats_1.5.0           BiocStyle_2.40.0           
+    ##  [1] patchwork_1.3.2             epiwraps_0.99.125          
+    ##  [3] EnrichedHeatmap_1.42.0      ComplexHeatmap_2.28.0      
+    ##  [5] SummarizedExperiment_1.42.0 Biobase_2.72.0             
+    ##  [7] GenomicRanges_1.64.0        Seqinfo_1.2.0              
+    ##  [9] IRanges_2.46.0              S4Vectors_0.50.1           
+    ## [11] BiocGenerics_0.58.1         generics_0.1.4             
+    ## [13] MatrixGenerics_1.24.0       matrixStats_1.5.0          
+    ## [15] BiocStyle_2.40.0           
     ## 
     ## loaded via a namespace (and not attached):
-    ##   [1] RColorBrewer_1.1-3       rstudioapi_0.19.0        jsonlite_2.0.0          
-    ##   [4] shape_1.4.6.1            magrittr_2.0.5           GenomicFeatures_1.64.0  
-    ##   [7] farver_2.1.2             rmarkdown_2.31           GlobalOptions_0.1.4     
-    ##  [10] fs_2.1.0                 BiocIO_1.22.0            ragg_1.5.2              
-    ##  [13] vctrs_0.7.3              memoise_2.0.1            Rsamtools_2.28.0        
-    ##  [16] RCurl_1.98-1.19          base64enc_0.1-6          htmltools_0.5.9         
-    ##  [19] S4Arrays_1.12.0          progress_1.2.3           curl_7.1.0              
-    ##  [22] SparseArray_1.12.2       Formula_1.2-5            sass_0.4.10             
-    ##  [25] bslib_0.11.0             htmlwidgets_1.6.4        desc_1.4.3              
-    ##  [28] Gviz_1.56.0              httr2_1.2.3              cachem_1.1.0            
-    ##  [31] GenomicAlignments_1.48.0 lifecycle_1.0.5          iterators_1.0.14        
-    ##  [34] pkgconfig_2.0.3          Matrix_1.7-5             R6_2.6.1                
-    ##  [37] fastmap_1.2.0            clue_0.3-68              digest_0.6.39           
-    ##  [40] colorspace_2.1-2         patchwork_1.3.2          AnnotationDbi_1.74.0    
-    ##  [43] textshaping_1.0.5        Hmisc_5.2-6              RSQLite_3.53.2          
-    ##  [46] filelock_1.0.3           httr_1.4.8               abind_1.4-8             
-    ##  [49] compiler_4.6.1           bit64_4.8.2              doParallel_1.0.17       
-    ##  [52] backports_1.5.1          htmlTable_2.5.0          S7_0.2.2                
-    ##  [55] BiocParallel_1.46.0      DBI_1.3.0                biomaRt_2.68.0          
-    ##  [58] rappdirs_0.3.4           DelayedArray_0.38.2      rjson_0.2.23            
-    ##  [61] tools_4.6.1              foreign_0.8-91           otel_0.2.0              
-    ##  [64] nnet_7.3-20              glue_1.8.1               restfulr_0.0.17         
-    ##  [67] checkmate_2.3.4          cluster_2.1.8.2          gtable_0.3.6            
-    ##  [70] BSgenome_1.80.0          ensembldb_2.36.1         data.table_1.18.4       
-    ##  [73] hms_1.1.4                XVector_0.52.0           foreach_1.5.2           
-    ##  [76] pillar_1.11.1            stringr_1.6.0            circlize_0.4.18         
-    ##  [79] dplyr_1.2.1              BiocFileCache_3.2.0      lattice_0.22-9          
-    ##  [82] deldir_2.0-4             rtracklayer_1.72.0       bit_4.6.0               
-    ##  [85] biovizBase_1.60.0        tidyselect_1.2.1         locfit_1.5-9.12         
-    ##  [88] pbapply_1.7-4            Biostrings_2.80.1        knitr_1.51              
-    ##  [91] gridExtra_2.3.1          bookdown_0.47            ProtGenerics_1.44.0     
-    ##  [94] xfun_0.59                stringi_1.8.7            UCSC.utils_1.8.0        
-    ##  [97] lazyeval_0.2.3           yaml_2.3.12              evaluate_1.0.5          
-    ## [100] codetools_0.2-20         cigarillo_1.2.0          interp_1.1-6            
-    ## [103] GenomicFiles_1.48.0      tibble_3.3.1             BiocManager_1.30.27     
-    ## [106] cli_3.6.6                rpart_4.1.27             systemfonts_1.3.2       
-    ## [109] jquerylib_0.1.4          dichromat_2.0-0.1        Rcpp_1.1.1-1.1          
-    ## [112] GenomeInfoDb_1.48.0      dbplyr_2.6.0             png_0.1-9               
-    ## [115] XML_3.99-0.23            parallel_4.6.1           pkgdown_2.2.0           
-    ## [118] ggplot2_4.0.3            blob_1.3.0               prettyunits_1.2.0       
-    ## [121] jpeg_0.1-11              latticeExtra_0.6-31      AnnotationFilter_1.36.0 
-    ## [124] bitops_1.0-9             viridisLite_0.4.3        VariantAnnotation_1.58.0
-    ## [127] scales_1.4.0             crayon_1.5.3             GetoptLong_1.1.1        
-    ## [130] rlang_1.2.0              KEGGREST_1.52.2
+    ##   [1] DBI_1.3.0                bitops_1.0-9             pbapply_1.7-4           
+    ##   [4] rlang_1.3.0              magrittr_2.0.5           clue_0.3-68             
+    ##   [7] GetoptLong_1.1.1         otel_0.2.0               compiler_4.6.1          
+    ##  [10] RSQLite_3.53.3           GenomicFeatures_1.64.0   png_0.1-9               
+    ##  [13] systemfonts_1.3.2        vctrs_0.7.3              ProtGenerics_1.44.0     
+    ##  [16] pkgconfig_2.0.3          shape_1.4.6.1            crayon_1.5.3            
+    ##  [19] fastmap_1.2.0            XVector_0.52.0           labeling_0.4.3          
+    ##  [22] Rsamtools_2.28.0         rmarkdown_2.31           UCSC.utils_1.8.0        
+    ##  [25] ragg_1.5.2               bit_4.6.0                xfun_0.60               
+    ##  [28] cachem_1.1.0             cigarillo_1.2.0          GenomeInfoDb_1.48.0     
+    ##  [31] jsonlite_2.0.0           blob_1.3.0               DelayedArray_0.38.2     
+    ##  [34] BiocParallel_1.46.0      parallel_4.6.1           cluster_2.1.8.2         
+    ##  [37] VariantAnnotation_1.58.0 R6_2.6.1                 bslib_0.11.0            
+    ##  [40] RColorBrewer_1.1-3       rtracklayer_1.72.0       jquerylib_0.1.4         
+    ##  [43] Rcpp_1.1.2               bookdown_0.47            iterators_1.0.14        
+    ##  [46] knitr_1.51               Matrix_1.7-5             tidyselect_1.2.1        
+    ##  [49] dichromat_2.0-0.1        abind_1.4-8              yaml_2.3.12             
+    ##  [52] doParallel_1.0.17        codetools_0.2-20         curl_7.1.0              
+    ##  [55] lattice_0.22-9           tibble_3.3.1             withr_3.0.3             
+    ##  [58] KEGGREST_1.52.2          S7_0.2.2                 evaluate_1.0.5          
+    ##  [61] desc_1.4.3               circlize_0.4.18          Biostrings_2.80.1       
+    ##  [64] pillar_1.11.1            BiocManager_1.30.27      foreach_1.5.2           
+    ##  [67] RCurl_1.98-1.19          ensembldb_2.36.1         ggplot2_4.0.3           
+    ##  [70] scales_1.4.0             GenomicFiles_1.48.0      glue_1.8.1              
+    ##  [73] lazyeval_0.2.3           tools_4.6.1              BiocIO_1.22.0           
+    ##  [76] data.table_1.18.4        BSgenome_1.80.0          locfit_1.5-9.12         
+    ##  [79] GenomicAlignments_1.48.0 XML_3.99-0.23            fs_2.1.0                
+    ##  [82] AnnotationDbi_1.74.0     colorspace_2.1-2         restfulr_0.0.17         
+    ##  [85] cli_3.6.6                textshaping_1.0.5        viridisLite_0.4.3       
+    ##  [88] S4Arrays_1.12.0          dplyr_1.2.1              AnnotationFilter_1.36.0 
+    ##  [91] gtable_0.3.6             sass_0.4.10              digest_0.6.39           
+    ##  [94] SparseArray_1.12.2       rjson_0.2.23             htmlwidgets_1.6.4       
+    ##  [97] farver_2.1.2             memoise_2.0.1            htmltools_0.5.9         
+    ## [100] pkgdown_2.2.1            lifecycle_1.0.5          httr_1.4.8              
+    ## [103] GlobalOptions_0.1.4      bit64_4.8.2
