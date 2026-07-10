@@ -51,11 +51,7 @@
 #' # if we are interested in having smaller regions, clearly it would seem 
 #' # sensible here to cut roughly in the middle, since we have two distinct 
 #' # groups of regions that are only joined by a single region
-#' 
 #' (redGr <- reduceWithResplit(gr, softMaxSize=100))
-#' plotSignalTracks(list("# overlapping regions"=coverage(gr),
-#'                       reduced=reduce(gr), "reduced\n\\w resplit"=redGr),
-#'                       region=reduce(gr))
 #' pl <- ggSignalTracks(list("# overlapping regions"=coverage(gr),
 #'                           reduced=reduce(gr), "reduced\n\\w resplit"=redGr),
 #'                      region=reduce(gr))
