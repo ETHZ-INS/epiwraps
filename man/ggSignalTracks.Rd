@@ -28,8 +28,9 @@ ggSignalTracks(
 }
 \arguments{
 \item{tracks}{A named list, where each element represents a track. Each track
-can be either the path to one or multiple bigwig files (that will be 
-grouped), or a GRanges object that will be shown as boxes.}
+can be either 1) the path to one or multiple bigwig files (that will be 
+grouped), 2) an `RleList` object, or 3) a GRanges object that will be 
+shown as boxes.}
 
 \item{region}{The region to plot, provided either as a GRanges or character.
 If `ensdb` is given, `region` can also be a gene name, which will be 

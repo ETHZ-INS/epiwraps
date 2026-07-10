@@ -1,8 +1,9 @@
 #' ggSignalTracks: Plot genomic signal tracks with ggplot2
 #'
 #' @param tracks A named list, where each element represents a track. Each track
-#'   can be either the path to one or multiple bigwig files (that will be 
-#'   grouped), or a GRanges object that will be shown as boxes.
+#'   can be either 1) the path to one or multiple bigwig files (that will be 
+#'   grouped), 2) an `RleList` object, or 3) a GRanges object that will be 
+#'   shown as boxes.
 #' @param region The region to plot, provided either as a GRanges or character.
 #'   If `ensdb` is given, `region` can also be a gene name, which will be 
 #'   looked up.
@@ -111,15 +112,22 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
 
     track_data_all <- lapply(seq_along(tracks), function(ti){
       gn   <- names(tracks)[ti]
-      if(is(tracks[[ti]], "GRanges"))
-        return(.grangesTrack(tracks[[ti]], region, yname=gn, colors[ti],
+      tr <- tracks[[ti]]
+      if(is(tr, "GRanges"))
+        return(.grangesTrack(tr, region, yname=gn, colors[ti],
                              baseTextSize=baseTextSize))
-      bw_paths <- tracks[[ti]]
-      if(is.null(names(bw_paths))) names(bw_paths) <- .getBwNames(bw_paths)
-      dat <- lapply(bw_paths, function(bw){
-        .binSignal(.importSingleRegionBW(bw, region), region, nbins, 
-                   summFn=binSummFn)
-      })
+      if(inherits(tr, "RleList")){
+        dat <- as.integer(Views(tr, region)[[1]][[1]])
+        dat <- data.frame(pos=start(region):end(region), score=dat)
+        dat <- list(.binSignal(dat, region, nbins, summFn=binSummFn))
+      }else{
+        bw_paths <- tracks[[ti]]
+        if(is.null(names(bw_paths))) names(bw_paths) <- .getBwNames(bw_paths)
+        dat <- lapply(bw_paths, function(bw){
+          .binSignal(.importSingleRegionBW(bw, region), region, nbins, 
+                     summFn=binSummFn)
+        })
+      }
       if(verbose) setTxtProgressBar(pb, ti)
       dat
     })
