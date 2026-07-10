@@ -1,3 +1,9 @@
+# epiwraps 0.99.125
+
+## Significant changes
+
+* replaced plotSignalTracks with ggSignalTracks
+
 # epiwraps 0.99.113
 
 ## Significant changes

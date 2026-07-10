@@ -9,9 +9,9 @@ package: epiwraps
 output:
   BiocStyle::html_document
 abstract: |
-  This vignette documents the use of the 'plotSignalTracks' to generate 
+  This vignette documents the use of the 'ggSignalTracks' to generate 
   genome-browser-like plots of signals and annotations along genomic coordinates
-  in a single given region. It is chiefly a wrapper around the 'Gviz' package.
+  in a single given region.
 vignette: |
   %\VignetteIndexEntry{singleRegionPlot}
   %\VignetteEngine{knitr::rmarkdown}
@@ -24,53 +24,39 @@ library(BiocStyle)
 
 # Plotting signals in a region
 
-`epiwraps` has two functions to plot signals along genomic coordinates in a 
-single region: the `plotSignalTracks()` function is a wrapper around the 
-`r BiocStyle::Biocpkg("Gviz")` package, and the `ggSignalTracks()` function is
-a slightly less flexible, ggplot-based equivalent. Both have been designed to 
-have a very similar interface. We first focus on `plotSignalTracks()`.
-
-The function lacks the full flexibility of the `r BiocStyle::Biocpkg("Gviz")` 
-package, but presents a considerable simpler interface, with automatic default 
-parameters, etc. It has two essential arguments: a (named) list of files whose 
-signal to display (can be a mixture of bigwig, bam, or bed-like files), and the 
-region in which to display the signals (can be given as a GRanges or as a 
-string). The function then automatically determines the relevant track type and 
-setting from the file types.
+The `ggSignalTracks()` function of `epiwraps` plots one or more signals along a
+given genomic region, producing `ggplot` objects:
 
 ```{r signal1, fig.width=6, fig.height=2.5, message=FALSE}
-suppressPackageStartupMessages(library(epiwraps))
+suppressPackageStartupMessages({
+  library(epiwraps)
+  library(patchwork)
+})
 
 # get the path to an example bigwig file:
 bwf1 <- system.file("extdata/example_rna.bw", package="epiwraps")
-plotSignalTracks(list(RNA=bwf1), region="8:22165140-22212326", genomeAxis=TRUE)
+ggSignalTracks(list(RNA=bwf1), region="8:22165140-22212326")
+
 # we could plot multiple tracks as follows:
-plotSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326")
+pl <- ggSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326")
+wrap_plots(pl, ncol=1)
 ```
 
 `GRanges` objects can also be plotted as annotation tracks alongside other data:
 
 ```{r signal2, fig.width=6, fig.height=2}
 myregions <- GRanges("8", IRanges(c(22166000,22202300), width=3000))
-plotSignalTracks(list(RNA=bwf1, regions=myregions), region="8:22165140-22212326")
+pl <- ggSignalTracks(list(RNA=bwf1, regions=myregions), region="8:22165140-22212326")
+wrap_plots(pl, ncol=1)
 ```
 
 Colors, track display types, and such parameters can either be set for all tracks
 or for each individual track, for example:
 
 ```{r signal3, fig.width=6, fig.height=2}
-myregions <- GRanges("8", IRanges(c(22166000,22202300), width=3000))
-plotSignalTracks(list(RNA=bwf1, regions=myregions), colors=c("red", "black"),
-                 region="8:22165140-22212326")
-```
-
-
-For bam files, we can also plot individual reads:
-
-```{r signalAlignments}
-# we fetch an example bam file:
-bam <- system.file("extdata", "ex1.bam", package="Rsamtools")
-plotSignalTracks(c("my bam file"=bam), "seq1:1-1500", type="alignments")
+pl <- ggSignalTracks(list(RNA=bwf1, regions=myregions),
+                     region="8:22165140-22212326", colors=c("red", "black"))
+wrap_plots(pl, ncol=1)
 ```
 
 ## Merging signal from different tracks
@@ -79,9 +65,10 @@ In addition to being displayed one below the other, data tracks can be combined
 in different ways. To do this, the tracks can simply be given in a nested 
 fashion:
 
-```{r mergingSignals, eval=FALSE}
-plotSignalTracks(list(track1=bwf1, combined=c(bwf1,bwf1)),
-                 region="8:22165140-22212326")
+```{r mergingSignals, fig.width=6, fig.height=2}
+pl <- ggSignalTracks(list(combined=c(bwf1, bwf1)), region="8:22165140-22212326",
+                     aggregation="mean")
+wrap_plots(pl, ncol=1)
 ```
 
 In this example we are always using the same track, but the first element 
@@ -107,7 +94,9 @@ rtracklayer::export.bw(coverage(cov2), bw2)
 Then we can plot them as replicates:
 
 ```{r heatmap}
-plotSignalTracks(list(group=c(bw1, bw2)), region="chr1:1-1030", aggregation="heatmap+mean")
+pl <- ggSignalTracks(list(group=c(rep1=bw1, rep2=bw2)), region="chr1:1-1030",
+                     aggregation="heatmap+mean") # this is actually the default
+wrap_plots(pl, ncol=1)
 ```
 
 We find this representation particularly useful, as it combines the visual 
@@ -131,8 +120,10 @@ library(AnnotationHub)
 ah <- AnnotationHub()
 ensdb <- ah[["AH89426"]]
 # we plot our previous RNA bigwig file, around the BMP1 locus:
-plotSignalTracks(c(coverage=bwf1), region="BMP1", ensdb=ensdb, 
-                 transcripts="full")
+pl <- ggSignalTracks(list(coverage=bwf1), region="BMP1", ensdb=ensdb,
+                     transcripts="full")
+# we can adjust the size of the different tracks:
+wrap_plots(pl, ncol=1, heights=c(2,5))
 ```
 
 <img src="TracksWithTranscripts.png" />
@@ -142,59 +133,19 @@ transcripts/exons are not expressed as highly as others. The transcripts could
 also have been collapsed into a gene model using `transcripts="collapsed"` (the
 default).
 
-To display only the gene track, the first argument can simply be omitted.
+To display only the gene track, the first argument can simply be empty, e.g.
+`ggSignalTracks(list(), region="BMP1", ensdb=ensdb)`.
 
 ## Further track customization
 
-In addition to the `colors` and `type` argument (and a number of others), which 
-can customize the appearance of tracks, any additional parameters supported by 
-the respective `r BiocStyle::Biocpkg("Gviz")` function can be passed through the
-`genes.params` (for Gviz's `GeneRegionTrack`), `align.params` (for Gviz's 
-`AlignmentsTrack`, when plotting individual reads), or `tracks.params` (for any 
-other Gviz `DataTrack`).
-
-For example, if you wish to manually set the same y-axis range for all data 
-tracks, this can be done with:
-
-```{r yaxis}
-plotSignalTracks(list(track1=bwf1, track2=bwf1), region="8:22165140-22212326",
-                 tracks.params=list(ylim=c(0,200)))
-```
-
-
-Also, in addition to passing filepaths or `GRanges`, any Gviz track(s) can be 
-passed (i.e. objects inheriting the `GdObject` class) can be passed, enabling 
-full track customization when needed.
-
-
-# ggplot version with ggSignalTracks
-
-`plotSignalTracks` relies on `r BiocStyle::Biocpkg("Gviz")`, which is very 
-feature-rich. However, when composing complex figures it is often useful to 
-have `r BiocStyle::CRANpkg("ggplot2")` objects that can be theme in a standard
-fashion. To this end there is also the `ggSignalTracks()` function, which can 
-only show coverage tracks and heatmaps (and a genes track), but was
-designed with a largely similar interface. For example:
-
-```{r ggSignalTracks}
-pl <- ggSignalTracks(list(group=c(A=bw1, B=bw2)), region="chr1:1-1030",
-                     aggregation="heatmap+mean")
-```
-
-The output, `pl`, is a list of ggplot2 objects, which can be plotted together
-using `r BiocStyle::CRANpkg("patchwork")` :
-
-```{r}
-library(patchwork)
-patchwork::wrap_plots(pl, ncol=1, heights=c(3,1))
-```
-
-Since they are ggplot objects, they can also be edited as such, either 
-individually or as whole via patchwork:
+The output of `ggSignalTracks()` is a list of ggplot objects. This means that 
+we can customize individual panels after they have been generated, before we 
+wrap them together. For example:
 
 ```{r}
 library(ggplot2)
-pl[[1]] <- pl[[1]] + theme(axis.title.y=element_text(colour="darkblue"))
+pl <- ggSignalTracks(list(group=c(rep1=bw1, rep2=bw2)), region="chr1:1-1030")
+pl[[1]] <- pl[[1]] + theme(axis.title.y=element_text(colour="darkblue", size=12))
 patchwork::wrap_plots(pl, ncol=1, heights=c(3,1)) & 
    theme(axis.title.y=element_text(face="bold"))
 ```

@@ -1,7 +1,9 @@
 #' ggSignalTracks: Plot genomic signal tracks with ggplot2
 #'
-#' @param tracks A named list or named character vector, where each element is 
-#'   the path to one or multiple bigwig files (nesting indicates grouping).
+#' @param tracks A named list, where each element represents a track. Each track
+#'   can be either 1) the path to one or multiple bigwig files (that will be 
+#'   grouped), 2) an `RleList` object, or 3) a GRanges object that will be 
+#'   shown as boxes.
 #' @param region The region to plot, provided either as a GRanges or character.
 #'   If `ensdb` is given, `region` can also be a gene name, which will be 
 #'   looked up.
@@ -37,7 +39,7 @@
 #' @param baseTextSize The base plotting text size.
 #' @param xAxis Logical; whether to plot the xAxis in the bottom panel.
 #' @param coverage.linewidth Line width of the coverage plots (above ribbons).
-#' @param verbose Logical; whether to print progress messages.
+#' @param verbose Logical; whether to print progress
 #' 
 #' @return A list of ggplot objects.
 #'
@@ -52,7 +54,11 @@
 #' @importFrom patchwork wrap_plots plot_layout
 #' @importFrom AnnotationFilter GRangesFilter
 #' @importFrom GenomicFeatures transcripts genes
+#' @importFrom utils txtProgressBar setTxtProgressBar
+#' @importFrom ensembldb genes
 #' @importFrom scales comma
+#' @importFrom matrixStats rowMins rowMaxs rowMedians
+#' @importFrom Seqinfo seqlevels
 #' @export
 #' @examples
 #' # we create dummy data
@@ -78,7 +84,7 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
                             binSummFn=c("mean", "max"), sameLimits=TRUE,
                             gene_label="symbol", trans=c("none","sqrt","log1p"),
                             gene_color="black", baseTextSize=9, xAxis=TRUE,
-                            coverage.linewidth=0.2, verbose=TRUE ){
+                            coverage.linewidth=0.2, verbose=FALSE ){
   binSummFn <- match.arg(binSummFn)
   transcripts <- match.arg(transcripts)
   aggregation <- match.arg(aggregation)
@@ -93,41 +99,74 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
       start(region) <- max(start(region),1L)
     }
   }
+  if((2*nbins) >= width(region))
+    nbins <- width(region)
   
-  if(is.null(names(tracks))) names(tracks) <- paste0("Track", seq_along(tracks))
   
-  colors <- setNames(rep_len(colors, length(tracks)), names(tracks))
+  if(length(tracks)>0){
+    if(is.null(names(tracks))) names(tracks) <- paste0("Track", seq_along(tracks))
   
-  if(verbose) message("Loading BigWig data...")
-  track_data_all <- lapply(tracks, function(bw_paths) {
-    if(is.null(names(bw_paths))) names(bw_paths) <- .getBwNames(bw_paths)
-    lapply(bw_paths, function(bw) {
-      if(verbose) message("  Importing: ", bw)
-      .binSignal(.importSingleRegionBW(bw, region), region, nbins, 
-                 summFn=binSummFn)
+    colors <- setNames(rep_len(colors, length(tracks)), names(tracks))
+    
+    if(verbose) pb <- txtProgressBar(min=0L, max=length(tracks), style=3)
+
+    track_data_all <- lapply(seq_along(tracks), function(ti){
+      gn   <- names(tracks)[ti]
+      tr <- tracks[[ti]]
+      if(is(tr, "GRanges"))
+        return(.grangesTrack(tr, region, yname=gn, colors[ti],
+                             baseTextSize=baseTextSize))
+      if(inherits(tr, "RleList")){
+        dat <- as.integer(Views(tr, region)[[1]][[1]])
+        dat <- data.frame(pos=start(region):end(region), score=dat)
+        dat <- list(.binSignal(dat, region, nbins, summFn=binSummFn))
+      }else{
+        bw_paths <- tracks[[ti]]
+        if(is.null(names(bw_paths))) names(bw_paths) <- .getBwNames(bw_paths)
+        dat <- lapply(bw_paths, function(bw){
+          .binSignal(.importSingleRegionBW(bw, region), region, nbins, 
+                     summFn=binSummFn)
+        })
+      }
+      if(verbose) setTxtProgressBar(pb, ti)
+      dat
     })
-  })
-  
-  ymax <- NULL
-  if(sameLimits) ymax <-
-        max(unlist(lapply(track_data_all, \(x) lapply(x, \(y) max(y$score)))))
+    if(verbose) close(pb)
+    
+    ymax <- NULL
+    if(sameLimits){
+      ymax <- unlist(lapply(track_data_all, \(x){
+        if(inherits(x, "ggplot")) return(NA)
+        lapply(x, \(y) max(y$score))
+      }))
+      if(all(is.na(ymax))){
+        ymax <- NULL
+      }else{
+        ymax <- max(ymax, na.rm=TRUE)
+      }
+    }
+  }
   
   panels <- list()
   
-  for (gi in seq_along(tracks)) {
-    gn   <- names(tracks)[gi]
-    dat  <- track_data_all[[gi]]
-    
-    if(length(dat)==1 || grepl("mean", aggregation)) {
-      panels[[length(panels) + 1]] <- .coverageTrack(
-        dat, gn, fill_color=colors[gi], region=region, trans=trans,
-        showSE=showSE, ylim=ymax, baseTextSize=baseTextSize,
-        lineWidth=coverage.linewidth)
-    }
-    if (length(dat)>1 && grepl("heatmap", aggregation)) {
-      panels[[length(panels) + 1]] <- .heatmapTrack(
-        dat, gn, palette=heatmap.palette, region=region, trans=trans,
-        ymax=ymax, baseTextSize=baseTextSize)
+  for (gi in seq_along(tracks)){
+    if(inherits(track_data_all[[gi]], "ggplot")){
+      panels[[length(panels) + 1]] <- track_data_all[[gi]]
+    }else{
+      gn   <- names(tracks)[gi]
+      dat  <- track_data_all[[gi]]
+      
+      if(length(dat)==1 || grepl("mean", aggregation)) {
+        panels[[length(panels) + 1]] <- .coverageTrack(
+          dat, gn, fill_color=colors[gi], region=region, trans=trans,
+          showSE=showSE, ylim=ymax, baseTextSize=baseTextSize,
+          lineWidth=coverage.linewidth)
+      }
+      if (length(dat)>1 && grepl("heatmap", aggregation)) {
+        panels[[length(panels) + 1]] <- .heatmapTrack(
+          dat, gn, palette=heatmap.palette, region=region, trans=trans,
+          ymax=ymax, baseTextSize=baseTextSize)
+      }
     }
   }
   
@@ -249,6 +288,28 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
                    legend.title=ggplot2::element_text(size=7),
                    plot.margin =ggplot2::margin(0, 5, 0, 5))
   p
+}
+
+# Build a ggplot track for a GRanges object
+.grangesTrack <- function(gr, yname, region, color="darkblue", baseTextSize=9){
+  gr <- gr[overlapsAny(gr, region)]
+  gr <- restrict(gr, start=start(region), end=end(region))
+  df <- data.frame(start=start(gr), end=end(gr),
+                   y=.packIntervals(start(gr), end(gr)))
+  df$score <- score(gr)
+  
+  p <- ggplot(df, aes(xmin=start, xmax=end, ymin=y-0.4,  ymax=y+0.4))
+  if(!is.null(df$score) && !all(is.na(df$score))){
+    p <- p + geom_rect(aes(fill=score), colour=NA)
+  }else{
+    p <- p + geom_rect(fill=color, colour=NA)
+  }
+  p + scale_x_continuous(limits=c(start(region), end(region)), expand=c(0,0)) +
+    scale_y_continuous(limits=c(0.5, max(df$y) + 0.5), breaks=NULL) +
+    ylab(yname) + theme_classic(base_size=baseTextSize) + 
+    theme(axis.line=element_blank(), axis.title.x=element_blank(),
+          axis.text=element_blank(), axis.ticks=element_blank(),
+          plot.margin=ggplot2::margin(0, 5, 0, 5))
 }
 
 # Build a ggplot gene/transcript annotation track.
@@ -425,7 +486,7 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
 .bottomXLab <- function(region){
   xlab(paste0(as.character(seqnames(region)),
                 " : ", scales::comma(start(region)), " - ", 
-                scales::comma(end(region)), ")"))
+                scales::comma(end(region))))
 }
 
 # Pack intervals onto as few non-overlapping levels as possible.
@@ -459,7 +520,9 @@ ggSignalTracks <- function( tracks, region, ensdb=NULL, colors="darkblue",
     paths <- gsub(ext.regex, "", paths, ignore.case=TRUE)
   bn <- basename(paths)
   if(!any(duplicated(bn))) return(bn)
-  if(length(unique(bn))==1) return(.getBwNames(dirname(paths), NULL))
+  if(length(unique(bn))==1 && !all(paths==dirname(paths))){
+    return(.getBwNames(dirname(paths), NULL))
+  }
   paste0("rep", seq_along(paths))
 }
 

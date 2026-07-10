@@ -71,10 +71,9 @@ test_that("overlap functions work", {
 })
 
 
-test_that("plotSignalTracks works", {
+test_that("ggSignalTracks works", {
   bw <- system.file("extdata/example_atac.bw", package="epiwraps")
   pdf(NULL)
-  expect_no_error(plotSignalTracks(list(track1=bw),
-                                   region="8:22165140-22212326"))
+  ggSignalTracks(list(track1 = bw), region = "1-195053100-195055250")[[1]]
   dev.off()
 })

@@ -489,3 +489,54 @@ formatGenomicDist <- function(e, allowFraction=TRUE, sameUnits=TRUE, head0=TRUE,
   if(sum(grepl("\\.[0-3]$", qn))>=9) suffix <- "."
   BamFile(path, asMates=TRUE, qnameSuffixStart=suffix)
 }
+
+
+
+#' @importFrom AnnotationFilter SymbolFilter GeneIdFilter TxIdFilter
+.parseRegion <- function(region, ensdb=NULL, asGR=FALSE){
+  if(is.list(region) && length(region)==3 && all(lengths(region)==1) &&
+     all(is.numeric(unlist(region[2:3])))){
+    if(asGR) return(GRanges(region[[1]], IRanges(region[[2]], region[[3]])))
+    return(region)
+  }
+  stopifnot(length(region)==1)
+  if(is(region,"GRanges")){
+    if(asGR) return(region)
+    region <- as.character(GRanges(region))
+  }
+  stopifnot(is.character(region))
+  region <- strsplit(gsub("-",":",region),":")[[1]]
+  if(length(region)==2) region <- paste(region, collapse="-")
+  if(length(region)==1){
+    # assumes an ID is given; check in that order:
+    # gene symbols, gene ids, transcript ids, or partial gene symbol matches
+    if(is.null(ensdb))
+      stop("`ensdb` is required when defining the region with a gene name.")
+    gname <- region
+    if(is(ensdb, "EnsDb")){
+      region <- reduce(genes(ensdb, filter=SymbolFilter(gname)))
+      if(length(region)==0) 
+        region <- reduce(genes(ensdb, filter=GeneIdFilter(gname)))
+      if(length(region)==0) 
+        region <- reduce(genes(ensdb, filter=TxIdFilter(gname)))
+      if(length(region)==0){
+        region <- reduce(genes(ensdb, filter=SymbolFilter(gname,"startsWith")))
+        if(length(region)>1)
+          stop("Gene not found with this exact name, and mutliple genes match ",
+               "this string.")
+      }
+    }else{
+      region <- reduce(genes(ensdb, filter=list(gene_id=gname)))
+    }
+    if(length(region)==0) stop("Gene/transcript not found!")
+    if(length(region)>1)
+      stop("Region input is ambiguous (multiple non-overlapping regions)")
+    region <- strsplit(gsub("-",":",as.character(region)),":")[[1]][1:3]
+  }
+  stopifnot(length(region) %in% 3:4)
+  region <- as.list(region)
+  region[[2]] <- as.integer(region[[2]])
+  region[[3]] <- as.integer(region[[3]])
+  if(asGR) return(GRanges(region[[1]], IRanges(region[[2]], region[[3]])))
+  region
+}
