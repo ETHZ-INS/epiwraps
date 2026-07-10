@@ -70,7 +70,7 @@ pl <- ggSignalTracks(list(regions=gr,
                           "# overlapping regions"=coverage(gr),
                           reduced=reduce(gr)),
                      region=reduce(gr))
-wrap_plots(pl, ncol=1, heights=c(3,3,1))
+patchwork::wrap_plots(pl, ncol=1, heights=c(3,3,1))
 
 # if we are interested in having smaller regions, clearly it would seem 
 # sensible here to cut roughly in the middle, since we have two distinct 
@@ -83,5 +83,5 @@ plotSignalTracks(list("# overlapping regions"=coverage(gr),
 pl <- ggSignalTracks(list("# overlapping regions"=coverage(gr),
                           reduced=reduce(gr), "reduced\n\\\\w resplit"=redGr),
                      region=reduce(gr))
-wrap_plots(pl, ncol=1)
+patchwork::wrap_plots(pl, ncol=1)
 }
