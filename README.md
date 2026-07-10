@@ -57,5 +57,4 @@ control, clustering, and visualizing region overlaps.
 `epiwraps` builds around a number of high-quality bioconductor packages, in 
 particular (beyond core Bioc packages) the 
 [EnrichedHeatmap](https://jokergoo.github.io/EnrichedHeatmap) package from 
-Zuguang Gu, as well as 
-[Gviz](https://bioconductor.org/packages/release/bioc/html/Gviz.html) package.
+Zuguang Gu.
