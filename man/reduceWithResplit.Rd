@@ -66,8 +66,12 @@ quite slow, hence multithreading is recommended for large sets of regions.
 # consider the following example set of regions:
 gr <- GRanges("1", IRanges(c(100,120,140,390,410,430,120),
                            width=rep(c(200,520),c(6,1))))
-plotSignalTracks(list(regions=gr, "# overlapping regions"=coverage(gr),
-                      reduced=reduce(gr)), region=reduce(gr))
+pl <- ggSignalTracks(list(regions=gr,
+                          "# overlapping regions"=coverage(gr),
+                          reduced=reduce(gr)),
+                     region=reduce(gr))
+wrap_plots(pl, ncol=1, heights=c(3,3,1))
+
 # if we are interested in having smaller regions, clearly it would seem 
 # sensible here to cut roughly in the middle, since we have two distinct 
 # groups of regions that are only joined by a single region
@@ -76,4 +80,8 @@ plotSignalTracks(list(regions=gr, "# overlapping regions"=coverage(gr),
 plotSignalTracks(list("# overlapping regions"=coverage(gr),
                       reduced=reduce(gr), "reduced\n\\\\w resplit"=redGr),
                       region=reduce(gr))
+pl <- ggSignalTracks(list("# overlapping regions"=coverage(gr),
+                          reduced=reduce(gr), "reduced\n\\\\w resplit"=redGr),
+                     region=reduce(gr))
+wrap_plots(pl, ncol=1)
 }
