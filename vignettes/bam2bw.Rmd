@@ -38,7 +38,10 @@ To introduce the different variations on coverage, let's assume you've go the
 following single-end reads:
 
 ```{r plotGR, fig.height=1, fig.width=4}
-suppressPackageStartupMessages(library(epiwraps))
+suppressPackageStartupMessages({
+  library(epiwraps)
+  library(patchwork) # to combine the signal plots
+})
 # we create some arbitrary genomic ranges
 gr <- GRanges("chr1", IRanges(c(30,70,120), width=50), strand=c("+","+","-"),
               seqlengths=c(chr1=500))
