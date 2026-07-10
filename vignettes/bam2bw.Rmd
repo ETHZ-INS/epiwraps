@@ -42,7 +42,7 @@ suppressPackageStartupMessages(library(epiwraps))
 # we create some arbitrary genomic ranges
 gr <- GRanges("chr1", IRanges(c(30,70,120), width=50), strand=c("+","+","-"),
               seqlengths=c(chr1=500))
-plotSignalTracks(list(reads=gr), region="chr1:1:180", extend=0, genomeAxis=FALSE)
+ggSignalTracks(list(reads=gr), region="chr1:1:180", xAxis = FALSE)[[1]]
 ```
 
 For testing purposes, we'll save this as a bam file and index it:
@@ -59,29 +59,32 @@ First, we can save coverage at different resolutions, from full resolution
 (each nucleotide is a single bin) to larger bin sizes, the latter giving smaller
 filesizes:
 
-```{r plotBw1, fig.width=4.5, fig.height=2.5}
+```{r plotBw1, fig.width=5, fig.height=3}
 # Full coverage with bin width of 1 nucleotide (i.e. full resolution)
 cov_full_bw1 <- tempfile(fileext = ".bw") # temp file name
 bam2bw(bam, cov_full_bw1, binWidth=1L, scaling=FALSE)
 # Full coverage with larger bins
 cov_full_bw25 <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_full_bw25, binWidth=25L, scaling=FALSE)
-plotSignalTracks(list(reads=gr, "binWidth=1"=cov_full_bw1, "binWidth=25"=cov_full_bw25),
-                 region="chr1:1:180", extend=0)
+pl <- ggSignalTracks(list(reads=gr, "binWidth=1"=cov_full_bw1,
+                          "binWidth=25"=cov_full_bw25),
+                     region="chr1:1:180", xAxis = FALSE)
+wrap_plots(pl, ncol=1)
 ```
 
 Both tracks compile the number of reads that overlap each position, but in the 
 bottom track the signal is by chunks of 25 nucleotides. By default, the maximum 
 signal inside a bin is used, however it is possible to change this:
 
-```{r plotBw2, fig.width=4.5, fig.height=3.5}
+```{r plotBw2, fig.width=5, fig.height=3.5}
 # Using mean per bin:
-cov_full_bw25mean <- tempfile(fileext = ".bw")
-bam2bw(bam, cov_full_bw25mean, binWidth=25L, binSummarization = "mean", scaling=FALSE)
-plotSignalTracks(list(reads=gr, "binWidth=1"=cov_full_bw1, 
-                      "binWidth=25\n(max)"=cov_full_bw25,
-                      "binWidth=25\n(mean)"=cov_full_bw25mean),
-                 region="chr1:1:180", extend=0)
+cov_full_bw25max <- tempfile(fileext = ".bw")
+bam2bw(bam, cov_full_bw25max, binWidth=25L, binSummarization = "max", scaling=FALSE)
+pl <- ggSignalTracks(list(reads=gr, "binWidth=1"=cov_full_bw1, 
+                          "binWidth=25\n(mean)"=cov_full_bw25,
+                          "binWidth=25\n(max)"=cov_full_bw25max),
+                     region="chr1:1:180", xAxis=FALSE)
+wrap_plots(pl, ncol=1)
 ```
 
 In most cases, single-end reads are just the beginning of the DNA fragments 
@@ -92,14 +95,14 @@ common to extend reads to this size when computing coverage, so as to obtain
 the number of fragments (rather than reads) coverage each position. This can be
 done as follows:
 
-```{r plotBwExtended, fig.width=4.5, fig.height=2.5}
+```{r plotBwExtended, fig.width=5, fig.height=3}
 # Here the reads are 50bp, and we want to extend them to 100bp, hence _by_ 50:
 cov_full_ext <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_full_ext, binWidth=1L, extend=50L, scaling=FALSE)
-plotSignalTracks(list(reads=gr, "no extension"=cov_full_bw1, 
-                      "read extension"=cov_full_ext),
-                 region="chr1:1:190", extend=0)
-
+pl <- ggSignalTracks(list(reads=gr, "no extension"=cov_full_bw1, 
+                          "read extension"=cov_full_ext),
+                     region="chr1:1:180", xAxis=FALSE)
+wrap_plots(pl, ncol=1)
 ```
 
 Taking into account read extension shows better the peak at the center, which is
@@ -109,17 +112,17 @@ the captured fragments.
 Instead of computing coverage, we could compute the number of reads starting, 
 ending, or being centered at each position:
 
-```{r plotBwEnds, fig.width=4.5, fig.height=3.5}
+```{r plotBwEnds, fig.width=5, fig.height=3.5}
 # Here the reads are 50bp, and we want to extend them to 100bp, hence _by_ 50:
 cov_start <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_start, binWidth=1L, extend=50L, scaling=FALSE, type="start")
 cov_center <- tempfile(fileext = ".bw")
 bam2bw(bam, cov_center, binWidth=1L, extend=50L, scaling=FALSE, type="center")
 
-plotSignalTracks(list(reads=gr, "type=full"=cov_full_bw1, 
-                      "type=start"=cov_start, "type=center"=cov_center),
-                 region="chr1:1:190", extend=0)
-
+pl <- ggSignalTracks(list(reads=gr, "type=full"=cov_full_bw1, 
+                          "type=start"=cov_start, "type=center"=cov_center),
+                     region="chr1:1:180", xAxis=FALSE)
+wrap_plots(pl, ncol=1)
 ```
 
 Note that when extending reads, as in this case, the position (e.g. "center") are
