@@ -2,8 +2,10 @@ bw <- system.file("extdata/example_atac.bw", package="epiwraps")
 regions <- system.file("extdata/example_peaks.bed", package="epiwraps")
 regions <- importBedlike(regions)
 
+SKIP_ON_WINDOWS <- FALSE
+
 skipOnWindows <- function(){
-  if(.Platform$OS.type == "windows")
+  if(SKIP_ON_WINDOWS && .Platform$OS.type == "windows")
     skip("Skipping UCSC-dependent tests on Windows")
 }
 
@@ -23,7 +25,8 @@ test_that("signal2Matrix works with bw files", {
   h <- plotEnrichedHeatmaps(m)
 })
 
-m_ref <- signal2Matrix(list(test=bw), regions)
+if(!SKIP_ON_WINDOWS || .Platform$OS.type != "windows")
+  m_ref <- signal2Matrix(list(test=bw), regions)
 
 test_that("signal2Matrix works with RleList", {
   skipOnWindows()
