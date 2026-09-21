@@ -23,8 +23,7 @@ test_that("signal2Matrix works with bw files", {
   h <- plotEnrichedHeatmaps(m)
 })
 
-if(.Platform$OS.type != "windows")
-  m_ref <- signal2Matrix(list(test=bw), regions)
+m_ref <- signal2Matrix(list(test=bw), regions)
 
 test_that("signal2Matrix works with RleList", {
   skipOnWindows()
