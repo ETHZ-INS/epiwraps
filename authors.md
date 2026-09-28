@@ -8,16 +8,17 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](http://github.com/ETHZ-INS/epiwraps/blob/devel/DESCRIPTION)
+[`inst/CITATION`](http://github.com/ETHZ-INS/epiwraps/blob/devel/inst/CITATION)
 
-Germain P (2026). *epiwraps: epiwraps: Wrappers for plotting and dealing
-with epigenomics data*. R package version 0.99.125,
-<https://ethz-ins.github.io/epiwraps/>.
+Wang J, Sonder E, Domcke S, Robinson M, Germain P (2026). “Addressing
+technical variations in ATAC-seq data and improving motif accessibility
+analyses.” *bioRxiv*.
+[doi:10.64898/2026.08.21.746151](https://doi.org/10.64898/2026.08.21.746151).
 
-    @Manual{,
-      title = {epiwraps: epiwraps: Wrappers for plotting and dealing with epigenomics data},
-      author = {Pierre-Luc Germain},
+    @Article{,
+      title = {Addressing technical variations in ATAC-seq data and improving motif accessibility analyses},
+      author = {Jiayi Wang and Emanuel Sonder and Silvia Domcke and Mark D. Robinson and Pierre-Luc Germain},
       year = {2026},
-      note = {R package version 0.99.125},
-      url = {https://ethz-ins.github.io/epiwraps/},
+      journal = {bioRxiv},
+      doi = {10.64898/2026.08.21.746151},
     }
