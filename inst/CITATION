@@ -1,0 +1,13 @@
+bibentry(bibtype = "Article",
+         title = "Addressing technical variations in ATAC-seq data and improving motif accessibility analyses",
+         author = c(
+                    person("Jiayi", "Wang"),
+                    person("Emanuel", "Sonder"),
+                    person("Silvia", "Domcke"),
+                    person("Mark D.", "Robinson"),
+                    person("Pierre-Luc", "Germain")),
+         year = 2026,
+         journal = "bioRxiv",
+         doi = "10.64898/2026.08.21.746151"
+         )
+
