@@ -193,7 +193,7 @@ sessionInfo()
     ## 
     ## other attached packages:
     ##  [1] ggplot2_4.0.3               patchwork_1.3.2            
-    ##  [3] epiwraps_0.99.125           EnrichedHeatmap_1.42.0     
+    ##  [3] epiwraps_0.99.126           EnrichedHeatmap_1.42.0     
     ##  [5] ComplexHeatmap_2.28.0       SummarizedExperiment_1.42.0
     ##  [7] Biobase_2.72.0              GenomicRanges_1.64.0       
     ##  [9] Seqinfo_1.2.0               IRanges_2.46.0             
