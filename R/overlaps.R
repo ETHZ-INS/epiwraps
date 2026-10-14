@@ -24,13 +24,13 @@
 #'
 #' @examples
 #' # random list of GRanges:
-#' set.seed(123)
 #' grl <- lapply(c(A=10,B=20,C=30), FUN=function(x){
-#'   GRanges("seq1", IRanges(runif(x,1,1000), width=20))
+#'   GRanges("seq1", IRanges(c(500,runif(x,1,1000)), width=20))
 #' })
 #' input_for_upset <- regionsToUpset(grl)
 #' # we would then plot the data with:
-#' ComplexHeatmap::UpSet(make_comb_mat(input_for_upset))
+#' # library(ComplexHeatmap)
+#' # UpSet(make_comb_mat(input_for_upset))
 regionsToUpset <- function(x, reference=c("reduce","disjoin"), returnList=FALSE,
                            ignore.strand=FALSE, maxgap=-1L, minoverlap=0L, ...){
   if(is.character(x)) x <- as.list(x)
