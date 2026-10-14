@@ -156,8 +156,8 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50),
 }
 
 .fragLengthPlots <- function(x, span=0.05){
-  if(!requireNamespace("ggplot2", quietly=TRUE))
-    stop("The 'ggplot2' package is required.")
+  if(!requireNamespace("patchwork", quietly=TRUE))
+    stop("The 'patchwork' packages is required.")
   dn <- x$perPeakDistance
   d1 <- x$coverages
   q <- quantile(abs(dn$distance), c(0.05,0.5,0.95))
@@ -168,7 +168,7 @@ estimateFragSize <- function(bam, ctrl=NULL, binSize=10L, mfold=c(10,50),
   p2 <- ggplot(d1, aes(rel_pos, count, colour=strand)) + geom_line(alpha=0.5) + 
     geom_smooth(formula=y~x, method="loess", span=span, size=1.2) + 
     labs(x="Relative position", y="Read start count")
-  plot_grid(p1, p2, nrow=2)
+  wrap_plots(p1, p2, ncol=1)
 }
 
 # sets coverages below a threshold to 0
