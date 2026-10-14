@@ -193,7 +193,7 @@ sessionInfo()
     ## 
     ## other attached packages:
     ##  [1] ggplot2_4.0.3               patchwork_1.3.2            
-    ##  [3] epiwraps_0.99.126           EnrichedHeatmap_1.42.0     
+    ##  [3] epiwraps_0.99.128           EnrichedHeatmap_1.42.0     
     ##  [5] ComplexHeatmap_2.28.0       SummarizedExperiment_1.42.0
     ##  [7] Biobase_2.72.0              GenomicRanges_1.64.0       
     ##  [9] Seqinfo_1.2.0               IRanges_2.46.0             
@@ -228,7 +228,7 @@ sessionInfo()
     ##  [70] glue_1.8.1               lazyeval_0.2.3           tools_4.6.1             
     ##  [73] BiocIO_1.22.0            data.table_1.18.6.1      BSgenome_1.80.0         
     ##  [76] locfit_1.5-9.12          GenomicAlignments_1.48.0 fs_2.1.0                
-    ##  [79] XML_3.99-0.25            AnnotationDbi_1.74.0     colorspace_2.1-3        
+    ##  [79] XML_3.99-0.25            AnnotationDbi_1.74.0     colorspace_2.1-4        
     ##  [82] restfulr_0.0.17          cli_3.6.6                textshaping_1.0.5       
     ##  [85] viridisLite_0.4.3        S4Arrays_1.12.1          dplyr_1.2.1             
     ##  [88] AnnotationFilter_1.36.0  gtable_0.3.6             sass_0.4.10             
