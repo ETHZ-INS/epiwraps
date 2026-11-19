@@ -44,8 +44,7 @@ tabixChrApply <- function(x, fn, keepSeqLvls=NULL, exclude=NULL, only=NULL,
   if(!is.null(only)) stopifnot(is(only, "GRanges"))
   
   f2 <- function(sn, postfn, ...){
-    x <- rtracklayer::import(path(x), format="bed",
-                             which=GRanges(sn, IRanges(1,5*10^8)))
+    x <- importFragments(x, GRanges(sn, IRanges(1,5*10^8)))
     if(!is.null(only)){
       .comparableStyles(x, only)
       x <- x[overlapsAny(x, only)]
