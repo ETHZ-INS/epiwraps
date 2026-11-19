@@ -55,6 +55,8 @@
   : ggSignalTracks: Plot genomic signal tracks with ggplot2
 - [`importBedlike()`](https://ethz-ins.github.io/epiwraps/reference/importBedlike.md)
   : importBedlike
+- [`importFragments()`](https://ethz-ins.github.io/epiwraps/reference/importFragments.md)
+  : importFragments
 - [`inject()`](https://ethz-ins.github.io/epiwraps/reference/inject.md)
   : Inject (insert) values at positions in a vector
 - [`meltSignals()`](https://ethz-ins.github.io/epiwraps/reference/meltSignals.md)

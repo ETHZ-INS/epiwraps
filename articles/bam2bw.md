@@ -43,8 +43,8 @@ rtracklayer::export(gr, bam, format="bam")
 Rsamtools::indexBam(bam)
 ```
 
-    ##       /tmp/RtmpJFa19r/file1d691b0afcfe.bam 
-    ## "/tmp/RtmpJFa19r/file1d691b0afcfe.bam.bai"
+    ##       /tmp/RtmpebBpXC/file341914f2425.bam 
+    ## "/tmp/RtmpebBpXC/file341914f2425.bam.bai"
 
 Using these example reads, we can illustrate different ways of computing
 coverages.
@@ -244,13 +244,13 @@ function for more information.
 sessionInfo()
 ```
 
-    ## R version 4.6.1 (2026-06-24)
+    ## R version 4.6.2 (2026-10-29)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.5 LTS
+    ## Running under: Ubuntu 26.04.1 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
-    ## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+    ## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.32.so;  LAPACK version 3.12.0
     ## 
     ## locale:
     ##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
@@ -266,7 +266,7 @@ sessionInfo()
     ## [8] methods   base     
     ## 
     ## other attached packages:
-    ##  [1] patchwork_1.3.2             epiwraps_0.99.129          
+    ##  [1] patchwork_1.3.2             epiwraps_0.99.131          
     ##  [3] EnrichedHeatmap_1.42.0      ComplexHeatmap_2.28.0      
     ##  [5] SummarizedExperiment_1.42.0 Biobase_2.72.0             
     ##  [7] GenomicRanges_1.64.0        Seqinfo_1.2.0              
@@ -278,29 +278,29 @@ sessionInfo()
     ## loaded via a namespace (and not attached):
     ##   [1] DBI_1.3.0                bitops_1.1-0             pbapply_1.7-5           
     ##   [4] rlang_1.3.0              magrittr_2.0.5           clue_0.3-68             
-    ##   [7] GetoptLong_1.1.1         otel_0.2.0               compiler_4.6.1          
+    ##   [7] GetoptLong_1.1.1         otel_0.3.0               compiler_4.6.2          
     ##  [10] RSQLite_3.53.3           GenomicFeatures_1.64.0   png_0.1-9               
-    ##  [13] systemfonts_1.3.2        vctrs_0.7.3              ProtGenerics_1.44.0     
+    ##  [13] systemfonts_1.3.3        vctrs_0.7.3              ProtGenerics_1.44.0     
     ##  [16] pkgconfig_2.0.3          shape_1.4.6.1            crayon_1.5.3            
     ##  [19] fastmap_1.2.0            XVector_0.52.0           labeling_0.4.3          
     ##  [22] Rsamtools_2.28.0         rmarkdown_2.32           UCSC.utils_1.8.0        
-    ##  [25] ragg_1.5.2               bit_4.6.0                xfun_0.61               
+    ##  [25] ragg_1.5.2               bit_4.6.0                xfun_0.62               
     ##  [28] cachem_1.1.0             cigarillo_1.2.1          GenomeInfoDb_1.48.0     
     ##  [31] jsonlite_2.0.0           blob_1.3.0               DelayedArray_0.38.2     
-    ##  [34] BiocParallel_1.46.0      parallel_4.6.1           cluster_2.1.8.2         
+    ##  [34] BiocParallel_1.46.0      parallel_4.6.2           cluster_2.1.8.3         
     ##  [37] VariantAnnotation_1.58.0 R6_2.6.1                 bslib_0.12.0            
     ##  [40] RColorBrewer_1.1-3       rtracklayer_1.72.0       jquerylib_0.1.4         
     ##  [43] Rcpp_1.1.2               bookdown_0.48            iterators_1.0.14        
-    ##  [46] knitr_1.52               Matrix_1.7-5             tidyselect_1.2.1        
+    ##  [46] knitr_1.52               Matrix_1.7-6             tidyselect_1.2.1        
     ##  [49] abind_1.4-8              yaml_2.3.12              doParallel_1.0.17       
-    ##  [52] codetools_0.2-20         curl_8.0.0               lattice_0.22-9          
+    ##  [52] codetools_0.2-20         curl_8.1.0               lattice_0.23-1          
     ##  [55] tibble_3.3.1             withr_3.0.3              KEGGREST_1.52.2         
     ##  [58] S7_0.2.2                 evaluate_1.0.5           desc_1.4.3              
     ##  [61] circlize_0.4.18          Biostrings_2.80.2        pillar_1.11.1           
     ##  [64] BiocManager_1.30.27      foreach_1.5.2            RCurl_1.98-1.20         
-    ##  [67] ensembldb_2.36.1         ggplot2_4.0.3            scales_1.4.0            
+    ##  [67] ensembldb_2.36.1         ggplot2_4.0.4            scales_1.4.0            
     ##  [70] GenomicFiles_1.48.0      glue_1.8.1               lazyeval_0.2.3          
-    ##  [73] tools_4.6.1              BiocIO_1.22.0            data.table_1.18.6.1     
+    ##  [73] tools_4.6.2              BiocIO_1.22.0            data.table_1.18.6.1     
     ##  [76] BSgenome_1.80.0          locfit_1.5-9.12          GenomicAlignments_1.48.0
     ##  [79] fs_2.1.0                 XML_3.99-0.25            AnnotationDbi_1.74.0    
     ##  [82] colorspace_2.1-4         restfulr_0.0.17          cli_3.6.6               
